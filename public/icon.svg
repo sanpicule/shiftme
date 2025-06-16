@@ -1,84 +1,63 @@
 <svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+    <!-- Main gradient for the background -->
+    <linearGradient id="mainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
       <stop offset="50%" style="stop-color:#8B5CF6;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#EC4899;stop-opacity:1" />
     </linearGradient>
-    <linearGradient id="piggyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FBBF24;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#F59E0B;stop-opacity:1" />
-    </linearGradient>
-    <linearGradient id="sparkleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+    
+    <!-- Sparkles gradient -->
+    <linearGradient id="sparklesGradient" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#FBBF24;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#F97316;stop-opacity:1" />
     </linearGradient>
+    
+    <!-- Star gradient -->
+    <linearGradient id="starGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10B981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Shadow filter -->
     <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
       <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#3B82F6" flood-opacity="0.25"/>
     </filter>
   </defs>
   
-  <!-- Background -->
-  <rect width="512" height="512" rx="128" ry="128" fill="url(#bgGradient)" filter="url(#shadow)"/>
+  <!-- Main rounded rectangle background -->
+  <rect x="32" y="32" width="448" height="448" rx="96" ry="96" fill="url(#mainGradient)" filter="url(#shadow)"/>
   
-  <!-- Piggy Bank Body -->
-  <ellipse cx="256" cy="280" rx="120" ry="80" fill="url(#piggyGradient)" stroke="#F59E0B" stroke-width="4"/>
-  
-  <!-- Piggy Bank Head -->
-  <circle cx="256" cy="200" r="60" fill="url(#piggyGradient)" stroke="#F59E0B" stroke-width="4"/>
-  
-  <!-- Snout -->
-  <ellipse cx="256" cy="220" rx="25" ry="15" fill="#F59E0B"/>
-  <circle cx="248" cy="218" r="3" fill="#D97706"/>
-  <circle cx="264" cy="218" r="3" fill="#D97706"/>
-  
-  <!-- Eyes -->
-  <circle cx="240" cy="185" r="8" fill="#1F2937"/>
-  <circle cx="272" cy="185" r="8" fill="#1F2937"/>
-  <circle cx="242" cy="183" r="3" fill="#FFFFFF"/>
-  <circle cx="274" cy="183" r="3" fill="#FFFFFF"/>
-  
-  <!-- Ears -->
-  <ellipse cx="220" cy="160" rx="12" ry="20" fill="url(#piggyGradient)" transform="rotate(-30 220 160)"/>
-  <ellipse cx="292" cy="160" rx="12" ry="20" fill="url(#piggyGradient)" transform="rotate(30 292 160)"/>
-  
-  <!-- Legs -->
-  <rect x="200" y="340" width="20" height="30" rx="10" fill="#F59E0B"/>
-  <rect x="240" y="340" width="20" height="30" rx="10" fill="#F59E0B"/>
-  <rect x="280" y="340" width="20" height="30" rx="10" fill="#F59E0B"/>
-  <rect x="320" y="340" width="20" height="30" rx="10" fill="#F59E0B"/>
-  
-  <!-- Tail -->
-  <path d="M 360 260 Q 380 240 370 220 Q 360 200 380 190" stroke="#F59E0B" stroke-width="8" fill="none" stroke-linecap="round"/>
-  
-  <!-- Coin Slot -->
-  <rect x="246" y="240" width="20" height="4" rx="2" fill="#D97706"/>
-  
-  <!-- Sparkles -->
-  <g fill="url(#sparkleGradient)">
-    <!-- Top right sparkle -->
-    <g transform="translate(380,120)">
-      <path d="M0,-12 L3,0 L0,12 L-3,0 Z"/>
-      <path d="M-12,0 L0,3 L12,0 L0,-3 Z"/>
-    </g>
-    
-    <!-- Top left sparkle -->
-    <g transform="translate(140,140) scale(0.7)">
-      <path d="M0,-12 L3,0 L0,12 L-3,0 Z"/>
-      <path d="M-12,0 L0,3 L12,0 L0,-3 Z"/>
-    </g>
-    
-    <!-- Bottom right sparkle -->
-    <g transform="translate(360,320) scale(0.5)">
-      <path d="M0,-12 L3,0 L0,12 L-3,0 Z"/>
-      <path d="M-12,0 L0,3 L12,0 L0,-3 Z"/>
-    </g>
+  <!-- PiggyBank icon (scaled and centered) -->
+  <g transform="translate(256,256) scale(8,8) translate(-12,-12)">
+    <!-- Piggy bank body -->
+    <path d="M2 12C2 6.48 6.48 2 12 2s10 4.48 10 10c0 .78-.11 1.53-.3 2.25L19 16.5c0 .83-.67 1.5-1.5 1.5S16 17.33 16 16.5v-1.77c-.64.15-1.31.27-2 .27-4.42 0-8-3.58-8-8z" fill="white" opacity="0.95"/>
+    <!-- Piggy bank legs -->
+    <circle cx="7" cy="19" r="1" fill="white" opacity="0.9"/>
+    <circle cx="11" cy="19" r="1" fill="white" opacity="0.9"/>
+    <circle cx="15" cy="19" r="1" fill="white" opacity="0.9"/>
+    <circle cx="19" cy="19" r="1" fill="white" opacity="0.9"/>
+    <!-- Piggy bank eye -->
+    <circle cx="9" cy="9" r="1" fill="white" opacity="0.8"/>
+    <!-- Coin slot -->
+    <rect x="11" y="6" width="4" height="1" rx="0.5" fill="white" opacity="0.7"/>
+    <!-- Tail -->
+    <path d="M22 12c0-1.1-.9-2-2-2s-2 .9-2 2 .9 2 2 2 2-.9 2-2z" fill="white" opacity="0.8"/>
   </g>
   
-  <!-- Coins -->
-  <circle cx="180" cy="200" r="12" fill="#FBBF24" stroke="#F59E0B" stroke-width="2"/>
-  <text x="180" y="206" text-anchor="middle" font-family="serif" font-size="14" font-weight="bold" fill="#D97706">¥</text>
+  <!-- Sparkles decoration (top right) -->
+  <g transform="translate(400,112) scale(2.5,2.5)">
+    <path d="M12 2l2.09 6.26L20 10l-5.91 1.74L12 18l-2.09-6.26L4 10l5.91-1.74L12 2z" fill="url(#sparklesGradient)" opacity="0.9"/>
+  </g>
   
-  <circle cx="340" cy="240" r="10" fill="#FBBF24" stroke="#F59E0B" stroke-width="2"/>
-  <text x="340" y="245" text-anchor="middle" font-family="serif" font-size="12" font-weight="bold" fill="#D97706">¥</text>
+  <!-- Star decoration (bottom left) -->
+  <g transform="translate(112,400) scale(2,2)">
+    <path d="M12 2l3.09 6.26L22 9.27l-5.18 5.05L18.18 22 12 18.77 5.82 22l1.36-7.68L2 9.27l6.91-1.01L12 2z" fill="url(#starGradient)" opacity="0.8"/>
+  </g>
+  
+  <!-- Additional sparkle effects -->
+  <circle cx="150" cy="150" r="8" fill="url(#sparklesGradient)" opacity="0.6"/>
+  <circle cx="380" cy="350" r="6" fill="url(#starGradient)" opacity="0.7"/>
+  <circle cx="100" cy="300" r="4" fill="white" opacity="0.5"/>
+  <circle cx="350" cy="180" r="5" fill="white" opacity="0.6"/>
 </svg>
