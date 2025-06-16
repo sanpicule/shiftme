@@ -10,6 +10,9 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
+      input: {
+        main: 'index.html'
+      },
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
