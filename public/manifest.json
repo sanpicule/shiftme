@@ -6,7 +6,7 @@
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#3B82F6",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
   "scope": "/",
   "icons": [
     {
@@ -20,9 +20,30 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
-  "categories": ["finance", "productivity"],
+  "categories": ["finance", "productivity", "lifestyle"],
   "lang": "ja",
-  "dir": "ltr"
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "支出を追加",
+      "short_name": "支出追加",
+      "description": "新しい支出を素早く記録",
+      "url": "/?action=add-expense",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
 }
