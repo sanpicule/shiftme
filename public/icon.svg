@@ -1,63 +1,32 @@
-<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <!-- Main gradient for the background -->
-    <linearGradient id="mainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
-      <stop offset="50%" style="stop-color:#8B5CF6;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#EC4899;stop-opacity:1" />
-    </linearGradient>
-    
-    <!-- Sparkles gradient -->
-    <linearGradient id="sparklesGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FBBF24;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#F97316;stop-opacity:1" />
-    </linearGradient>
-    
-    <!-- Star gradient -->
-    <linearGradient id="starGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#10B981;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
-    </linearGradient>
-    
-    <!-- Shadow filter -->
-    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#3B82F6" flood-opacity="0.25"/>
-    </filter>
-  </defs>
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with gradient -->
+  <rect width="192" height="192" rx="48" fill="url(#gradient)"/>
   
-  <!-- Main rounded rectangle background -->
-  <rect x="32" y="32" width="448" height="448" rx="96" ry="96" fill="url(#mainGradient)" filter="url(#shadow)"/>
-  
-  <!-- PiggyBank icon (scaled and centered) -->
-  <g transform="translate(256,256) scale(8,8) translate(-12,-12)">
-    <!-- Piggy bank body -->
-    <path d="M2 12C2 6.48 6.48 2 12 2s10 4.48 10 10c0 .78-.11 1.53-.3 2.25L19 16.5c0 .83-.67 1.5-1.5 1.5S16 17.33 16 16.5v-1.77c-.64.15-1.31.27-2 .27-4.42 0-8-3.58-8-8z" fill="white" opacity="0.95"/>
-    <!-- Piggy bank legs -->
-    <circle cx="7" cy="19" r="1" fill="white" opacity="0.9"/>
-    <circle cx="11" cy="19" r="1" fill="white" opacity="0.9"/>
-    <circle cx="15" cy="19" r="1" fill="white" opacity="0.9"/>
-    <circle cx="19" cy="19" r="1" fill="white" opacity="0.9"/>
-    <!-- Piggy bank eye -->
-    <circle cx="9" cy="9" r="1" fill="white" opacity="0.8"/>
+  <!-- PiggyBank icon in white -->
+  <g transform="translate(48, 48)">
+    <path d="M96 24C96 10.7452 85.2548 0 72 0C58.7452 0 48 10.7452 48 24V30H24C10.7452 30 0 40.7452 0 54V78C0 91.2548 10.7452 102 24 102H30V108C30 121.255 40.7452 132 54 132H78C91.2548 132 102 121.255 102 108V102H108C121.255 102 132 91.2548 132 78V54C132 40.7452 121.255 30 108 30H102V24C102 10.7452 91.2548 0 78 0C64.7452 0 54 10.7452 54 24V30H48V24Z" fill="white" fill-opacity="0.9"/>
+    
+    <!-- Simplified piggy bank shape -->
+    <ellipse cx="48" cy="48" rx="36" ry="24" fill="white"/>
+    <circle cx="42" cy="42" r="3" fill="url(#gradient)"/>
+    <path d="M72 48C72 51.3137 69.3137 54 66 54C62.6863 54 60 51.3137 60 48" stroke="url(#gradient)" stroke-width="2" stroke-linecap="round"/>
+    <rect x="30" y="66" width="6" height="12" rx="3" fill="white"/>
+    <rect x="54" y="66" width="6" height="12" rx="3" fill="white"/>
+    <rect x="42" y="72" width="6" height="6" rx="3" fill="white"/>
+    
     <!-- Coin slot -->
-    <rect x="11" y="6" width="4" height="1" rx="0.5" fill="white" opacity="0.7"/>
-    <!-- Tail -->
-    <path d="M22 12c0-1.1-.9-2-2-2s-2 .9-2 2 .9 2 2 2 2-.9 2-2z" fill="white" opacity="0.8"/>
+    <rect x="45" y="30" width="6" height="3" rx="1.5" fill="url(#gradient)"/>
   </g>
   
-  <!-- Sparkles decoration (top right) -->
-  <g transform="translate(400,112) scale(2.5,2.5)">
-    <path d="M12 2l2.09 6.26L20 10l-5.91 1.74L12 18l-2.09-6.26L4 10l5.91-1.74L12 2z" fill="url(#sparklesGradient)" opacity="0.9"/>
-  </g>
+  <!-- Sparkle effect -->
+  <circle cx="156" cy="36" r="18" fill="#FFD700"/>
+  <path d="M156 24L158.5 31.5L166 34L158.5 36.5L156 44L153.5 36.5L146 34L153.5 31.5Z" fill="white"/>
   
-  <!-- Star decoration (bottom left) -->
-  <g transform="translate(112,400) scale(2,2)">
-    <path d="M12 2l3.09 6.26L22 9.27l-5.18 5.05L18.18 22 12 18.77 5.82 22l1.36-7.68L2 9.27l6.91-1.01L12 2z" fill="url(#starGradient)" opacity="0.8"/>
-  </g>
-  
-  <!-- Additional sparkle effects -->
-  <circle cx="150" cy="150" r="8" fill="url(#sparklesGradient)" opacity="0.6"/>
-  <circle cx="380" cy="350" r="6" fill="url(#starGradient)" opacity="0.7"/>
-  <circle cx="100" cy="300" r="4" fill="white" opacity="0.5"/>
-  <circle cx="350" cy="180" r="5" fill="white" opacity="0.6"/>
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366F1"/>
+      <stop offset="50%" style="stop-color:#8B5CF6"/>
+      <stop offset="100%" style="stop-color:#EC4899"/>
+    </linearGradient>
+  </defs>
 </svg>

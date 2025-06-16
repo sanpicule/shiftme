@@ -102,10 +102,10 @@ export function Dashboard() {
   const StatusIcon = budgetStatus.icon
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 md:space-y-8">
       {/* Welcome Section */}
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
           おかえりなさい！
         </h1>
         <p className="text-gray-600">
@@ -114,15 +114,15 @@ export function Dashboard() {
       </div>
 
       {/* Main Budget Display - Hero Section */}
-      <div className="bg-gradient-to-br from-white/80 to-blue-50/80 backdrop-blur-md rounded-3xl shadow-2xl border border-white/30 p-8 md:p-12">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center space-x-3 mb-4">
-            <StatusIcon className={`w-8 h-8 text-${budgetStatus.color}-500`} />
-            <h2 className="text-2xl font-bold text-gray-800">今月の残り予算</h2>
+      <div className="bg-gradient-to-br from-white/80 to-blue-50/80 backdrop-blur-md rounded-2xl md:rounded-3xl shadow-2xl border border-white/30 p-6 md:p-12">
+        <div className="text-center mb-6 md:mb-8">
+          <div className="flex items-center justify-center space-x-2 md:space-x-3 mb-3 md:mb-4">
+            <StatusIcon className={`w-6 h-6 md:w-8 md:h-8 text-${budgetStatus.color}-500`} />
+            <h2 className="text-xl md:text-2xl font-bold text-gray-800">今月の残り予算</h2>
           </div>
           
           <div className="relative">
-            <div className={`text-6xl md:text-8xl font-black mb-4 ${
+            <div className={`text-4xl md:text-6xl lg:text-8xl font-black mb-3 md:mb-4 ${
               remainingBudget < 0 ? 'text-red-600' : 
               remainingBudget < budgetAfterFixed * 0.2 ? 'text-yellow-600' : 
               'text-green-600'
@@ -130,24 +130,24 @@ export function Dashboard() {
               ¥{Math.abs(remainingBudget).toLocaleString()}
             </div>
             {remainingBudget < 0 && (
-              <div className="absolute -top-4 -right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold animate-pulse">
+              <div className="absolute -top-2 -right-2 md:-top-4 md:-right-4 bg-red-500 text-white px-2 py-1 md:px-3 md:py-1 rounded-full text-xs md:text-sm font-bold animate-pulse">
                 予算超過
               </div>
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-            <div className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl border border-white/40">
-              <div className="text-sm text-gray-600 mb-1">今月の予算</div>
-              <div className="text-2xl font-bold text-blue-600">¥{budgetAfterFixed.toLocaleString()}</div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mt-6 md:mt-8">
+            <div className="bg-white/60 backdrop-blur-sm p-3 md:p-4 rounded-xl md:rounded-2xl border border-white/40">
+              <div className="text-xs md:text-sm text-gray-600 mb-1">今月の予算</div>
+              <div className="text-lg md:text-2xl font-bold text-blue-600">¥{budgetAfterFixed.toLocaleString()}</div>
             </div>
-            <div className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl border border-white/40">
-              <div className="text-sm text-gray-600 mb-1">使用済み</div>
-              <div className="text-2xl font-bold text-orange-600">¥{totalMonthlyExpenses.toLocaleString()}</div>
+            <div className="bg-white/60 backdrop-blur-sm p-3 md:p-4 rounded-xl md:rounded-2xl border border-white/40">
+              <div className="text-xs md:text-sm text-gray-600 mb-1">使用済み</div>
+              <div className="text-lg md:text-2xl font-bold text-orange-600">¥{totalMonthlyExpenses.toLocaleString()}</div>
             </div>
-            <div className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl border border-white/40">
-              <div className="text-sm text-gray-600 mb-1">使用率</div>
-              <div className={`text-2xl font-bold ${
+            <div className="bg-white/60 backdrop-blur-sm p-3 md:p-4 rounded-xl md:rounded-2xl border border-white/40">
+              <div className="text-xs md:text-sm text-gray-600 mb-1">使用率</div>
+              <div className={`text-lg md:text-2xl font-bold ${
                 progressPercentage > 90 ? 'text-red-600' : 
                 progressPercentage > 70 ? 'text-yellow-600' : 
                 'text-green-600'
@@ -158,11 +158,11 @@ export function Dashboard() {
           </div>
 
           {/* Progress Bar */}
-          <div className="mt-8">
+          <div className="mt-6 md:mt-8">
             <div className="relative">
-              <div className="w-full bg-gray-200/50 rounded-full h-6 overflow-hidden">
+              <div className="w-full bg-gray-200/50 rounded-full h-4 md:h-6 overflow-hidden">
                 <div
-                  className={`h-6 rounded-full transition-all duration-1000 ease-out ${
+                  className={`h-4 md:h-6 rounded-full transition-all duration-1000 ease-out ${
                     progressPercentage > 90 ? 'bg-gradient-to-r from-red-400 to-red-600' : 
                     progressPercentage > 70 ? 'bg-gradient-to-r from-yellow-400 to-yellow-600' : 
                     'bg-gradient-to-r from-green-400 to-green-600'
@@ -171,12 +171,12 @@ export function Dashboard() {
                 />
               </div>
               {progressPercentage > 100 && (
-                <div className="absolute top-0 right-0 -mt-2 -mr-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center animate-bounce">
+                <div className="absolute top-0 right-0 -mt-1 -mr-1 md:-mt-2 md:-mr-2 w-4 h-4 md:w-6 md:h-6 bg-red-500 rounded-full flex items-center justify-center animate-bounce">
                   <span className="text-white text-xs font-bold">!</span>
                 </div>
               )}
             </div>
-            <div className="flex justify-between text-sm text-gray-600 mt-2">
+            <div className="flex justify-between text-xs md:text-sm text-gray-600 mt-2">
               <span>0%</span>
               <span className="font-medium">
                 {remainingBudget < 0 ? '予算超過中' : `残り${(100 - progressPercentage).toFixed(1)}%`}
@@ -186,48 +186,48 @@ export function Dashboard() {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           <div className="text-center">
-            <div className="text-sm text-gray-600 mb-1">月収</div>
-            <div className="text-lg font-bold text-gray-900">¥{monthlyIncome.toLocaleString()}</div>
+            <div className="text-xs md:text-sm text-gray-600 mb-1">月収</div>
+            <div className="text-sm md:text-lg font-bold text-gray-900">¥{monthlyIncome.toLocaleString()}</div>
           </div>
           <div className="text-center">
-            <div className="text-sm text-gray-600 mb-1">固定支出</div>
-            <div className="text-lg font-bold text-gray-900">¥{totalFixedExpenses.toLocaleString()}</div>
+            <div className="text-xs md:text-sm text-gray-600 mb-1">固定支出</div>
+            <div className="text-sm md:text-lg font-bold text-gray-900">¥{totalFixedExpenses.toLocaleString()}</div>
           </div>
           <div className="text-center">
-            <div className="text-sm text-gray-600 mb-1">貯金目標</div>
-            <div className="text-lg font-bold text-purple-600">¥{monthlyNeededForGoal.toLocaleString()}</div>
+            <div className="text-xs md:text-sm text-gray-600 mb-1">貯金目標</div>
+            <div className="text-sm md:text-lg font-bold text-purple-600">¥{monthlyNeededForGoal.toLocaleString()}</div>
           </div>
           <div className="text-center">
-            <div className="text-sm text-gray-600 mb-1">支出記録</div>
-            <div className="text-lg font-bold text-orange-600">{expenses.length}件</div>
+            <div className="text-xs md:text-sm text-gray-600 mb-1">支出記録</div>
+            <div className="text-sm md:text-lg font-bold text-orange-600">{expenses.length}件</div>
           </div>
         </div>
       </div>
 
       {/* Savings Goal Progress */}
       {savingsGoal && (
-        <div className="bg-white/70 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-white/20">
+        <div className="bg-white/70 backdrop-blur-sm p-4 md:p-6 rounded-xl md:rounded-2xl shadow-lg border border-white/20">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl">
-                <Target className="w-5 h-5 text-white" />
+            <div className="flex items-center space-x-2 md:space-x-3">
+              <div className="p-2 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg md:rounded-xl">
+                <Target className="w-4 h-4 md:w-5 md:h-5 text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900">{savingsGoal.title}</h3>
-                <p className="text-sm text-gray-600">{savingsGoal.description}</p>
+                <h3 className="text-base md:text-lg font-bold text-gray-900">{savingsGoal.title}</h3>
+                <p className="text-xs md:text-sm text-gray-600">{savingsGoal.description}</p>
               </div>
             </div>
             <div className="text-right">
-              <p className="text-sm text-gray-600">目標</p>
-              <p className="text-xl font-bold text-purple-600">
+              <p className="text-xs md:text-sm text-gray-600">目標</p>
+              <p className="text-lg md:text-xl font-bold text-purple-600">
                 ¥{savingsGoal.target_amount.toLocaleString()}
               </p>
             </div>
           </div>
           
-          <div className="flex justify-between text-sm text-gray-600 mb-2">
+          <div className="flex justify-between text-xs md:text-sm text-gray-600 mb-2">
             <span>達成予定: {format(new Date(savingsGoal.target_date), 'yyyy年MM月dd日', { locale: ja })}</span>
             <span>月間必要額: ¥{monthlyNeededForGoal.toLocaleString()}</span>
           </div>
@@ -235,14 +235,14 @@ export function Dashboard() {
       )}
 
       {/* Calendar Section */}
-      <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="p-3 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl">
-            <Calendar className="w-6 h-6 text-white" />
+      <div className="bg-white/70 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-lg border border-white/20 p-4 md:p-6">
+        <div className="flex items-center space-x-2 md:space-x-3 mb-4 md:mb-6">
+          <div className="p-2 md:p-3 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg md:rounded-xl">
+            <Calendar className="w-5 h-5 md:w-6 md:h-6 text-white" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-900">支出カレンダー</h2>
-            <p className="text-sm text-gray-600">日付をクリックして支出を入力・確認できます</p>
+            <h2 className="text-lg md:text-xl font-bold text-gray-900">支出カレンダー</h2>
+            <p className="text-xs md:text-sm text-gray-600">日付をクリックして支出を入力・確認できます</p>
           </div>
         </div>
 
@@ -250,35 +250,35 @@ export function Dashboard() {
       </div>
 
       {/* Budget Tips */}
-      <div className="bg-gradient-to-r from-blue-50/80 to-purple-50/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">💡 今月のアドバイス</h3>
+      <div className="bg-gradient-to-r from-blue-50/80 to-purple-50/80 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-lg border border-white/20 p-4 md:p-6">
+        <h3 className="text-base md:text-lg font-bold text-gray-900 mb-3 md:mb-4">💡 今月のアドバイス</h3>
         <div className="space-y-3">
           {remainingBudget < 0 && (
-            <div className="flex items-start space-x-3 p-3 bg-red-50/80 rounded-xl border border-red-200/50">
-              <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5" />
+            <div className="flex items-start space-x-2 md:space-x-3 p-3 bg-red-50/80 rounded-xl border border-red-200/50">
+              <AlertTriangle className="w-4 h-4 md:w-5 md:h-5 text-red-500 mt-0.5" />
               <div>
-                <p className="font-medium text-red-800">予算を超過しています</p>
-                <p className="text-sm text-red-600">支出を見直すか、来月の計画を調整しましょう</p>
+                <p className="font-medium text-red-800 text-sm md:text-base">予算を超過しています</p>
+                <p className="text-xs md:text-sm text-red-600">支出を見直すか、来月の計画を調整しましょう</p>
               </div>
             </div>
           )}
           
           {remainingBudget > 0 && remainingBudget < budgetAfterFixed * 0.2 && (
-            <div className="flex items-start space-x-3 p-3 bg-yellow-50/80 rounded-xl border border-yellow-200/50">
-              <AlertTriangle className="w-5 h-5 text-yellow-500 mt-0.5" />
+            <div className="flex items-start space-x-2 md:space-x-3 p-3 bg-yellow-50/80 rounded-xl border border-yellow-200/50">
+              <AlertTriangle className="w-4 h-4 md:w-5 md:h-5 text-yellow-500 mt-0.5" />
               <div>
-                <p className="font-medium text-yellow-800">予算残りわずかです</p>
-                <p className="text-sm text-yellow-600">残り{Math.ceil((new Date(endOfMonth(currentDate)).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))}日間、計画的に使いましょう</p>
+                <p className="font-medium text-yellow-800 text-sm md:text-base">予算残りわずかです</p>
+                <p className="text-xs md:text-sm text-yellow-600">残り{Math.ceil((new Date(endOfMonth(currentDate)).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))}日間、計画的に使いましょう</p>
               </div>
             </div>
           )}
           
           {remainingBudget >= budgetAfterFixed * 0.2 && (
-            <div className="flex items-start space-x-3 p-3 bg-green-50/80 rounded-xl border border-green-200/50">
-              <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
+            <div className="flex items-start space-x-2 md:space-x-3 p-3 bg-green-50/80 rounded-xl border border-green-200/50">
+              <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-green-500 mt-0.5" />
               <div>
-                <p className="font-medium text-green-800">順調に管理できています</p>
-                <p className="text-sm text-green-600">この調子で貯金目標を達成しましょう！</p>
+                <p className="font-medium text-green-800 text-sm md:text-base">順調に管理できています</p>
+                <p className="text-xs md:text-sm text-green-600">この調子で貯金目標を達成しましょう！</p>
               </div>
             </div>
           )}

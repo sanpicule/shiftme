@@ -25,22 +25,22 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
       {/* Header */}
       <header className="bg-white/60 backdrop-blur-xl border-b border-white/20 sticky top-0 z-40 shadow-lg shadow-black/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
+          <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3 md:space-x-4">
               <div className="relative group">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/25 group-hover:shadow-2xl group-hover:shadow-blue-500/40 transition-all duration-300 group-hover:scale-105">
-                  <PiggyBank className="w-7 h-7 text-white" />
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-xl md:rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/25 group-hover:shadow-2xl group-hover:shadow-blue-500/40 transition-all duration-300 group-hover:scale-105">
+                  <PiggyBank className="w-5 h-5 md:w-7 md:h-7 text-white" />
                 </div>
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center animate-pulse">
-                  <Sparkles className="w-2.5 h-2.5 text-white" />
+                <div className="absolute -top-0.5 -right-0.5 md:-top-1 md:-right-1 w-3 h-3 md:w-4 md:h-4 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center animate-pulse">
+                  <Sparkles className="w-1.5 h-1.5 md:w-2.5 md:h-2.5 text-white" />
                 </div>
               </div>
               <div>
-                <h1 className="text-2xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                <h1 className="text-xl md:text-2xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                   Shiftme
                 </h1>
-                <p className="text-xs text-gray-500 font-medium">Smart Money Manager</p>
+                <p className="text-xs text-gray-500 font-medium hidden md:block">Smart Money Manager</p>
               </div>
             </div>
 
@@ -83,9 +83,9 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-3 rounded-2xl text-gray-600 hover:text-gray-900 hover:bg-white/60 transition-all duration-300 hover:shadow-lg hover:shadow-black/5 relative z-50"
+              className="md:hidden p-2 md:p-3 rounded-xl md:rounded-2xl text-gray-600 hover:text-gray-900 hover:bg-white/60 transition-all duration-300 hover:shadow-lg hover:shadow-black/5 relative z-50"
             >
-              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {isMobileMenuOpen ? <X className="w-5 h-5 md:w-6 md:h-6" /> : <Menu className="w-5 h-5 md:w-6 md:h-6" />}
             </button>
           </div>
         </div>
@@ -96,13 +96,13 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
         <div className="md:hidden fixed inset-0 z-[9999] bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 animate-fadeIn">
           <div className="flex flex-col h-full">
             {/* Mobile Header */}
-            <div className="flex items-center justify-between p-6 border-b border-white/20">
-              <div className="flex items-center space-x-4">
-                <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                  <PiggyBank className="w-6 h-6 text-white" />
+            <div className="flex items-center justify-between p-4 md:p-6 border-b border-white/20">
+              <div className="flex items-center space-x-3 md:space-x-4">
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-white/20 backdrop-blur-sm rounded-lg md:rounded-xl flex items-center justify-center">
+                  <PiggyBank className="w-4 h-4 md:w-6 md:h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-black text-white">Shiftme</h1>
+                  <h1 className="text-lg md:text-xl font-black text-white">Shiftme</h1>
                   <p className="text-xs text-white/80">Smart Money Manager</p>
                 </div>
               </div>
@@ -110,12 +110,12 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="p-2 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition-colors"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5 md:w-6 md:h-6" />
               </button>
             </div>
 
             {/* Mobile Navigation */}
-            <div className="flex-1 px-6 py-8 space-y-4 overflow-y-auto">
+            <div className="flex-1 px-4 md:px-6 py-6 md:py-8 space-y-3 md:space-y-4 overflow-y-auto">
               {navigation.map((item, index) => {
                 const Icon = item.icon
                 const isActive = currentPage === item.id
@@ -127,7 +127,7 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
                       setIsMobileMenuOpen(false)
                     }}
                     className={`
-                      w-full flex items-center space-x-4 px-6 py-5 rounded-2xl text-left transition-all duration-300 transform hover:scale-105 animate-slideInUp
+                      w-full flex items-center space-x-3 md:space-x-4 px-4 md:px-6 py-4 md:py-5 rounded-xl md:rounded-2xl text-left transition-all duration-300 transform hover:scale-105 animate-slideInUp
                       ${isActive 
                         ? 'bg-white/20 backdrop-blur-sm text-white shadow-xl' 
                         : 'text-white/80 hover:text-white hover:bg-white/10'
@@ -135,12 +135,12 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
                     `}
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
-                    <div className={`p-3 rounded-xl ${isActive ? 'bg-white/20' : 'bg-white/10'}`}>
-                      <Icon className="w-6 h-6" />
+                    <div className={`p-2 md:p-3 rounded-lg md:rounded-xl ${isActive ? 'bg-white/20' : 'bg-white/10'}`}>
+                      <Icon className="w-5 h-5 md:w-6 md:h-6" />
                     </div>
                     <div>
-                      <span className="text-lg font-semibold">{item.name}</span>
-                      <div className="text-sm opacity-70">
+                      <span className="text-base md:text-lg font-semibold">{item.name}</span>
+                      <div className="text-xs md:text-sm opacity-70">
                         {item.id === 'dashboard' && '収支管理・カレンダー'}
                         {item.id === 'analytics' && 'データ分析・統計'}
                         {item.id === 'settings' && '各種設定・管理'}
@@ -153,18 +153,18 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
             </div>
 
             {/* Mobile Logout */}
-            <div className="p-6 border-t border-white/20">
+            <div className="p-4 md:p-6 border-t border-white/20">
               <button
                 onClick={() => {
                   signOut()
                   setIsMobileMenuOpen(false)
                 }}
-                className="w-full flex items-center space-x-4 px-6 py-4 rounded-2xl text-white/80 hover:text-white hover:bg-red-500/20 transition-all duration-300"
+                className="w-full flex items-center space-x-3 md:space-x-4 px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl text-white/80 hover:text-white hover:bg-red-500/20 transition-all duration-300"
               >
-                <div className="p-3 rounded-xl bg-red-500/20">
-                  <LogOut className="w-6 h-6" />
+                <div className="p-2 md:p-3 rounded-lg md:rounded-xl bg-red-500/20">
+                  <LogOut className="w-5 h-5 md:w-6 md:h-6" />
                 </div>
-                <span className="text-lg font-semibold">ログアウト</span>
+                <span className="text-base md:text-lg font-semibold">ログアウト</span>
               </button>
             </div>
           </div>
@@ -172,7 +172,7 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
       )}
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
         {children}
       </main>
 
