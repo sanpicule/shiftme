@@ -4,6 +4,7 @@ import { ToastProvider } from './components/ToastContainer'
 import { AuthForm } from './components/AuthForm'
 import { InitialSetup } from './components/InitialSetup'
 import { MainApp } from './components/MainApp'
+import { InstallPrompt } from './components/InstallPrompt'
 import { useUserSettings } from './hooks/useUserSettings'
 
 function AppContent() {
@@ -28,14 +29,24 @@ function AppContent() {
   }
 
   if (!user) {
-    return <AuthForm />
+    return (
+      <>
+        <AuthForm />
+        <InstallPrompt />
+      </>
+    )
   }
 
   if (!userSettings?.setup_completed) {
     return <InitialSetup />
   }
 
-  return <MainApp />
+  return (
+    <>
+      <MainApp />
+      <InstallPrompt />
+    </>
+  )
 }
 
 function App() {
