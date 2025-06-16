@@ -1,17 +1,16 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import path from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  root: '.',
   plugins: [react()],
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
   build: {
+    outDir: 'dist',
+    sourcemap: false,
     rollupOptions: {
-      input: path.resolve(__dirname, 'src/main.tsx'),
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
