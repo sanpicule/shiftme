@@ -1,12 +1,16 @@
 import React, { useState } from 'react'
-import { User, Mail, Calendar, Settings, Award, TrendingUp, Target, PiggyBank } from 'lucide-react'
+import { User, Mail, Calendar, Settings, Award, TrendingUp, Target, PiggyBank, LogOut } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useUserSettings } from '../hooks/useUserSettings'
 import { format } from 'date-fns'
 import { ja } from 'date-fns/locale'
 
-export function ProfilePage() {
-  const { user } = useAuth()
+interface ProfilePageProps {
+  onPageChange: (page: string) => void
+}
+
+export function ProfilePage({ onPageChange }: ProfilePageProps) {
+  const { user, signOut } = useAuth()
   const { userSettings } = useUserSettings()
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'statistics'>('overview')
 
@@ -52,7 +56,7 @@ export function ProfilePage() {
   const totalAchievements = achievements.length
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-32">
       {/* Page Header */}
       <div className="text-center">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">プロフィール</h1>
@@ -330,6 +334,24 @@ export function ProfilePage() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Settings and Logout Buttons */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-gray-200/50 p-4 space-y-3">
+        <button
+          onClick={() => onPageChange('settings')}
+          className="w-full flex items-center justify-center space-x-3 px-6 py-4 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl transition-all duration-300 group"
+        >
+          <Settings className="w-5 h-5 group-hover:scale-110 transition-transform" />
+          <span className="font-medium">設定</span>
+        </button>
+        <button
+          onClick={signOut}
+          className="w-full flex items-center justify-center space-x-3 px-6 py-4 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl transition-all duration-300 group"
+        >
+          <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
+          <span className="font-medium">ログアウト</span>
+        </button>
       </div>
     </div>
   )

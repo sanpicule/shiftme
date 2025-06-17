@@ -1,12 +1,13 @@
 import React from 'react'
-import { LogOut, PiggyBank, Home, Settings, User, TrendingUp, Menu, X, Sparkles } from 'lucide-react'
+import { LogOut, PiggyBank, Home, Settings, User, TrendingUp, Sparkles } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { useState } from 'react'
+
+type Page = 'dashboard' | 'analytics' | 'settings' | 'profile'
 
 interface LayoutProps {
   children: React.ReactNode
-  currentPage: string
-  onPageChange: (page: string) => void
+  currentPage: Page
+  onPageChange: (page: Page) => void
 }
 
 const navigation = [
@@ -18,7 +19,6 @@ const navigation = [
 
 export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
   const { signOut } = useAuth()
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -79,129 +79,40 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
               <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
               <span className="text-sm font-medium">ログアウト</span>
             </button>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 md:p-3 rounded-xl md:rounded-2xl text-gray-600 hover:text-gray-900 hover:bg-white/60 transition-all duration-300 hover:shadow-lg hover:shadow-black/5 relative z-50"
-            >
-              {isMobileMenuOpen ? <X className="w-5 h-5 md:w-6 md:h-6" /> : <Menu className="w-5 h-5 md:w-6 md:h-6" />}
-            </button>
           </div>
         </div>
       </header>
 
-      {/* Mobile Menu - Full Screen Overlay */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-[9999] bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 animate-fadeIn">
-          <div className="flex flex-col h-full">
-            {/* Mobile Header */}
-            <div className="flex items-center justify-between p-4 md:p-6 border-b border-white/20">
-              <div className="flex items-center space-x-3 md:space-x-4">
-                <div className="w-8 h-8 md:w-10 md:h-10 bg-white/20 backdrop-blur-sm rounded-lg md:rounded-xl flex items-center justify-center">
-                  <PiggyBank className="w-4 h-4 md:w-6 md:h-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-lg md:text-xl font-black text-white">Shiftme</h1>
-                  <p className="text-xs text-white/80">Smart Money Manager</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="p-2 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition-colors"
-              >
-                <X className="w-5 h-5 md:w-6 md:h-6" />
-              </button>
-            </div>
-
-            {/* Mobile Navigation */}
-            <div className="flex-1 px-4 md:px-6 py-6 md:py-8 space-y-3 md:space-y-4 overflow-y-auto">
-              {navigation.map((item, index) => {
-                const Icon = item.icon
-                const isActive = currentPage === item.id
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      onPageChange(item.id)
-                      setIsMobileMenuOpen(false)
-                    }}
-                    className={`
-                      w-full flex items-center space-x-3 md:space-x-4 px-4 md:px-6 py-4 md:py-5 rounded-xl md:rounded-2xl text-left transition-all duration-300 transform hover:scale-105 animate-slideInUp
-                      ${isActive 
-                        ? 'bg-white/20 backdrop-blur-sm text-white shadow-xl' 
-                        : 'text-white/80 hover:text-white hover:bg-white/10'
-                      }
-                    `}
-                    style={{ animationDelay: `${index * 100}ms` }}
-                  >
-                    <div className={`p-2 md:p-3 rounded-lg md:rounded-xl ${isActive ? 'bg-white/20' : 'bg-white/10'}`}>
-                      <Icon className="w-5 h-5 md:w-6 md:h-6" />
-                    </div>
-                    <div>
-                      <span className="text-base md:text-lg font-semibold">{item.name}</span>
-                      <div className="text-xs md:text-sm opacity-70">
-                        {item.id === 'dashboard' && '収支管理・カレンダー'}
-                        {item.id === 'analytics' && 'データ分析・統計'}
-                        {item.id === 'settings' && '各種設定・管理'}
-                        {item.id === 'profile' && 'アカウント・実績'}
-                      </div>
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-
-            {/* Mobile Logout */}
-            <div className="p-4 md:p-6 border-t border-white/20">
-              <button
-                onClick={() => {
-                  signOut()
-                  setIsMobileMenuOpen(false)
-                }}
-                className="w-full flex items-center space-x-3 md:space-x-4 px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl text-white/80 hover:text-white hover:bg-red-500/20 transition-all duration-300"
-              >
-                <div className="p-2 md:p-3 rounded-lg md:rounded-xl bg-red-500/20">
-                  <LogOut className="w-5 h-5 md:w-6 md:h-6" />
-                </div>
-                <span className="text-base md:text-lg font-semibold">ログアウト</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 pb-24 md:pb-8">
         {children}
       </main>
 
-      <style jsx>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        
-        @keyframes slideInUp {
-          from { 
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to { 
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out;
-        }
-        
-        .animate-slideInUp {
-          animation: slideInUp 0.5s ease-out forwards;
-          opacity: 0;
-        }
-      `}</style>
+      {/* Mobile Bottom Navigation */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-white/20 shadow-lg shadow-black/5 z-40">
+        <div className="grid grid-cols-4 gap-1 p-2">
+          {navigation.map((item) => {
+            const Icon = item.icon
+            const isActive = currentPage === item.id
+            return (
+              <button
+                key={item.id}
+                onClick={() => onPageChange(item.id)}
+                className={`
+                  flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-300
+                  ${isActive 
+                    ? 'text-blue-600 bg-blue-50/80' 
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50/80'
+                  }
+                `}
+              >
+                <Icon className={`w-6 h-6 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
+                <span className="text-xs font-medium mt-1">{item.name}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
     </div>
   )
 }

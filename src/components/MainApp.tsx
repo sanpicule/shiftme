@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Home, Settings, User, TrendingUp, Calendar } from 'lucide-react'
+import { Home, Settings, User, TrendingUp } from 'lucide-react'
 import { Dashboard } from './Dashboard'
 import { SettingsPage } from './SettingsPage'
 import { ProfilePage } from './ProfilePage'
@@ -34,7 +34,7 @@ export function MainApp() {
       case 'settings':
         return <SettingsPage />
       case 'profile':
-        return <ProfilePage />
+        return <ProfilePage onPageChange={handlePageChange} />
       default:
         return <Dashboard />
     }
