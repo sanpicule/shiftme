@@ -113,95 +113,74 @@ export function Dashboard() {
         </p>
       </div>
 
-      {/* Main Budget Display - Hero Section */}
-      <div className="bg-gradient-to-br from-white/80 to-blue-50/80 backdrop-blur-md rounded-2xl md:rounded-3xl shadow-2xl border border-white/30 p-6 md:p-12">
-        <div className="text-center mb-6 md:mb-8">
-          <div className="flex items-center justify-center space-x-2 md:space-x-3 mb-3 md:mb-4">
-            <StatusIcon className={`w-6 h-6 md:w-8 md:h-8 text-${budgetStatus.color}-500`} />
-            <h2 className="text-xl md:text-2xl font-bold text-gray-800">今月の残り予算</h2>
-          </div>
-          
-          <div className="relative">
-            <div className={`text-4xl md:text-6xl lg:text-8xl font-black mb-3 md:mb-4 ${
-              remainingBudget < 0 ? 'text-red-600' : 
-              remainingBudget < budgetAfterFixed * 0.2 ? 'text-yellow-600' : 
-              'text-green-600'
-            }`}>
-              ¥{Math.abs(remainingBudget).toLocaleString()}
-            </div>
-            {remainingBudget < 0 && (
-              <div className="absolute -top-2 -right-2 md:-top-4 md:-right-4 bg-red-500 text-white px-2 py-1 md:px-3 md:py-1 rounded-full text-xs md:text-sm font-bold animate-pulse">
-                予算超過
-              </div>
-            )}
-          </div>
+      {/* Main Budget Display - Hero Section with Pink Gradient */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-pink-400 via-purple-500 to-purple-600 rounded-3xl shadow-2xl p-8 md:p-12 text-white">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-0 w-32 h-32 bg-white rounded-full -translate-x-16 -translate-y-16"></div>
+          <div className="absolute bottom-0 right-0 w-48 h-48 bg-white rounded-full translate-x-24 translate-y-24"></div>
+          <div className="absolute top-1/2 left-1/2 w-24 h-24 bg-white rounded-full -translate-x-12 -translate-y-12"></div>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mt-6 md:mt-8">
-            <div className="bg-white/60 backdrop-blur-sm p-3 md:p-4 rounded-xl md:rounded-2xl border border-white/40">
-              <div className="text-xs md:text-sm text-gray-600 mb-1">今月の予算</div>
-              <div className="text-lg md:text-2xl font-bold text-blue-600">¥{budgetAfterFixed.toLocaleString()}</div>
-            </div>
-            <div className="bg-white/60 backdrop-blur-sm p-3 md:p-4 rounded-xl md:rounded-2xl border border-white/40">
-              <div className="text-xs md:text-sm text-gray-600 mb-1">使用済み</div>
-              <div className="text-lg md:text-2xl font-bold text-orange-600">¥{totalMonthlyExpenses.toLocaleString()}</div>
-            </div>
-            <div className="bg-white/60 backdrop-blur-sm p-3 md:p-4 rounded-xl md:rounded-2xl border border-white/40">
-              <div className="text-xs md:text-sm text-gray-600 mb-1">使用率</div>
-              <div className={`text-lg md:text-2xl font-bold ${
-                progressPercentage > 90 ? 'text-red-600' : 
-                progressPercentage > 70 ? 'text-yellow-600' : 
-                'text-green-600'
-              }`}>
-                {progressPercentage.toFixed(1)}%
+        <div className="relative z-10">
+          <div className="text-left mb-6 md:mb-8">
+            <h2 className="text-lg md:text-xl font-medium text-white/90 mb-2">今月の残り使用可能額</h2>
+            
+            <div className="mb-4">
+              <div className="text-4xl md:text-6xl lg:text-7xl font-black mb-2">
+                ¥{Math.abs(remainingBudget).toLocaleString()}
               </div>
+              {remainingBudget < 0 && (
+                <div className="inline-flex items-center bg-red-500/20 backdrop-blur-sm px-3 py-1 rounded-full">
+                  <AlertTriangle className="w-4 h-4 mr-2" />
+                  <span className="text-sm font-medium">予算超過</span>
+                </div>
+              )}
             </div>
-          </div>
 
-          {/* Progress Bar */}
-          <div className="mt-6 md:mt-8">
+            <div className="text-sm text-white/80 mb-6">
+              使用済み: ¥{totalMonthlyExpenses.toLocaleString()} / 予算: ¥{budgetAfterFixed.toLocaleString()}
+            </div>
+
+            {/* Progress Bar */}
             <div className="relative">
-              <div className="w-full bg-gray-200/50 rounded-full h-4 md:h-6 overflow-hidden">
+              <div className="w-full bg-white/20 rounded-full h-3 overflow-hidden backdrop-blur-sm">
                 <div
-                  className={`h-4 md:h-6 rounded-full transition-all duration-1000 ease-out ${
-                    progressPercentage > 90 ? 'bg-gradient-to-r from-red-400 to-red-600' : 
-                    progressPercentage > 70 ? 'bg-gradient-to-r from-yellow-400 to-yellow-600' : 
-                    'bg-gradient-to-r from-green-400 to-green-600'
+                  className={`h-3 rounded-full transition-all duration-1000 ease-out ${
+                    progressPercentage > 90 ? 'bg-red-400' : 
+                    progressPercentage > 70 ? 'bg-yellow-400' : 
+                    'bg-white'
                   }`}
                   style={{ width: `${Math.min(progressPercentage, 100)}%` }}
                 />
               </div>
-              {progressPercentage > 100 && (
-                <div className="absolute top-0 right-0 -mt-1 -mr-1 md:-mt-2 md:-mr-2 w-4 h-4 md:w-6 md:h-6 bg-red-500 rounded-full flex items-center justify-center animate-bounce">
-                  <span className="text-white text-xs font-bold">!</span>
-                </div>
-              )}
-            </div>
-            <div className="flex justify-between text-xs md:text-sm text-gray-600 mt-2">
-              <span>0%</span>
-              <span className="font-medium">
-                {remainingBudget < 0 ? '予算超過中' : `残り${(100 - progressPercentage).toFixed(1)}%`}
-              </span>
+              <div className="flex justify-between text-xs text-white/70 mt-2">
+                <span>0%</span>
+                <span className="font-medium">
+                  {remainingBudget < 0 ? '予算超過中' : `残り${(100 - progressPercentage).toFixed(1)}%`}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-          <div className="text-center">
-            <div className="text-xs md:text-sm text-gray-600 mb-1">月収</div>
-            <div className="text-sm md:text-lg font-bold text-gray-900">¥{monthlyIncome.toLocaleString()}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-xs md:text-sm text-gray-600 mb-1">固定支出</div>
-            <div className="text-sm md:text-lg font-bold text-gray-900">¥{totalFixedExpenses.toLocaleString()}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-xs md:text-sm text-gray-600 mb-1">貯金目標</div>
-            <div className="text-sm md:text-lg font-bold text-purple-600">¥{monthlyNeededForGoal.toLocaleString()}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-xs md:text-sm text-gray-600 mb-1">支出記録</div>
-            <div className="text-sm md:text-lg font-bold text-orange-600">{expenses.length}件</div>
+          {/* Quick Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
+              <div className="text-xs text-white/70 mb-1">月収</div>
+              <div className="text-lg font-bold">¥{monthlyIncome.toLocaleString()}</div>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
+              <div className="text-xs text-white/70 mb-1">固定支出</div>
+              <div className="text-lg font-bold">¥{totalFixedExpenses.toLocaleString()}</div>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
+              <div className="text-xs text-white/70 mb-1">貯金目標</div>
+              <div className="text-lg font-bold">¥{monthlyNeededForGoal.toLocaleString()}</div>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
+              <div className="text-xs text-white/70 mb-1">支出記録</div>
+              <div className="text-lg font-bold">{expenses.length}件</div>
+            </div>
           </div>
         </div>
       </div>
