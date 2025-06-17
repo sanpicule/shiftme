@@ -34,8 +34,21 @@ export function SettingsPage() {
   const [loading, setLoading] = useState(false)
 
   const { register: registerIncome, handleSubmit: handleIncomeSubmit, setValue: setIncomeValue } = useForm<IncomeForm>()
-  const { register: registerExpense, handleSubmit: handleExpenseSubmit, reset: resetExpense } = useForm<FixedExpenseForm>()
-  const { register: registerGoal, handleSubmit: handleGoalSubmit, reset: resetGoal } = useForm<SavingsGoalForm>()
+  const { register: registerExpense, handleSubmit: handleExpenseSubmit, reset: resetExpense, setValue: setExpenseValue } = useForm<FixedExpenseForm>()
+  const { register: registerGoal, handleSubmit: handleGoalSubmit, reset: resetGoal, setValue: setGoalValue } = useForm<SavingsGoalForm>()
+
+  // 編集用のフォーム状態
+  const [editingExpenseForm, setEditingExpenseForm] = useState<FixedExpenseForm>({
+    name: '',
+    amount: 0,
+    category: '住居費'
+  })
+  const [editingGoalForm, setEditingGoalForm] = useState<SavingsGoalForm>({
+    title: '',
+    description: '',
+    target_amount: 0,
+    target_date: ''
+  })
 
   useEffect(() => {
     if (user) {
@@ -156,6 +169,67 @@ export function SettingsPage() {
     }
   }
 
+  const startEditExpense = (expense: FixedExpense) => {
+    setEditingExpense(expense.id)
+    setEditingExpenseForm({
+      name: expense.name,
+      amount: expense.amount,
+      category: expense.category
+    })
+  }
+
+  const updateFixedExpense = async () => {
+    if (!editingExpense || !user) return
+
+    try {
+      const { error } = await supabase
+        .from('fixed_expenses')
+        .update(editingExpenseForm)
+        .eq('id', editingExpense)
+        .eq('user_id', user.id)
+
+      if (error) throw error
+
+      setEditingExpense(null)
+      fetchData()
+      showSuccess('固定支出を更新しました', `${editingExpenseForm.name}: ¥${editingExpenseForm.amount.toLocaleString()}`)
+    } catch (error) {
+      console.error('Error updating fixed expense:', error)
+      showError('更新に失敗しました', 'もう一度お試しください')
+    }
+  }
+
+  const startEditGoal = (goal: SavingsGoal) => {
+    setEditingGoal(goal.id)
+    setEditingGoalForm({
+      title: goal.title,
+      description: goal.description,
+      target_amount: goal.target_amount,
+      target_date: goal.target_date
+    })
+  }
+
+  const updateSavingsGoal = async () => {
+    if (!editingGoal || !user) return
+
+    try {
+      const { error } = await supabase
+        .from('savings_goals')
+        .update(editingGoalForm)
+        .eq('id', editingGoal)
+        .eq('user_id', user.id)
+
+      if (error) throw error
+
+      setEditingGoal(null)
+      fetchData()
+      showSuccess('貯金目標を更新しました', `${editingGoalForm.title}: ¥${editingGoalForm.target_amount.toLocaleString()}`)
+    } catch (error) {
+      console.error('Error updating savings goal:', error)
+      showError('更新に失敗しました', 'もう一度お試しください')
+    }
+  }
+
   const categories = [
     '住居費',
     '光熱費',
@@ -233,7 +307,7 @@ export function SettingsPage() {
         </div>
 
         {/* Add Fixed Expense Form */}
-        <form onSubmit={handleExpenseSubmit(addFixedExpense)} className="mb-8">
+        <form onSubmit={handleExpenseSubmit(editingExpense ? updateFixedExpense : addFixedExpense)} className="mb-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-3">項目名</label>
@@ -264,10 +338,10 @@ export function SettingsPage() {
                 ))}
               </select>
             </div>
-            <div className="flex items-end">
+            <div className="flex items-end space-x-2">
               <button
                 type="submit"
-                className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-3 rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/40 transform hover:-translate-y-0.5 font-semibold"
+                className="flex-1 flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-3 rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/40 transform hover:-translate-y-0.5 font-semibold"
               >
                 <Plus className="w-5 h-5" />
                 <span>追加</span>
@@ -283,27 +357,81 @@ export function SettingsPage() {
               <div className="flex items-center space-x-4 mb-4 sm:mb-0">
                 <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full shadow-lg"></div>
                 <div>
-                  <h4 className="font-semibold text-gray-900 text-lg">{expense.name}</h4>
-                  <p className="text-sm text-gray-600 font-medium">{expense.category}</p>
+                  {editingExpense === expense.id ? (
+                    <input
+                      type="text"
+                      value={editingExpenseForm.name}
+                      className="w-full px-3 py-1 border border-gray-300/50 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/50 backdrop-blur-sm text-lg font-semibold"
+                      onChange={(e) => setEditingExpenseForm(prev => ({ ...prev, name: e.target.value }))}
+                    />
+                  ) : (
+                    <h4 className="font-semibold text-gray-900 text-lg">{expense.name}</h4>
+                  )}
+                  {editingExpense === expense.id ? (
+                    <select
+                      value={editingExpenseForm.category}
+                      className="w-full px-3 py-1 mt-1 border border-gray-300/50 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/50 backdrop-blur-sm text-sm"
+                      onChange={(e) => setEditingExpenseForm(prev => ({ ...prev, category: e.target.value }))}
+                    >
+                      {categories.map((category) => (
+                        <option key={category} value={category}>{category}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <p className="text-sm text-gray-600 font-medium">{expense.category}</p>
+                  )}
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
-                <span className="text-2xl font-bold text-gray-900">
-                  ¥{expense.amount.toLocaleString()}
-                </span>
+                {editingExpense === expense.id ? (
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="number"
+                      value={editingExpenseForm.amount}
+                      className="w-32 px-3 py-1 border border-gray-300/50 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/50 backdrop-blur-sm text-2xl font-bold"
+                      onChange={(e) => setEditingExpenseForm(prev => ({ ...prev, amount: Number(e.target.value) }))}
+                    />
+                    <span className="text-2xl font-bold text-gray-900">円</span>
+                  </div>
+                ) : (
+                  <span className="text-2xl font-bold text-gray-900">
+                    ¥{expense.amount.toLocaleString()}
+                  </span>
+                )}
                 <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => setEditingExpense(expense.id)}
-                    className="p-3 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300"
-                  >
-                    <Edit2 className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => deleteFixedExpense(expense.id)}
-                    className="p-3 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-300"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
+                  {editingExpense === expense.id ? (
+                    <>
+                      <button
+                        onClick={updateFixedExpense}
+                        className="p-3 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-xl transition-all duration-300"
+                      >
+                        <Save className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingExpense(null)
+                        }}
+                        className="p-3 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-300"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => startEditExpense(expense)}
+                        className="p-3 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300"
+                      >
+                        <Edit2 className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => deleteFixedExpense(expense.id)}
+                        className="p-3 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-300"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -335,7 +463,7 @@ export function SettingsPage() {
         </div>
 
         {/* Add Savings Goal Form */}
-        <form onSubmit={handleGoalSubmit(addSavingsGoal)} className="mb-8">
+        <form onSubmit={handleGoalSubmit(editingGoal ? updateSavingsGoal : addSavingsGoal)} className="mb-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-3">目標タイトル</label>
@@ -363,10 +491,10 @@ export function SettingsPage() {
                 className="w-full px-4 py-3 border border-gray-300/50 rounded-xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-300 bg-white/50 backdrop-blur-sm"
               />
             </div>
-            <div className="flex items-end">
+            <div className="flex items-end space-x-2">
               <button
                 type="submit"
-                className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white px-4 py-3 rounded-xl hover:from-purple-600 hover:to-pink-700 transition-all duration-300 shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/40 transform hover:-translate-y-0.5 font-semibold"
+                className="flex-1 flex items-center justify-center space-x-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white px-4 py-3 rounded-xl hover:from-purple-600 hover:to-pink-700 transition-all duration-300 shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/40 transform hover:-translate-y-0.5 font-semibold"
               >
                 <Plus className="w-5 h-5" />
                 <span>追加</span>
@@ -389,37 +517,99 @@ export function SettingsPage() {
           {savingsGoals.map((goal) => (
             <div key={goal.id} className="p-8 bg-gradient-to-r from-purple-50/80 to-pink-50/80 backdrop-blur-sm rounded-2xl border border-purple-200/50 shadow-lg hover:shadow-xl transition-all duration-300">
               <div className="flex items-start justify-between mb-6">
-                <div>
-                  <h4 className="text-xl font-bold text-gray-900 mb-2">{goal.title}</h4>
-                  <p className="text-gray-600">{goal.description}</p>
+                <div className="flex-1">
+                  {editingGoal === goal.id ? (
+                    <div className="space-y-4">
+                      <input
+                        type="text"
+                        defaultValue={goal.title}
+                        className="w-full px-4 py-2 border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-300 bg-white/50 backdrop-blur-sm text-xl font-bold"
+                        onChange={(e) => setGoalValue('title', e.target.value)}
+                      />
+                      <textarea
+                        defaultValue={goal.description}
+                        rows={2}
+                        className="w-full px-4 py-2 border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-300 bg-white/50 backdrop-blur-sm"
+                        onChange={(e) => setGoalValue('description', e.target.value)}
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      <h4 className="text-xl font-bold text-gray-900 mb-2">{goal.title}</h4>
+                      <p className="text-gray-600">{goal.description}</p>
+                    </>
+                  )}
                 </div>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => setEditingGoal(goal.id)}
-                    className="p-3 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-all duration-300"
-                  >
-                    <Edit2 className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => deleteSavingsGoal(goal.id)}
-                    className="p-3 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-300"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
+                <div className="flex items-center space-x-2 ml-4">
+                  {editingGoal === goal.id ? (
+                    <>
+                      <button
+                        onClick={() => handleGoalSubmit(updateSavingsGoal)()}
+                        className="p-3 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-xl transition-all duration-300"
+                      >
+                        <Save className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingGoal(null)
+                          resetGoal()
+                        }}
+                        className="p-3 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-300"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => startEditGoal(goal)}
+                        className="p-3 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-all duration-300"
+                      >
+                        <Edit2 className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => deleteSavingsGoal(goal.id)}
+                        className="p-3 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-300"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="flex justify-between items-center p-4 bg-white/60 backdrop-blur-sm rounded-xl">
                   <span className="text-gray-600 font-medium">目標金額:</span>
-                  <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                    ¥{goal.target_amount.toLocaleString()}
-                  </span>
+                  {editingGoal === goal.id ? (
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="number"
+                        defaultValue={goal.target_amount}
+                        className="w-32 px-3 py-1 border border-gray-300/50 rounded-lg focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-300 bg-white/50 backdrop-blur-sm text-xl font-bold"
+                        onChange={(e) => setGoalValue('target_amount', Number(e.target.value))}
+                      />
+                      <span className="text-xl font-bold text-gray-900">円</span>
+                    </div>
+                  ) : (
+                    <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                      ¥{goal.target_amount.toLocaleString()}
+                    </span>
+                  )}
                 </div>
                 <div className="flex justify-between items-center p-4 bg-white/60 backdrop-blur-sm rounded-xl">
                   <span className="text-gray-600 font-medium">達成予定:</span>
-                  <span className="font-semibold text-gray-900">
-                    {new Date(goal.target_date).toLocaleDateString('ja-JP')}
-                  </span>
+                  {editingGoal === goal.id ? (
+                    <input
+                      type="date"
+                      defaultValue={goal.target_date}
+                      className="px-3 py-1 border border-gray-300/50 rounded-lg focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-300 bg-white/50 backdrop-blur-sm"
+                      onChange={(e) => setGoalValue('target_date', e.target.value)}
+                    />
+                  ) : (
+                    <span className="font-semibold text-gray-900">
+                      {new Date(goal.target_date).toLocaleDateString('ja-JP')}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
