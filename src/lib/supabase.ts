@@ -7,7 +7,38 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+    flowType: 'pkce'
+  }
+})
+
+// Handle invalid refresh token errors by clearing the session
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'TOKEN_REFRESHED' && !session) {
+    // Clear any stale session data
+    supabase.auth.signOut()
+  }
+})
+
+// Clear any existing invalid session on initialization
+const clearInvalidSession = async () => {
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession()
+    if (error && error.message.includes('refresh_token_not_found')) {
+      await supabase.auth.signOut()
+    }
+  } catch (error) {
+    // If there's any error getting the session, clear it
+    await supabase.auth.signOut()
+  }
+}
+
+// Initialize session cleanup
+clearInvalidSession()
 
 // Database types
 export interface UserSettings {
