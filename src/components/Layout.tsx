@@ -20,6 +20,18 @@ const navigation = [
 export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
   const { signOut } = useAuth()
 
+  const handleSignOut = async () => {
+    if (confirm('ログアウトしますか？')) {
+      try {
+        await signOut()
+      } catch (error) {
+        console.error('Logout error:', error)
+        // Force reload even if logout fails
+        window.location.reload()
+      }
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
@@ -73,7 +85,7 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
 
             {/* Desktop Logout */}
             <button
-              onClick={signOut}
+              onClick={handleSignOut}
               className="hidden md:flex items-center space-x-3 text-gray-500 hover:text-red-600 transition-all duration-300 px-4 py-3 rounded-2xl hover:bg-red-50/60 hover:shadow-lg hover:shadow-red-500/10 group"
             >
               <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
