@@ -18,14 +18,12 @@ export function ProfilePage({ onPageChange }: ProfilePageProps) {
   const daysSinceMember = Math.floor((new Date().getTime() - memberSince.getTime()) / (1000 * 60 * 60 * 24))
 
   const handleSignOut = async () => {
-    if (confirm('ログアウトしますか？')) {
-      try {
-        await signOut()
-      } catch (error) {
-        console.error('Logout error:', error)
-        // Force reload even if logout fails
-        window.location.reload()
-      }
+    try {
+      await signOut()
+    } catch (error) {
+      console.error('Logout error:', error)
+      // Force reload even if logout fails
+      window.location.reload()
     }
   }
 

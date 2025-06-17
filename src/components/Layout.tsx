@@ -21,14 +21,12 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
   const { signOut } = useAuth()
 
   const handleSignOut = async () => {
-    if (confirm('ログアウトしますか？')) {
-      try {
-        await signOut()
-      } catch (error) {
-        console.error('Logout error:', error)
-        // Force reload even if logout fails
-        window.location.reload()
-      }
+    try {
+      await signOut()
+    } catch (error) {
+      console.error('Logout error:', error)
+      // Force reload even if logout fails
+      window.location.reload()
     }
   }
 

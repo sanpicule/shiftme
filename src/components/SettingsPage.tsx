@@ -279,15 +279,15 @@ export function SettingsPage() {
         {/* Fixed Expenses List */}
         <div className="space-y-4">
           {fixedExpenses.map((expense) => (
-            <div key={expense.id} className="flex items-center justify-between p-6 bg-gradient-to-r from-white/80 to-blue-50/80 backdrop-blur-sm rounded-2xl border border-white/30 shadow-lg hover:shadow-xl transition-all duration-300">
-              <div className="flex items-center space-x-4">
+            <div key={expense.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-6 bg-gradient-to-r from-white/80 to-blue-50/80 backdrop-blur-sm rounded-2xl border border-white/30 shadow-lg hover:shadow-xl transition-all duration-300">
+              <div className="flex items-center space-x-4 mb-4 sm:mb-0">
                 <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full shadow-lg"></div>
                 <div>
                   <h4 className="font-semibold text-gray-900 text-lg">{expense.name}</h4>
                   <p className="text-sm text-gray-600 font-medium">{expense.category}</p>
                 </div>
               </div>
-              <div className="flex items-center space-x-6">
+              <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
                 <span className="text-2xl font-bold text-gray-900">
                   ¥{expense.amount.toLocaleString()}
                 </span>
