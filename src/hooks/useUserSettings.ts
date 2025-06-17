@@ -57,8 +57,12 @@ export function useUserSettings() {
       if (error) throw error
 
       setUserSettings(data)
-      // Refresh the user settings to ensure the UI updates
-      await fetchUserSettings()
+      
+      // Force a refetch to ensure the UI updates immediately
+      setTimeout(() => {
+        fetchUserSettings()
+      }, 100)
+      
       return { data, error: null }
     } catch (error) {
       console.error('Error updating user settings:', error)
