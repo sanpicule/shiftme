@@ -43,6 +43,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
       (event: AuthChangeEvent, session: Session | null) => {
+        console.log('Auth state changed:', event, session?.user?.email)
         setSession(session)
         setUser(session?.user ?? null)
         setLoading(false)
@@ -53,15 +54,63 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    return await supabase.auth.signInWithPassword({ email, password })
+    try {
+      const result = await supabase.auth.signInWithPassword({ email, password })
+      if (result.error) {
+        console.error('Sign in error:', result.error)
+      }
+      return result
+    } catch (error) {
+      console.error('Sign in exception:', error)
+      return { error }
+    }
   }
 
   const signUp = async (email: string, password: string) => {
-    return await supabase.auth.signUp({ email, password })
+    try {
+      const result = await supabase.auth.signUp({ email, password })
+      if (result.error) {
+        console.error('Sign up error:', result.error)
+      }
+      return result
+    } catch (error) {
+      console.error('Sign up exception:', error)
+      return { error }
+    }
   }
 
   const signOut = async () => {
-    await supabase.auth.signOut()
+    try {
+      console.log('Attempting to sign out...')
+      
+      // Clear local state immediately
+      setUser(null)
+      setSession(null)
+      
+      // Clear localStorage
+      localStorage.clear()
+      sessionStorage.clear()
+      
+      // Attempt to sign out from Supabase
+      const { error } = await supabase.auth.signOut({ scope: 'local' })
+      
+      if (error) {
+        console.warn('Supabase signOut error (but continuing with local logout):', error)
+      } else {
+        console.log('Successfully signed out from Supabase')
+      }
+      
+      // Force reload to ensure clean state
+      window.location.reload()
+    } catch (error) {
+      console.error('Sign out exception:', error)
+      // Even if there's an error, clear local state and reload
+      setUser(null)
+      setSession(null)
+      localStorage.clear()
+      sessionStorage.clear()
+      window.location.reload()
+    }
   }
 
   const value = {

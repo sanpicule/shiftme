@@ -17,6 +17,16 @@ export function ProfilePage({ onPageChange }: ProfilePageProps) {
   const memberSince = user?.created_at ? new Date(user.created_at) : new Date()
   const daysSinceMember = Math.floor((new Date().getTime() - memberSince.getTime()) / (1000 * 60 * 60 * 24))
 
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+    } catch (error) {
+      console.error('Logout error:', error)
+      // Force reload even if logout fails
+      window.location.reload()
+    }
+  }
+
   const achievements = [
     {
       id: 1,
@@ -346,7 +356,7 @@ export function ProfilePage({ onPageChange }: ProfilePageProps) {
           <span className="font-medium">設定</span>
         </button>
         <button
-          onClick={signOut}
+          onClick={handleSignOut}
           className="w-full flex items-center justify-center space-x-3 px-6 py-4 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl transition-all duration-300 group"
         >
           <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />

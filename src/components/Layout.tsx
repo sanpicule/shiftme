@@ -20,6 +20,16 @@ const navigation = [
 export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
   const { signOut } = useAuth()
 
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+    } catch (error) {
+      console.error('Logout error:', error)
+      // Force reload even if logout fails
+      window.location.reload()
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
@@ -73,7 +83,7 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
 
             {/* Desktop Logout */}
             <button
-              onClick={signOut}
+              onClick={handleSignOut}
               className="hidden md:flex items-center space-x-3 text-gray-500 hover:text-red-600 transition-all duration-300 px-4 py-3 rounded-2xl hover:bg-red-50/60 hover:shadow-lg hover:shadow-red-500/10 group"
             >
               <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
@@ -84,12 +94,12 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 pb-24 md:pb-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 pb-28 md:pb-8">
         {children}
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-white/20 shadow-lg shadow-black/5 z-40">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-white/20 shadow-lg shadow-black/5 z-40 pb-4">
         <div className="grid grid-cols-4 gap-1 p-2">
           {navigation.map((item) => {
             const Icon = item.icon
