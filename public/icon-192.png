@@ -1,3 +1,2 @@
-<!-- This is a placeholder for the 192x192 PNG icon -->
-<!-- The actual PNG file would be generated from the SVG above -->
-<!-- For now, we'll update the manifest to use the SVG -->
+<!-- PNG icon files cannot be created as text. This is a placeholder. -->
+<!-- In a real implementation, you would generate actual PNG files from the SVG logo -->

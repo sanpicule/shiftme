@@ -1,9 +1,12 @@
-const CACHE_NAME = 'shiftme-v1';
+const CACHE_NAME = 'shiftme-v2';
 const urlsToCache = [
   '/',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
-  '/manifest.json'
+  '/manifest.json',
+  '/icon.svg',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/apple-touch-icon.png',
+  '/favicon.ico'
 ];
 
 // インストール時のキャッシュ
@@ -11,23 +14,45 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
+        console.log('Opened cache');
         return cache.addAll(urlsToCache);
       })
+      .catch((error) => {
+        console.error('Cache addAll failed:', error);
+      })
   );
+  // 新しいサービスワーカーを即座にアクティブ化
+  self.skipWaiting();
 });
 
-// フェッチ時のキャッシュ戦略
+// フェッチ時のキャッシュ戦略（Network First with Cache Fallback）
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request)
+    fetch(event.request)
       .then((response) => {
-        // キャッシュにあればそれを返す、なければネットワークから取得
-        if (response) {
-          return response;
+        // レスポンスが有効な場合、キャッシュに保存
+        if (response && response.status === 200 && response.type === 'basic') {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME)
+            .then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
         }
-        return fetch(event.request);
-      }
-    )
+        return response;
+      })
+      .catch(() => {
+        // ネットワークが失敗した場合、キャッシュから取得
+        return caches.match(event.request)
+          .then((response) => {
+            if (response) {
+              return response;
+            }
+            // キャッシュにもない場合、オフラインページを返す
+            if (event.request.destination === 'document') {
+              return caches.match('/');
+            }
+          });
+      })
   );
 });
 
@@ -38,10 +63,56 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
+            console.log('Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
     })
   );
+  // 新しいサービスワーカーがすべてのクライアントを制御
+  self.clients.claim();
+});
+
+// プッシュ通知のサポート（将来の拡張用）
+self.addEventListener('push', (event) => {
+  if (event.data) {
+    const data = event.data.json();
+    const options = {
+      body: data.body,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      vibrate: [100, 50, 100],
+      data: {
+        dateOfArrival: Date.now(),
+        primaryKey: data.primaryKey
+      },
+      actions: [
+        {
+          action: 'explore',
+          title: '開く',
+          icon: '/icon-192.png'
+        },
+        {
+          action: 'close',
+          title: '閉じる'
+        }
+      ]
+    };
+    
+    event.waitUntil(
+      self.registration.showNotification(data.title, options)
+    );
+  }
+});
+
+// 通知クリック時の処理
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  
+  if (event.action === 'explore') {
+    event.waitUntil(
+      clients.openWindow('/')
+    );
+  }
 });

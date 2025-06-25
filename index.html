@@ -2,33 +2,64 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    
+    <!-- Viewport and PWA Meta Tags -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#3B82F6" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Shiftme" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="application-name" content="Shiftme" />
     
     <!-- iOS用アイコン -->
-    <link rel="apple-touch-icon" href="/icon.svg" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/icon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     
     <!-- Android用アイコン -->
-    <link rel="icon" type="image/svg+xml" sizes="192x192" href="/icon.svg" />
-    <link rel="icon" type="image/svg+xml" sizes="512x512" href="/icon.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
     
-    <!-- SEO Meta Tags -->
-    <meta name="description" content="あなたの目標達成をサポートする貯金管理アプリ" />
-    <meta name="keywords" content="貯金,家計管理,目標達成,お金,アプリ" />
+    <!-- Microsoft Tiles -->
+    <meta name="msapplication-TileColor" content="#3B82F6" />
+    <meta name="msapplication-TileImage" content="/icon-192.png" />
+    <meta name="msapplication-config" content="/browserconfig.xml" />
     
-    <!-- Open Graph -->
-    <meta property="og:title" content="Shiftme - 夢実現貯金アプリ" />
-    <meta property="og:description" content="あなたの目標達成をサポートする貯金管理アプリ" />
-    <meta property="og:image" content="/icon.svg" />
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="あなたの目標達成をサポートする貯金管理アプリ。支出管理、貯金目標設定、家計分析機能を搭載したスマートな家計管理ツール。" />
+    <meta name="keywords" content="貯金,家計管理,目標達成,お金,アプリ,支出管理,予算管理,財務管理" />
+    <meta name="author" content="Shiftme" />
+    <meta name="robots" content="index, follow" />
+    
+    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://lively-marzipan-614a01.netlify.app/" />
+    <meta property="og:title" content="Shiftme - 夢実現貯金アプリ" />
+    <meta property="og:description" content="あなたの目標達成をサポートする貯金管理アプリ。支出管理、貯金目標設定、家計分析機能を搭載。" />
+    <meta property="og:image" content="/icon-512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:locale" content="ja_JP" />
+    <meta property="og:site_name" content="Shiftme" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://lively-marzipan-614a01.netlify.app/" />
+    <meta name="twitter:title" content="Shiftme - 夢実現貯金アプリ" />
+    <meta name="twitter:description" content="あなたの目標達成をサポートする貯金管理アプリ" />
+    <meta name="twitter:image" content="/icon-512.png" />
+    
+    <!-- Additional PWA Meta Tags -->
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="apple-touch-fullscreen" content="yes" />
+    <meta name="apple-mobile-web-app-orientations" content="portrait" />
     
     <title>Shiftme - 夢実現貯金アプリ</title>
   </head>
@@ -47,6 +78,25 @@
               console.log('SW registration failed: ', registrationError);
             });
         });
+      }
+
+      // PWAインストールプロンプトの改善
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        console.log('PWA install prompt ready');
+      });
+
+      // PWAインストール状態の検出
+      window.addEventListener('appinstalled', () => {
+        console.log('PWA was installed');
+        deferredPrompt = null;
+      });
+
+      // スタンドアロンモードの検出
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        console.log('Running in standalone mode');
       }
     </script>
   </body>
