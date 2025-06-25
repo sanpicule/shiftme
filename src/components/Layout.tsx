@@ -47,7 +47,6 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
                 <h1 className="text-xl md:text-2xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                   Shiftme
                 </h1>
-                <p className="text-xs text-gray-500 font-medium hidden md:block">Smart Money Manager</p>
               </div>
             </div>
 
