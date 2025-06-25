@@ -42,9 +42,6 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
                 <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-xl md:rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/25 group-hover:shadow-2xl group-hover:shadow-blue-500/40 transition-all duration-300 group-hover:scale-105">
                   <PiggyBank className="w-5 h-5 md:w-7 md:h-7 text-white" />
                 </div>
-                <div className="absolute -top-0.5 -right-0.5 md:-top-1 md:-right-1 w-3 h-3 md:w-4 md:h-4 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center animate-pulse">
-                  <Sparkles className="w-1.5 h-1.5 md:w-2.5 md:h-2.5 text-white" />
-                </div>
               </div>
               <div>
                 <h1 className="text-xl md:text-2xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
