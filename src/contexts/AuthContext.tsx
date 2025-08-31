@@ -83,15 +83,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       console.log('Attempting to sign out...')
       
-      // Clear local state immediately
-      setUser(null)
-      setSession(null)
-      
-      // Clear localStorage
-      localStorage.clear()
-      sessionStorage.clear()
-      
-      // Attempt to sign out from Supabase
+      // Attempt to sign out from Supabase first
       const { error } = await supabase.auth.signOut({ scope: 'local' })
       
       if (error) {
@@ -100,16 +92,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
         console.log('Successfully signed out from Supabase')
       }
       
-      // Force reload to ensure clean state
-      window.location.reload()
+      // Clear local state
+      setUser(null)
+      setSession(null)
+      
+      // Clear localStorage and sessionStorage
+      localStorage.clear()
+      sessionStorage.clear()
+      
+      console.log('Logout completed successfully')
+      
+      // No need to reload - React state will handle the transition
     } catch (error) {
       console.error('Sign out exception:', error)
-      // Even if there's an error, clear local state and reload
+      // Even if there's an error, clear local state
       setUser(null)
       setSession(null)
       localStorage.clear()
       sessionStorage.clear()
-      window.location.reload()
     }
   }
 

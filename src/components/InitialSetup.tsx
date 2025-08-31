@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Plus, Trash2, Target, CheckCircle, Sparkles } from 'lucide-react'
 import { useUserSettings } from '../hooks/useUserSettings'
@@ -29,7 +29,7 @@ export function InitialSetup() {
   const [loading, setLoading] = useState(false)
   const [monthlyIncome, setMonthlyIncome] = useState(0)
   const [fixedExpenses, setFixedExpenses] = useState<FixedExpenseForm[]>([])
-  const [savingsGoal, setSavingsGoal] = useState<SavingsGoalForm>({
+  const [savingsGoal] = useState<SavingsGoalForm>({
     title: '',
     description: '',
     target_amount: 0,

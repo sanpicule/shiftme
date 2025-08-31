@@ -16,6 +16,13 @@ export function useUserSettings() {
     }
   }, [user])
 
+  // Reset loading state when user changes
+  useEffect(() => {
+    if (!user) {
+      setLoading(false)
+    }
+  }, [user])
+
   const fetchUserSettings = async () => {
     if (!user) return
 

@@ -1,6 +1,7 @@
-import React from 'react'
-import { LogOut, PiggyBank, Home, Settings, User, TrendingUp, Sparkles } from 'lucide-react'
+import React, { useState } from 'react'
+import { LogOut, PiggyBank, Home, Settings, User, TrendingUp } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { LogoutConfirmModal } from './LogoutConfirmModal'
 
 type Page = 'dashboard' | 'analytics' | 'settings' | 'profile'
 
@@ -10,7 +11,7 @@ interface LayoutProps {
   onPageChange: (page: Page) => void
 }
 
-const navigation = [
+const navigation: Array<{ id: Page; name: string; icon: React.ComponentType<{ className?: string }> }> = [
   { id: 'dashboard', name: 'ダッシュボード', icon: Home },
   { id: 'analytics', name: '分析', icon: TrendingUp },
   { id: 'settings', name: '設定', icon: Settings },
@@ -19,6 +20,7 @@ const navigation = [
 
 export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
   const { signOut } = useAuth()
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
 
   const handleSignOut = async () => {
     try {
@@ -29,6 +31,9 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
       window.location.reload()
     }
   }
+
+  const openLogoutModal = () => setShowLogoutModal(true)
+  const closeLogoutModal = () => setShowLogoutModal(false)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -79,7 +84,7 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
 
             {/* Desktop Logout */}
             <button
-              onClick={handleSignOut}
+              onClick={openLogoutModal}
               className="hidden md:flex items-center space-x-3 text-gray-500 hover:text-red-600 transition-all duration-300 px-4 py-3 rounded-2xl hover:bg-red-50/60 hover:shadow-lg hover:shadow-red-500/10 group"
             >
               <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
@@ -113,12 +118,18 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
                 `}
               >
                 <Icon className={`w-6 h-6 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
-                <span className="text-xs font-medium mt-1">{item.name}</span>
               </button>
             )
           })}
         </div>
       </div>
+
+      {/* Logout Confirm Modal */}
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onClose={closeLogoutModal}
+        onConfirm={handleSignOut}
+      />
     </div>
   )
 }

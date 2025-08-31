@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { Plus, Trash2, Edit2, Save, X, DollarSign, Target, Home, Sparkles } from 'lucide-react'
+import { Plus, Trash2, Edit2, Save, X } from 'lucide-react'
 import { useUserSettings } from '../hooks/useUserSettings'
 import { useToast } from './ToastContainer'
 import { supabase, FixedExpense, SavingsGoal } from '../lib/supabase'
@@ -34,7 +34,7 @@ export function SettingsPage() {
   const [loading, setLoading] = useState(false)
 
   const { register: registerIncome, handleSubmit: handleIncomeSubmit, setValue: setIncomeValue } = useForm<IncomeForm>()
-  const { register: registerExpense, handleSubmit: handleExpenseSubmit, reset: resetExpense, setValue: setExpenseValue } = useForm<FixedExpenseForm>()
+  const { register: registerExpense, handleSubmit: handleExpenseSubmit, reset: resetExpense } = useForm<FixedExpenseForm>()
   const { register: registerGoal, handleSubmit: handleGoalSubmit, reset: resetGoal, setValue: setGoalValue } = useForm<SavingsGoalForm>()
 
   // 編集用のフォーム状態
@@ -242,29 +242,16 @@ export function SettingsPage() {
   return (
     <div className="space-y-8">
       {/* Page Header */}
-      <div className="text-center">
-        <div className="flex items-center justify-center space-x-3 mb-4">
-          <div className="relative">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-3xl flex items-center justify-center shadow-xl shadow-blue-500/25">
-              <DollarSign className="w-8 h-8 text-white" />
-            </div>
-            <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-              <Sparkles className="w-3 h-3 text-white" />
-            </div>
-          </div>
-        </div>
-        <h1 className="text-4xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-3">
+      <div>
+        <h1 className="text-3xl font-black mb-3">
           設定
         </h1>
-        <p className="text-lg text-gray-600">収入、固定支出、貯金目標を管理しましょう</p>
+        <p className="text-md text-gray-600">収入、固定支出、貯金目標を設定しましょう</p>
       </div>
 
       {/* Monthly Income Section */}
-      <div className="bg-white/60 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 hover:shadow-3xl transition-all duration-500">
+      <div className="bg-white/60 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-4 hover:shadow-3xl transition-all duration-500">
         <div className="flex items-center space-x-4 mb-8">
-          <div className="p-4 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl shadow-lg shadow-green-500/25">
-            <DollarSign className="w-8 h-8 text-white" />
-          </div>
           <div>
             <h2 className="text-2xl font-bold text-gray-900">月収設定</h2>
             <p className="text-gray-600">毎月の収入を設定してください</p>
@@ -295,11 +282,8 @@ export function SettingsPage() {
       </div>
 
       {/* Fixed Expenses Section */}
-      <div className="bg-white/60 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 hover:shadow-3xl transition-all duration-500">
+      <div className="bg-white/60 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-4 hover:shadow-3xl transition-all duration-500">
         <div className="flex items-center space-x-4 mb-8">
-          <div className="p-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg shadow-blue-500/25">
-            <Home className="w-8 h-8 text-white" />
-          </div>
           <div>
             <h2 className="text-2xl font-bold text-gray-900">固定支出管理</h2>
             <p className="text-gray-600">毎月の固定支出を管理してください</p>
@@ -451,11 +435,8 @@ export function SettingsPage() {
       </div>
 
       {/* Savings Goals Section */}
-      <div className="bg-white/60 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 hover:shadow-3xl transition-all duration-500">
+      <div className="bg-white/60 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-4 hover:shadow-3xl transition-all duration-500">
         <div className="flex items-center space-x-4 mb-8">
-          <div className="p-4 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl shadow-lg shadow-purple-500/25">
-            <Target className="w-8 h-8 text-white" />
-          </div>
           <div>
             <h2 className="text-2xl font-bold text-gray-900">貯金目標管理</h2>
             <p className="text-gray-600">貯金の目標を設定して管理しましょう</p>
@@ -515,7 +496,7 @@ export function SettingsPage() {
         {/* Savings Goals List */}
         <div className="space-y-6">
           {savingsGoals.map((goal) => (
-            <div key={goal.id} className="p-8 bg-gradient-to-r from-purple-50/80 to-pink-50/80 backdrop-blur-sm rounded-2xl border border-purple-200/50 shadow-lg hover:shadow-xl transition-all duration-300">
+            <div key={goal.id} className="p-4 bg-gradient-to-r from-purple-50/80 to-pink-50/80 backdrop-blur-sm rounded-2xl border border-purple-200/50 shadow-lg hover:shadow-xl transition-all duration-300">
               <div className="flex items-start justify-between mb-6">
                 <div className="flex-1">
                   {editingGoal === goal.id ? (

@@ -11,7 +11,8 @@ function AppContent() {
   const { user, loading: authLoading } = useAuth()
   const { userSettings, loading: settingsLoading } = useUserSettings()
 
-  if (authLoading || settingsLoading) {
+  // Show loading until all necessary data is loaded
+  if (authLoading || (user && settingsLoading) || (user && !userSettings)) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
@@ -37,7 +38,14 @@ function AppContent() {
     )
   }
 
-  if (!userSettings?.setup_completed) {
+  // Show InitialSetup only when we're sure the user hasn't completed setup
+  // and we're not in a loading state
+  if (userSettings === null && !settingsLoading) {
+    return <InitialSetup />
+  }
+  
+  // If userSettings exists but setup is not completed, show InitialSetup
+  if (userSettings && !userSettings.setup_completed) {
     return <InitialSetup />
   }
 

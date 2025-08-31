@@ -27,33 +27,47 @@ self.addEventListener('install', (event) => {
 
 // フェッチ時のキャッシュ戦略（Network First with Cache Fallback）
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // レスポンスが有効な場合、キャッシュに保存
-        if (response && response.status === 200 && response.type === 'basic') {
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME)
-            .then((cache) => {
-              cache.put(event.request, responseToCache);
+  // Chrome拡張機能やその他の特殊なスキームのリクエストはキャッシュしない
+  if (event.request.scheme !== 'https' && event.request.scheme !== 'http') {
+    return;
+  }
+
+  // 同じオリジンのリクエストのみをキャッシュ対象とする
+  if (event.request.url.startsWith(self.location.origin)) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          // レスポンスが有効な場合、キャッシュに保存
+          if (response && response.status === 200 && response.type === 'basic') {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME)
+              .then((cache) => {
+                cache.put(event.request, responseToCache);
+              })
+              .catch((error) => {
+                console.warn('Failed to cache response:', error);
+              });
+          }
+          return response;
+        })
+        .catch(() => {
+          // ネットワークが失敗した場合、キャッシュから取得
+          return caches.match(event.request)
+            .then((response) => {
+              if (response) {
+                return response;
+              }
+              // キャッシュにもない場合、オフラインページを返す
+              if (event.request.destination === 'document') {
+                return caches.match('/');
+              }
             });
-        }
-        return response;
-      })
-      .catch(() => {
-        // ネットワークが失敗した場合、キャッシュから取得
-        return caches.match(event.request)
-          .then((response) => {
-            if (response) {
-              return response;
-            }
-            // キャッシュにもない場合、オフラインページを返す
-            if (event.request.destination === 'document') {
-              return caches.match('/');
-            }
-          });
-      })
-  );
+        })
+    );
+  } else {
+    // 外部リクエストは通常のfetchのみ
+    event.respondWith(fetch(event.request));
+  }
 });
 
 // アップデート時の古いキャッシュ削除

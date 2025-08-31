@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { User, Mail, Calendar, Settings, Award, TrendingUp, Target, PiggyBank, LogOut } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useUserSettings } from '../hooks/useUserSettings'
 import { format } from 'date-fns'
 import { ja } from 'date-fns/locale'
+import { LogoutConfirmModal } from './LogoutConfirmModal'
 
 interface ProfilePageProps {
   onPageChange: (page: string) => void
@@ -13,6 +14,7 @@ export function ProfilePage({ onPageChange }: ProfilePageProps) {
   const { user, signOut } = useAuth()
   const { userSettings } = useUserSettings()
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'statistics'>('overview')
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
 
   const memberSince = user?.created_at ? new Date(user.created_at) : new Date()
   const daysSinceMember = Math.floor((new Date().getTime() - memberSince.getTime()) / (1000 * 60 * 60 * 24))
@@ -68,9 +70,8 @@ export function ProfilePage({ onPageChange }: ProfilePageProps) {
   return (
     <div className="space-y-8 pb-32">
       {/* Page Header */}
-      <div className="text-center">
+      <div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">プロフィール</h1>
-        <p className="text-gray-600">あなたの貯金ジャーニーを振り返りましょう</p>
       </div>
 
       {/* Profile Card */}
@@ -126,15 +127,15 @@ export function ProfilePage({ onPageChange }: ProfilePageProps) {
         <div className="border-b border-gray-200/50">
           <nav className="flex space-x-8 px-8">
             {[
-              { id: 'overview', name: '概要', icon: User },
-              { id: 'achievements', name: '実績', icon: Award },
-              { id: 'statistics', name: '統計', icon: TrendingUp },
+              { id: 'overview' as const, name: '概要', icon: User },
+              { id: 'achievements' as const, name: '実績', icon: Award },
+              { id: 'statistics' as const, name: '統計', icon: TrendingUp },
             ].map((tab) => {
               const Icon = tab.icon
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => setActiveTab(tab.id)}
                   className={`
                     flex items-center space-x-2 py-4 px-2 border-b-2 font-medium text-sm transition-colors
                     ${activeTab === tab.id
@@ -249,11 +250,18 @@ export function ProfilePage({ onPageChange }: ProfilePageProps) {
                               {format(new Date(achievement.date), 'yyyy年MM月dd日', { locale: ja })}達成
                             </p>
                           )}
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
+                                </div>
+      </div>
+
+      {/* Logout Confirm Modal */}
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleSignOut}
+      />
+    </div>
+  )
+})}
               </div>
             </div>
           )}
@@ -356,13 +364,20 @@ export function ProfilePage({ onPageChange }: ProfilePageProps) {
           <span className="font-medium">設定</span>
         </button>
         <button
-          onClick={handleSignOut}
+          onClick={() => setShowLogoutModal(true)}
           className="w-full flex items-center justify-center space-x-3 px-6 py-4 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl transition-all duration-300 group"
         >
           <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
           <span className="font-medium">ログアウト</span>
         </button>
       </div>
+
+      {/* Logout Confirm Modal */}
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleSignOut}
+      />
     </div>
   )
 }
