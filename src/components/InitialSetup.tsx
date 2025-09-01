@@ -41,7 +41,12 @@ export function InitialSetup() {
   const { register: registerGoal, handleSubmit: handleGoalSubmit } = useForm<SavingsGoalForm>()
 
   const addFixedExpense = (data: FixedExpenseForm) => {
-    setFixedExpenses([...fixedExpenses, data])
+    // Convert amount to number to ensure proper calculation
+    const expenseWithNumberAmount = {
+      ...data,
+      amount: Number(data.amount)
+    }
+    setFixedExpenses([...fixedExpenses, expenseWithNumberAmount])
     resetExpense()
   }
 
@@ -50,7 +55,7 @@ export function InitialSetup() {
   }
 
   const handleIncomeNext = (data: SetupForm) => {
-    setMonthlyIncome(data.monthly_income)
+    setMonthlyIncome(Number(data.monthly_income))
     setStep(2)
   }
 
@@ -67,6 +72,7 @@ export function InitialSetup() {
       if (fixedExpenses.length > 0) {
         const expensesWithUserId = fixedExpenses.map(expense => ({
           ...expense,
+          amount: Number(expense.amount),
           user_id: user.id,
         }))
         
@@ -82,6 +88,7 @@ export function InitialSetup() {
         .from('savings_goals')
         .insert({
           ...goalData,
+          target_amount: Number(goalData.target_amount),
           user_id: user.id,
         })
       
@@ -109,9 +116,9 @@ export function InitialSetup() {
     }
   }
 
-  const totalFixedExpenses = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
+  const totalFixedExpenses = fixedExpenses.reduce((sum, expense) => sum + Number(expense.amount), 0)
   const monthlyNeededForGoal = savingsGoal.target_amount && savingsGoal.target_date
-    ? Math.ceil(savingsGoal.target_amount / Math.max(1, Math.ceil((new Date(savingsGoal.target_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30))))
+    ? Math.ceil(Number(savingsGoal.target_amount) / Math.max(1, Math.ceil((new Date(savingsGoal.target_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30))))
     : 0
   const availableAmount = monthlyIncome - totalFixedExpenses - monthlyNeededForGoal
 
@@ -242,10 +249,6 @@ export function InitialSetup() {
                     <div className="flex justify-between">
                       <span className="text-gray-600">固定支出合計:</span>
                       <span className="font-semibold">¥{totalFixedExpenses.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between font-bold text-lg border-t pt-3 mt-3">
-                      <span className="text-gray-700">残り:</span>
-                      <span className="text-blue-600">¥{(monthlyIncome - totalFixedExpenses).toLocaleString()}</span>
                     </div>
                   </div>
                 </div>

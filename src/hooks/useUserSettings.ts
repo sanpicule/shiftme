@@ -37,9 +37,30 @@ export function useUserSettings() {
       }
 
       // Check if data array has any items, use first item or null
-      setUserSettings(data && data.length > 0 ? data[0] : null)
+      if (data && data.length > 0) {
+        setUserSettings(data[0])
+      } else {
+        // Create default settings for new users
+        const { data: newSettings, error: createError } = await supabase
+          .from('user_settings')
+          .insert({
+            user_id: user.id,
+            monthly_income: 0,
+            setup_completed: false
+          })
+          .select()
+          .single()
+
+        if (createError) {
+          console.error('Error creating default user settings:', createError)
+          setUserSettings(null)
+        } else {
+          setUserSettings(newSettings)
+        }
+      }
     } catch (error) {
       console.error('Error fetching user settings:', error)
+      setUserSettings(null)
     } finally {
       setLoading(false)
     }
