@@ -84,12 +84,8 @@ export function useUserSettings() {
 
       if (error) throw error
 
+      // Immediately update the local state with the new data
       setUserSettings(data)
-      
-      // Force a refetch to ensure the UI updates immediately
-      setTimeout(() => {
-        fetchUserSettings()
-      }, 100)
       
       return { data, error: null }
     } catch (error) {

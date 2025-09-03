@@ -242,7 +242,7 @@ export function Dashboard() {
   return (
     <div className="space-y-6 md:space-y-8">
       {/* Main Budget Display - Hero Section with Pink Gradient */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-pink-400 via-purple-500 to-purple-600 rounded-xl shadow-2xl p-4 md:p-12 text-white">
+      <div className="relative overflow-hidden text-white">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-32 h-32 bg-white rounded-full -translate-x-16 -translate-y-16"></div>
@@ -265,74 +265,84 @@ export function Dashboard() {
           </button>
         </div>
 
-        <div className="relative z-10">
-          <div className="text-left">
-            <p className="text-xs md:text-lg font-medium text-white/90 mb-2">{format(currentDate, 'MM月', { locale: ja })}の残り使用可能額</p>
-            
-            <div className="mb-2">
-              <div className="text-3xl md:text-6xl lg:text-7xl font-black">
-                ¥{Math.abs(remainingBudget).toLocaleString()}
+        {/* Budget Overview Card */}
+        <div className="bg-gradient-to-r from-gray-800 via-blue-800 to-blue-900 rounded-2xl shadow-xl p-6 mb-6">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between">
+            {/* Left Side - Remaining Budget */}
+            <div className="flex-1 lg:mb-0 w-full">
+              <h3 className="text-white/80 text-sm mb-2">今月の残り使えるお金</h3>
+              <div className="text-4xl font-bold text-white">
+                ¥{remainingBudget.toLocaleString()}
               </div>
-              {remainingBudget < 0 && (
-                <div className="inline-flex items-center bg-red-500/20 backdrop-blur-sm px-3 py-1 rounded-full mt-2">
-                  <AlertTriangle className="w-4 h-4 mr-2" />
-                  <span className="text-sm font-medium">予算超過</span>
+              
+              {/* Quick Stats - 2 columns - Hidden on mobile when collapsed */}
+              <div className={`md:block overflow-hidden transition-all duration-500 ease-in-out ${
+                isDetailsExpanded ? 'mt-4 max-h-96 opacity-100' : 'max-h-0 opacity-0 md:max-h-none md:opacity-100'
+              }`}>
+                <div className="grid grid-cols-2 gap-3 mt-2">
+                  {(() => {
+                    const remainingDays = Math.ceil((new Date(endOfMonth(currentDate)).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+                    const dailyBudget = Math.floor(remainingBudget / Math.max(1, remainingDays))
+                    const weeklyBudget = Math.floor(remainingBudget / Math.max(1, Math.ceil(remainingDays / 7)))
+                    
+                    return (
+                      <>
+                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center">
+                          <div className="text-xs text-white/70 mb-1">1日あたり</div>
+                          <div className="text-base font-bold text-white">¥{dailyBudget.toLocaleString()}</div>
+                        </div>
+                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center">
+                          <div className="text-xs text-white/70 mb-1">1週間あたり</div>
+                          <div className="text-base font-bold text-white">¥{weeklyBudget.toLocaleString()}</div>
+                        </div>
+                      </>
+                    )
+                  })()}
                 </div>
-              )}
+              </div>
             </div>
 
-            {/* Details Section - Collapsible on Mobile with Smooth Animation */}
-            <div 
-              className={`md:block overflow-hidden transition-all duration-500 ease-in-out ${
-                isDetailsExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 md:max-h-none md:opacity-100'
-              }`}
-            >
-              <div className="text-sm text-white/80 mb-3">
-                使用済み: ¥{totalMonthlyExpenses.toLocaleString()} / 予算: ¥{budgetAfterFixed.toLocaleString()}
-              </div>
-
-              {/* Quick Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center">
-                  <div className="text-xs text-white/70 mb-1">月収</div>
-                  <div className="text-base font-bold">¥{monthlyIncome.toLocaleString()}</div>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center">
-                  <div className="text-xs text-white/70 mb-1">固定支出</div>
-                  <div className="text-base font-bold">¥{totalFixedExpenses.toLocaleString()}</div>
-                </div>
-              </div>
-
-              {/* Savings Goal Progress - Inside Accordion */}
-              {savingsGoal && (
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center space-x-2">
-                      <div>
-                        <h3 className="text-sm font-bold text-white">{savingsGoal.title}</h3>
-                      </div>
+            {/* Right Side - Savings Goal - Hidden on mobile when collapsed */}
+            {savingsGoal && (
+              <div className={`lg:ml-8 overflow-hidden transition-all duration-500 ease-in-out ${
+                isDetailsExpanded ? 'mt-4 max-h-96 opacity-100' : 'max-h-0 opacity-0 md:max-h-none md:opacity-100'
+              }`}>
+                <div className="space-y-3">
+                  <div className="flex items-center">
+                    <div className="bg-white/20 rounded-lg px-3 py-2 text-white text-sm font-medium w-24">
+                      いつまでに
                     </div>
-                    <div className="text-right">
-                      <p className="text-xs text-white/70">目標</p>
-                      <p className="text-sm font-bold text-white">
-                        ¥{savingsGoal.target_amount.toLocaleString()}
-                      </p>
+                    <div className="text-white font-semibold ml-3">
+                      {format(new Date(savingsGoal.target_date), 'yyyy年M月', { locale: ja })}
                     </div>
                   </div>
                   
-                  <div className="flex justify-between text-xs text-white/70">
-                    <span>達成予定: {format(new Date(savingsGoal.target_date), 'yyyy年MM月dd日', { locale: ja })}</span>
-                    <span>月間必要額: ¥{monthlyNeededForGoal.toLocaleString()}</span>
+                  <div className="flex items-center">
+                    <div className="bg-white/20 rounded-lg px-3 py-2 text-white text-sm font-medium w-24">
+                      いくら
+                    </div>
+                    <div className="text-white font-semibold ml-3">
+                      ¥{savingsGoal.target_amount.toLocaleString()}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center">
+                    <div className="bg-white/20 rounded-lg px-3 py-2 text-white text-sm font-medium w-24">
+                      目標
+                    </div>
+                    <div className="text-white font-semibold ml-3">
+                      {savingsGoal.title}
+                    </div>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Calendar Section */}
-      <div className="bg-white/70 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-lg border border-white/20 p-4 md:p-6">
+      <div className="bg-white/70 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] border border-white/20 p-4 md:p-6">
         <div className="flex items-center space-x-2 md:space-x-3 mb-4 md:mb-6">
           <div>
             <h2 className="text-lg md:text-xl font-bold text-gray-900">支出カレンダー</h2>
@@ -344,7 +354,7 @@ export function Dashboard() {
       </div>
 
       {/* Budget Tips */}
-      <div className="bg-gradient-to-r from-blue-50/80 to-purple-50/80 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-lg border border-white/20 p-4 md:p-6">
+      <div className="bg-gradient-to-r from-blue-50/80 to-purple-50/80 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] border border-white/20 p-4 md:p-6">
         <h3 className="text-base md:text-lg font-bold text-gray-900 mb-3 md:mb-4">💡 今月のアドバイス</h3>
         <div className="space-y-3">
           {remainingBudget < 0 && (

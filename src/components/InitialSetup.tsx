@@ -102,11 +102,13 @@ export function InitialSetup() {
       
       if (settingsError) throw settingsError
 
-      // Show success message and wait a moment for the state to update
+      // Show success message briefly, then force a page reload to trigger App.tsx re-evaluation
       setStep(4) // Show success step
       
-      // The App component will automatically redirect to Dashboard
-      // when setup_completed becomes true and userSettings is refetched
+      // Wait 2 seconds to show success message, then reload the page
+      setTimeout(() => {
+        window.location.reload()
+      }, 2000)
       
     } catch (error) {
       console.error('Error saving setup:', error)

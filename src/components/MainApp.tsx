@@ -4,25 +4,16 @@ import { Dashboard } from './Dashboard'
 import { SettingsPage } from './SettingsPage'
 import { ProfilePage } from './ProfilePage'
 import { AnalyticsPage } from './AnalyticsPage'
-import { PageTransition } from './PageTransition'
 import { Layout } from './Layout'
 
 type Page = 'dashboard' | 'analytics' | 'settings' | 'profile'
 
 export function MainApp() {
   const [currentPage, setCurrentPage] = useState<Page>('dashboard')
-  const [isLoading, setIsLoading] = useState(false)
 
-  const handlePageChange = async (page: Page) => {
+  const handlePageChange = (page: Page) => {
     if (page === currentPage) return
-    
-    setIsLoading(true)
-    
-    // Simulate page loading time for smooth transition
-    await new Promise(resolve => setTimeout(resolve, 300))
-    
     setCurrentPage(page)
-    setIsLoading(false)
   }
 
   const renderPage = () => {
@@ -42,9 +33,9 @@ export function MainApp() {
 
   return (
     <Layout currentPage={currentPage} onPageChange={handlePageChange}>
-      <PageTransition isLoading={isLoading}>
+      <div className="animate-fadeIn">
         {renderPage()}
-      </PageTransition>
+      </div>
     </Layout>
   )
 }

@@ -1,40 +1,52 @@
-import { useState } from 'react'
-import { User, Mail, Calendar, Settings, Award, TrendingUp, Target, PiggyBank, LogOut } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { User, Mail, Calendar, Award, TrendingUp, Target, PiggyBank } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useUserSettings } from '../hooks/useUserSettings'
 import { format } from 'date-fns'
 import { ja } from 'date-fns/locale'
-import { LogoutConfirmModal } from './LogoutConfirmModal'
+import { supabase, FixedExpense } from '../lib/supabase'
 
-interface ProfilePageProps {
-  onPageChange: (page: string) => void
-}
-
-export function ProfilePage({ onPageChange }: ProfilePageProps) {
-  const { user, signOut } = useAuth()
+export function ProfilePage() {
+  const { user } = useAuth()
   const { userSettings } = useUserSettings()
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'statistics'>('overview')
-  const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const [fixedExpenses, setFixedExpenses] = useState<FixedExpense[]>([])
 
   const memberSince = user?.created_at ? new Date(user.created_at) : new Date()
   const daysSinceMember = Math.floor((new Date().getTime() - memberSince.getTime()) / (1000 * 60 * 60 * 24))
 
-  const handleSignOut = async () => {
+  useEffect(() => {
+    if (user) {
+      fetchFixedExpenses()
+    }
+  }, [user])
+
+  const fetchFixedExpenses = async () => {
+    if (!user) return
+
     try {
-      await signOut()
+      const { data, error } = await supabase
+        .from('fixed_expenses')
+        .select('*')
+        .eq('user_id', user.id)
+
+      if (error) throw error
+      setFixedExpenses(data || [])
     } catch (error) {
-      console.error('Logout error:', error)
-      // Force reload even if logout fails
-      window.location.reload()
+      console.error('Error fetching fixed expenses:', error)
+      setFixedExpenses([])
     }
   }
+
+  const totalFixedExpenses = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
+  const monthlyAvailableAmount = (userSettings?.monthly_income || 0) - totalFixedExpenses
 
   const achievements = [
     {
       id: 1,
       title: '初回設定完了',
       description: 'プロフィールと初期設定を完了しました',
-      icon: Settings,
+      icon: User, // Changed from Settings to User
       completed: userSettings?.setup_completed || false,
       date: userSettings?.created_at,
     },
@@ -68,7 +80,7 @@ export function ProfilePage({ onPageChange }: ProfilePageProps) {
   const totalAchievements = achievements.length
 
   return (
-    <div className="space-y-8 pb-32">
+    <div className="space-y-8">
       {/* Page Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">プロフィール</h1>
@@ -180,6 +192,30 @@ export function ProfilePage({ onPageChange }: ProfilePageProps) {
                 </div>
 
                 <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900">収支情報</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">月収:</span>
+                      <span className="font-medium text-green-600">
+                        ¥{userSettings?.monthly_income?.toLocaleString() || '未設定'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">固定支出:</span>
+                      <span className="font-medium text-red-600">
+                        ¥{totalFixedExpenses.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">月間利用可能額:</span>
+                      <span className="font-medium text-blue-600">
+                        ¥{monthlyAvailableAmount.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-900">アクティビティ</h3>
                   <div className="space-y-3">
                     <div className="flex justify-between">
@@ -254,11 +290,7 @@ export function ProfilePage({ onPageChange }: ProfilePageProps) {
       </div>
 
       {/* Logout Confirm Modal */}
-      <LogoutConfirmModal
-        isOpen={showLogoutModal}
-        onClose={() => setShowLogoutModal(false)}
-        onConfirm={handleSignOut}
-      />
+      {/* 削除済み */}
     </div>
   )
 })}
@@ -289,6 +321,25 @@ export function ProfilePage({ onPageChange }: ProfilePageProps) {
                   </div>
                 </div>
 
+                <div className="bg-gradient-to-r from-green-50 to-green-100 p-6 rounded-xl">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="p-2 bg-green-500 rounded-lg">
+                      <Target className="w-5 h-5 text-white" />
+                    </div>
+                    <h3 className="font-semibold text-green-800">収支統計</h3>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-green-600">月収:</span>
+                      <span className="font-bold text-green-800">¥{userSettings?.monthly_income?.toLocaleString() || '0'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-green-600">固定支出:</span>
+                      <span className="font-bold text-green-800">¥{totalFixedExpenses.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-6 rounded-xl">
                   <div className="flex items-center space-x-3 mb-4">
                     <div className="p-2 bg-purple-500 rounded-lg">
@@ -309,75 +360,43 @@ export function ProfilePage({ onPageChange }: ProfilePageProps) {
                     </div>
                   </div>
                 </div>
+              </div>
 
-                <div className="bg-gradient-to-r from-green-50 to-green-100 p-6 rounded-xl">
+              {/* Fixed Expenses Details */}
+              {fixedExpenses && fixedExpenses.length > 0 && (
+                <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-6 rounded-xl">
                   <div className="flex items-center space-x-3 mb-4">
-                    <div className="p-2 bg-green-500 rounded-lg">
-                      <TrendingUp className="w-5 h-5 text-white" />
+                    <div className="p-2 bg-orange-500 rounded-lg">
+                      <Target className="w-5 h-5 text-white" />
                     </div>
-                    <h3 className="font-semibold text-green-800">成長統計</h3>
+                    <h3 className="font-semibold text-orange-800">固定支出詳細</h3>
                   </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-green-600">設定完了:</span>
-                      <span className="font-bold text-green-800">
-                        {userSettings?.setup_completed ? '✓' : '×'}
+                  <div className="space-y-3">
+                    {fixedExpenses.map((expense, index) => (
+                      <div key={index} className="flex justify-between items-center p-3 bg-white/50 rounded-lg">
+                        <span className="text-orange-700 font-medium">{expense.name}</span>
+                        <span className="text-orange-800 font-bold">¥{expense.amount.toLocaleString()}</span>
+                      </div>
+                    ))}
+                    <div className="flex justify-between items-center p-3 bg-orange-200/50 rounded-lg border-t border-orange-300">
+                      <span className="text-orange-800 font-semibold">合計</span>
+                      <span className="text-orange-800 font-bold text-lg">
+                        ¥{totalFixedExpenses.toLocaleString()}
                       </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-green-600">レベル:</span>
-                      <span className="font-bold text-green-800">初級</span>
-                    </div>
                   </div>
                 </div>
-              </div>
-
-              <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-xl">
-                <h3 className="font-semibold text-gray-800 mb-4">今後の目標</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span className="text-gray-700">月間予算を3ヶ月連続で守る</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                    <span className="text-gray-700">貯金目標を達成する</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-gray-700">支出カテゴリを最適化する</span>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
           )}
         </div>
       </div>
 
       {/* Settings and Logout Buttons */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-gray-200/50 p-4 space-y-3">
-        <button
-          onClick={() => onPageChange('settings')}
-          className="w-full flex items-center justify-center space-x-3 px-6 py-4 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl transition-all duration-300 group"
-        >
-          <Settings className="w-5 h-5 group-hover:scale-110 transition-transform" />
-          <span className="font-medium">設定</span>
-        </button>
-        <button
-          onClick={() => setShowLogoutModal(true)}
-          className="w-full flex items-center justify-center space-x-3 px-6 py-4 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl transition-all duration-300 group"
-        >
-          <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
-          <span className="font-medium">ログアウト</span>
-        </button>
-      </div>
+      {/* 削除済み */}
 
       {/* Logout Confirm Modal */}
-      <LogoutConfirmModal
-        isOpen={showLogoutModal}
-        onClose={() => setShowLogoutModal(false)}
-        onConfirm={handleSignOut}
-      />
+      {/* 削除済み */}
     </div>
   )
 }

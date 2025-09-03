@@ -5,6 +5,7 @@ import { TrendingUp, TrendingDown, BarChart3, PieChart, Calendar, Target } from 
 import { useAuth } from '../contexts/AuthContext'
 import { useUserSettings } from '../hooks/useUserSettings'
 import { supabase, Expense, FixedExpense, SavingsGoal } from '../lib/supabase'
+import { LoadingSpinner } from './LoadingSpinner'
 
 interface MonthlyData {
   month: string
@@ -154,7 +155,7 @@ export function AnalyticsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <LoadingSpinner size="md" />
       </div>
     )
   }
