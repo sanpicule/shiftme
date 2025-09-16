@@ -42,6 +42,7 @@ export interface SavingsGoal {
   description: string
   target_amount: number
   target_date: string
+  start_date?: string
   created_at: string
   updated_at: string
 }

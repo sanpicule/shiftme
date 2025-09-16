@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { format, startOfMonth, endOfMonth } from 'date-fns'
 import { ja } from 'date-fns/locale'
-import { Calendar, AlertTriangle, CheckCircle, Edit2, Trash2, Plus, X, Save, DollarSign, ChevronDown, ChevronUp } from 'lucide-react'
+import { Calendar, AlertTriangle, CheckCircle, Edit2, Trash2, Plus, X, Save, DollarSign, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react'
 import { ExpenseCalendar } from './ExpenseCalendar'
 import { LoadingSpinner } from './LoadingSpinner'
 import { useUserSettings } from '../hooks/useUserSettings'
@@ -40,6 +40,7 @@ export function Dashboard() {
   const [isAddingExpense, setIsAddingExpense] = useState(false)
   const [editingExpense, setEditingExpense] = useState<string | null>(null)
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(false)
+  const [hideRemaining, setHideRemaining] = useState(false)
 
   const { register, handleSubmit, reset, setValue, formState: { isSubmitting } } = useForm<ExpenseForm>({
     defaultValues: {
@@ -221,7 +222,9 @@ export function Dashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <LoadingSpinner size="lg" text="データを読み込み中..." />
+        <div className="glass-card p-8">
+          <LoadingSpinner size="lg" text="データを読み込み中..." />
+        </div>
       </div>
     )
   }
@@ -241,38 +244,51 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6 md:space-y-8">
-      {/* Main Budget Display - Hero Section with Pink Gradient */}
-      <div className="relative overflow-hidden text-white">
+      {/* Main Budget Display - Hero Section with Glass Effect */}
+      <div className="relative overflow-hidden">
         {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-32 h-32 bg-white rounded-full -translate-x-16 -translate-y-16"></div>
-          <div className="absolute bottom-0 right-0 w-48 h-48 bg-white rounded-full translate-x-24 translate-y-24"></div>
-          <div className="absolute top-1/2 left-1/2 w-24 h-24 bg-white rounded-full -translate-x-12 -translate-y-12"></div>
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-0 left-0 w-32 h-32 bg-white/30 rounded-full -translate-x-16 -translate-y-16 glass-float"></div>
+          <div className="absolute bottom-0 right-0 w-48 h-48 bg-white/20 rounded-full translate-x-24 translate-y-24 glass-float" style={{animationDelay: '1s'}}></div>
+          <div className="absolute top-1/2 left-1/2 w-24 h-24 bg-white/25 rounded-full -translate-x-12 -translate-y-12 glass-float" style={{animationDelay: '2s'}}></div>
         </div>
 
         {/* Details Toggle Button - Top Right */}
         <div className="absolute top-4 right-4 md:hidden z-20">
           <button
             onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}
-            className="p-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-300 rounded-full text-white/90 hover:scale-110"
+            className="p-2 bg-glass-white-weak backdrop-blur-sm hover:bg-glass-white-strong transition-all duration-300 rounded-full glass-text hover:scale-110 border border-white/20"
             aria-label={isDetailsExpanded ? '詳細を隠す' : '詳細を確認'}
           >
             {isDetailsExpanded ? (
-              <ChevronUp className="w-5 h-5" />
+              <ChevronUp className="w-5 h-5 glass-icon" />
             ) : (
-              <ChevronDown className="w-5 h-5" />
+              <ChevronDown className="w-5 h-5 glass-icon" />
             )}
           </button>
         </div>
 
         {/* Budget Overview Card */}
-        <div className="bg-gradient-to-r from-gray-800 via-blue-800 to-blue-900 rounded-2xl shadow-xl p-6 mb-6">
+        <div className="bg-gradient-to-r from-gray-500/20 via-gray-600/20 to-gray-700/20 backdrop-blur-md border border-white/30 rounded-2xl shadow-glass p-6">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between">
             {/* Left Side - Remaining Budget */}
             <div className="flex-1 lg:mb-0 w-full">
-              <h3 className="text-white/80 text-sm mb-2">今月の残り使えるお金</h3>
-              <div className="text-4xl font-bold text-white">
-                ¥{remainingBudget.toLocaleString()}
+              <h3 className="glass-text text-sm mb-2 flex items-center space-x-1">
+                <span>残高</span>
+                <button
+                  onClick={() => setHideRemaining(!hideRemaining)}
+                  aria-label={hideRemaining ? '金額を表示' : '金額を非表示'}
+                  className="p-1 rounded-md hover:bg-glass-white-weak border border-white/20 transition-colors"
+                >
+                  {hideRemaining ? (
+                    <Eye className="w-3.5 h-3.5 glass-icon" />
+                  ) : (
+                    <EyeOff className="w-3.5 h-3.5 glass-icon" />
+                  )}
+                </button>
+              </h3>
+              <div className="text-2xl md:text-4xl font-bold glass-text-strong">
+                {hideRemaining ? '¥••••••' : `¥${remainingBudget.toLocaleString()}`}
               </div>
               
               {/* Quick Stats - 2 columns - Hidden on mobile when collapsed */}
@@ -287,13 +303,13 @@ export function Dashboard() {
                     
                     return (
                       <>
-                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center">
-                          <div className="text-xs text-white/70 mb-1">1日あたり</div>
-                          <div className="text-base font-bold text-white">¥{dailyBudget.toLocaleString()}</div>
+                        <div className="bg-glass-white-weak backdrop-blur-sm rounded-xl p-3 text-center border border-white/20">
+                          <div className="text-xs glass-text mb-1">1日あたり</div>
+                          <div className="text-base font-bold glass-text-strong">¥{dailyBudget.toLocaleString()}</div>
                         </div>
-                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center">
-                          <div className="text-xs text-white/70 mb-1">1週間あたり</div>
-                          <div className="text-base font-bold text-white">¥{weeklyBudget.toLocaleString()}</div>
+                        <div className="bg-glass-white-weak backdrop-blur-sm rounded-xl p-3 text-center border border-white/20">
+                          <div className="text-xs glass-text mb-1">1週間あたり</div>
+                          <div className="text-base font-bold glass-text-strong">¥{weeklyBudget.toLocaleString()}</div>
                         </div>
                       </>
                     )
@@ -309,28 +325,28 @@ export function Dashboard() {
               }`}>
                 <div className="space-y-3">
                   <div className="flex items-center">
-                    <div className="bg-white/20 rounded-lg px-3 py-2 text-white text-sm font-medium w-24">
+                    <div className="bg-glass-white-weak backdrop-blur-sm rounded-lg px-3 py-2 glass-text text-sm font-medium w-24 border border-white/20">
                       いつまでに
                     </div>
-                    <div className="text-white font-semibold ml-3">
+                    <div className="glass-text-strong font-semibold ml-3">
                       {format(new Date(savingsGoal.target_date), 'yyyy年M月', { locale: ja })}
                     </div>
                   </div>
                   
                   <div className="flex items-center">
-                    <div className="bg-white/20 rounded-lg px-3 py-2 text-white text-sm font-medium w-24">
+                    <div className="bg-glass-white-weak backdrop-blur-sm rounded-lg px-3 py-2 glass-text text-sm font-medium w-24 border border-white/20">
                       いくら
                     </div>
-                    <div className="text-white font-semibold ml-3">
+                    <div className="glass-text-strong font-semibold ml-3">
                       ¥{savingsGoal.target_amount.toLocaleString()}
                     </div>
                   </div>
                   
                   <div className="flex items-center">
-                    <div className="bg-white/20 rounded-lg px-3 py-2 text-white text-sm font-medium w-24">
+                    <div className="bg-glass-white-weak backdrop-blur-sm rounded-lg px-3 py-2 glass-text text-sm font-medium w-24 border border-white/20">
                       目標
                     </div>
-                    <div className="text-white font-semibold ml-3">
+                    <div className="glass-text-strong font-semibold ml-3">
                       {savingsGoal.title}
                     </div>
                   </div>
@@ -342,11 +358,11 @@ export function Dashboard() {
       </div>
 
       {/* Calendar Section */}
-      <div className="bg-white/70 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] border border-white/20 p-4 md:p-6">
+      <div>
         <div className="flex items-center space-x-2 md:space-x-3 mb-4 md:mb-6">
           <div>
-            <h2 className="text-lg md:text-xl font-bold text-gray-900">支出カレンダー</h2>
-            <p className="text-xs md:text-sm text-gray-600">日付をクリックして支出を入力・確認できます</p>
+            <h2 className="text-lg md:text-xl font-bold glass-text-strong">支出カレンダー</h2>
+            <p className="text-xs md:text-sm glass-text">日付をクリックして支出を入力・確認できます</p>
           </div>
         </div>
 
@@ -354,38 +370,38 @@ export function Dashboard() {
       </div>
 
       {/* Budget Tips */}
-      <div className="bg-gradient-to-r from-blue-50/80 to-purple-50/80 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] border border-white/20 p-4 md:p-6">
-        <h3 className="text-base md:text-lg font-bold text-gray-900 mb-3 md:mb-4">💡 今月のアドバイス</h3>
+      <div className="glass-card p-4 md:p-6">
+        <h3 className="text-base md:text-lg font-bold glass-text-strong mb-3 md:mb-4">💡 今月のアドバイス</h3>
         <div className="space-y-3">
-          {remainingBudget < 0 && (
-            <div className="flex items-start space-x-2 md:space-x-3 p-3 bg-red-50/80 rounded-xl border border-red-200/50">
-              <AlertTriangle className="w-4 h-4 md:w-5 md:h-5 text-red-500 mt-0.5" />
-              <div>
-                <p className="font-medium text-red-800 text-sm md:text-base">予算を超過しています</p>
-                <p className="text-xs md:text-sm text-red-600">支出を見直すか、来月の計画を調整しましょう</p>
+            {remainingBudget < 0 && (
+              <div className="flex items-start space-x-2 md:space-x-3 p-3 bg-red-500/20 backdrop-blur-sm rounded-xl border border-red-400/30">
+                <AlertTriangle className="w-4 h-4 md:w-5 md:h-5 text-red-400 mt-0.5 glass-icon" />
+                <div>
+                  <p className="font-medium text-red-300 text-sm md:text-base text-shadow">予算を超過しています</p>
+                  <p className="text-xs md:text-sm text-red-200 text-shadow">支出を見直すか、来月の計画を調整しましょう</p>
+                </div>
               </div>
-            </div>
-          )}
-          
-          {remainingBudget > 0 && remainingBudget < budgetAfterFixed * 0.2 && (
-            <div className="flex items-start space-x-2 md:space-x-3 p-3 bg-yellow-50/80 rounded-xl border border-yellow-200/50">
-              <AlertTriangle className="w-4 h-4 md:w-5 md:h-5 text-yellow-500 mt-0.5" />
-              <div>
-                <p className="font-medium text-yellow-800 text-sm md:text-base">予算残りわずかです</p>
-                <p className="text-xs md:text-sm text-yellow-600">残り{Math.ceil((new Date(endOfMonth(currentDate)).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))}日間、計画的に使いましょう</p>
+            )}
+
+            {remainingBudget > 0 && remainingBudget < budgetAfterFixed * 0.2 && (
+              <div className="flex items-start space-x-2 md:space-x-3 p-3 bg-gray-500/20 backdrop-blur-sm rounded-xl border border-gray-400/30">
+                <AlertTriangle className="w-4 h-4 md:w-5 md:h-5 text-gray-400 mt-0.5 glass-icon" />
+                <div>
+                  <p className="font-medium text-gray-300 text-sm md:text-base text-shadow">予算残りわずかです</p>
+                  <p className="text-xs md:text-sm text-gray-200 text-shadow">残り{Math.ceil((new Date(endOfMonth(currentDate)).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))}日間、計画的に使いましょう</p>
+                </div>
               </div>
-            </div>
-          )}
-          
-          {remainingBudget >= budgetAfterFixed * 0.2 && (
-            <div className="flex items-start space-x-2 md:space-x-3 p-3 bg-green-50/80 rounded-xl border border-green-200/50">
-              <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-green-500 mt-0.5" />
-              <div>
-                <p className="font-medium text-green-800 text-sm md:text-base">順調に管理できています</p>
-                <p className="text-xs md:text-sm text-green-600">この調子で貯金目標を達成しましょう！</p>
+            )}
+
+            {remainingBudget >= budgetAfterFixed * 0.2 && (
+              <div className="flex items-start space-x-2 md:space-x-3 p-3 bg-gray-600/20 backdrop-blur-sm rounded-xl border border-gray-500/30">
+                <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-gray-400 mt-0.5 glass-icon" />
+                <div>
+                  <p className="font-medium text-gray-300 text-sm md:text-base text-shadow">順調に管理できています</p>
+                  <p className="text-xs md:text-sm text-gray-200 text-shadow">この調子で貯金目標を達成しましょう！</p>
+                </div>
               </div>
-            </div>
-          )}
+            )}
         </div>
       </div>
 
@@ -409,6 +425,7 @@ export function Dashboard() {
           }}
         >
         <Box
+          className="glass-modal glass-shine glass-scrollbar"
           sx={{
             position: 'absolute',
             top: '50%',
@@ -417,11 +434,9 @@ export function Dashboard() {
             width: '95vw',
             maxWidth: '1200px',
             maxHeight: '90vh',
-            bgcolor: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px)',
+            bgcolor: 'transparent',
             borderRadius: '24px',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
+            boxShadow: 'none',
             outline: 'none',
             overflow: 'hidden',
             '@media (min-width: 1024px)': {
@@ -441,50 +456,50 @@ export function Dashboard() {
           }}
         >
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200/50 bg-gradient-to-r from-blue-50/50 to-purple-50/50">
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/20 bg-transparent">
               <div className="flex items-center space-x-3">
-                <div className="p-3 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl">
-                  <Calendar className="w-6 h-6 text-white" />
+                <div className="p-3 bg-gradient-to-br from-gray-500/30 to-gray-600/30 backdrop-blur-sm border border-gray-400/30 rounded-xl shadow-glass-glow">
+                  <Calendar className="w-6 h-6 glass-icon" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">
+                  <h2 className="text-xl font-bold glass-text-strong">
                     {format(selectedDate, 'MM月dd日（E）', { locale: ja })}
                   </h2>
-                  <p className="text-sm text-gray-600">支出の管理</p>
+                  <p className="text-sm glass-text">支出の管理</p>
                 </div>
               </div>
               <button
                 onClick={closeModal}
-                className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100/50 rounded-lg transition-colors"
+                className="glass-text p-2 hover:bg-glass-white-weak rounded-lg transition-colors border border-white/10"
               >
-                <X className="w-6 h-6" />
+                <X className="w-6 h-6 glass-icon" />
               </button>
             </div>
 
             {/* Modal Content */}
-            <div className="p-4 sm:p-6 max-h-[calc(90vh-120px)] overflow-y-auto">
+            <div className="p-4 sm:p-6 max-h[calc(90vh-120px)] overflow-y-auto glass-scrollbar">
               {/* Add Expense Button */}
               {!isAddingExpense && !editingExpense && (
                 <div className="mb-6">
                   <button
                     onClick={() => setIsAddingExpense(true)}
-                    className="w-full flex items-center justify-center space-x-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 sm:px-6 py-4 rounded-2xl hover:from-blue-600 hover:to-purple-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                    className="w-full flex items-center justify-center space-x-3 glass-button-primary text-white px-4 sm:px-6 py-4 hover:shadow-glass-glow transform hover:-translate-y-0.5"
                   >
-                    <Plus className="w-5 h-5" />
-                    <span className="font-medium">新しい支出を追加</span>
+                    <Plus className="w-5 h-5 glass-icon" />
+                    <span className="font-medium glass-text-strong">新しい支出を追加</span>
                   </button>
                 </div>
               )}
 
               {/* Add/Edit Expense Form */}
               {(isAddingExpense || editingExpense) && (
-                <div className="mb-6 p-6 bg-gradient-to-r from-gray-50/80 to-blue-50/80 backdrop-blur-sm rounded-2xl border border-gray-200/50">
+                <div className="mb-6 p-6 glass-card">
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-gradient-to-br from-green-400 to-green-600 rounded-lg">
-                        <DollarSign className="w-5 h-5 text-white" />
+                      <div className="p-2 bg-gradient-to-br from-gray-500/30 to-gray-600/30 backdrop-blur-sm border border-gray-400/30 rounded-lg">
+                        <DollarSign className="w-5 h-5 glass-icon" />
                       </div>
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-lg font-semibold glass-text-strong">
                         {editingExpense ? '支出を編集' : '支出を追加'}
                       </h3>
                     </div>
@@ -494,28 +509,28 @@ export function Dashboard() {
                         setEditingExpense(null)
                         reset()
                       }}
-                      className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100/50 rounded-lg transition-colors"
+                      className="glass-text p-2 hover:bg-glass-white-weak rounded-lg transition-colors border border-white/10"
                     >
-                      <X className="w-5 h-5" />
+                      <X className="w-5 h-5 glass-icon" />
                     </button>
                   </div>
                   
                   <form onSubmit={handleSubmit(editingExpense ? updateExpense : addExpense)} className="space-y-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-3">金額（円）</label>
+                        <label className="block text-sm font-semibold glass-text mb-3">金額（円）</label>
                         <input
                           type="number"
                           {...register('amount', { required: true, min: 0 })}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-lg font-medium"
+                          className="w-full px-4 py-3 rounded-xl transition-all duration-200 text-lg font-medium glass-input"
                           placeholder="1000"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-3">カテゴリ</label>
+                        <label className="block text-sm font-semibold glass-text mb-3">カテゴリ</label>
                         <select
                           {...register('category', { required: true })}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                          className="w-full px-4 py-3 rounded-xl transition-all duration-200 glass-input"
                         >
                           {categories.map((category) => (
                             <option key={category} value={category}>{category}</option>
@@ -525,11 +540,11 @@ export function Dashboard() {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-3">説明・メモ</label>
+                      <label className="block text-sm font-semibold glass-text mb-3">説明・メモ</label>
                       <input
                         type="text"
                         {...register('description')}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                        className="w-full px-4 py-3 rounded-xl transition-all duration-200 glass-input"
                         placeholder="コンビニで昼食"
                       />
                     </div>
@@ -542,20 +557,20 @@ export function Dashboard() {
                           setEditingExpense(null)
                           reset()
                         }}
-                        className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-medium"
+                        className="flex-1 px-6 py-3 glass-button font-medium"
                       >
                         キャンセル
                       </button>
                       <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl hover:from-blue-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium flex items-center justify-center space-x-2"
+                        className="flex-1 px-6 py-3 glass-button-primary text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium flex items-center justify-center space-x-2"
                       >
                         {isSubmitting ? (
                           <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
                         ) : (
                           <>
-                            <Save className="w-4 h-4" />
+                            <Save className="w-4 h-4 glass-icon" />
                             <span>{editingExpense ? '更新' : '追加'}</span>
                           </>
                         )}
@@ -570,9 +585,9 @@ export function Dashboard() {
                 format(new Date(expense.expense_date), 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
               ).length > 0 ? (
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                  <h3 className="text-lg font-semibold glass-text-strong flex items-center space-x-2">
                     <span>この日の支出</span>
-                    <span className="text-sm font-normal text-gray-500">({expenses.filter(expense => 
+                    <span className="text-sm font-normal glass-text">({expenses.filter(expense => 
                       format(new Date(expense.expense_date), 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
                     ).length}件)</span>
                   </h3>
@@ -583,35 +598,35 @@ export function Dashboard() {
                     ).map((expense) => (
                       <div
                         key={expense.id}
-                        className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gradient-to-r from-white/80 to-gray-50/80 backdrop-blur-sm rounded-xl border border-gray-200/50 hover:shadow-md transition-all duration-200"
+                        className="flex flex-col sm:flex-row sm:items-center justify-between p-4 glass-card hover:shadow-glass-glow transition-all duration-200"
                       >
                         <div className="flex-1 mb-3 sm:mb-0">
                           <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
-                            <span className="text-xl font-bold text-gray-900">
+                            <span className="text-xl font-bold glass-text-strong">
                               ¥{expense.amount.toLocaleString()}
                             </span>
-                            <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full w-fit">
+                            <span className="px-3 py-1 bg-glass-white-weak text-white text-sm font-medium rounded-full w-fit">
                               {expense.category}
                             </span>
                           </div>
                           {expense.description && (
-                            <p className="text-sm text-gray-600 mt-2">{expense.description}</p>
+                            <p className="text-sm glass-text mt-2">{expense.description}</p>
                           )}
                         </div>
                         <div className="flex items-center space-x-2 sm:ml-4">
                           <button 
                             onClick={() => startEditExpense(expense)}
-                            className="p-3 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
+                            className="p-3 glass-text hover:bg-glass-white-weak rounded-xl transition-colors border border-white/10"
                             title="編集"
                           >
-                            <Edit2 className="w-5 h-5" />
+                            <Edit2 className="w-5 h-5 glass-icon" />
                           </button>
                           <button 
                             onClick={() => deleteExpense(expense.id)}
-                            className="p-3 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                            className="p-3 glass-text hover:bg-glass-white-weak rounded-xl transition-colors border border-white/10"
                             title="削除"
                           >
-                            <Trash2 className="w-5 h-5" />
+                            <Trash2 className="w-5 h-5 glass-icon" />
                           </button>
                         </div>
                       </div>
@@ -619,10 +634,10 @@ export function Dashboard() {
                   </div>
                   
                   {/* Day Total */}
-                  <div className="mt-6 p-6 bg-gradient-to-r from-orange-50 to-red-50 rounded-2xl border border-orange-200/50">
+                  <div className="mt-6 p-6 glass-card">
                     <div className="flex justify-between items-center">
-                      <span className="text-lg font-semibold text-gray-700">この日の合計</span>
-                      <span className="text-3xl font-bold text-orange-600">
+                      <span className="text-lg font-semibold glass-text">この日の合計</span>
+                      <span className="text-3xl font-bold glass-text-strong">
                         ¥{expenses.filter(expense => 
                           format(new Date(expense.expense_date), 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
                         ).reduce((sum, expense) => sum + expense.amount, 0).toLocaleString()}
@@ -633,17 +648,17 @@ export function Dashboard() {
               ) : (
                 !isAddingExpense && !editingExpense && (
                   <div className="text-center py-12">
-                    <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <Calendar className="w-10 h-10 text-gray-400" />
+                    <div className="w-20 h-20 bg-glass-white-weak backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <Calendar className="w-10 h-10 glass-icon" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">支出がありません</h3>
-                    <p className="text-gray-500 mb-6">この日の支出はまだ記録されていません</p>
+                    <h3 className="text-lg font-semibold glass-text-strong mb-2">支出がありません</h3>
+                    <p className="glass-text mb-6">この日の支出はまだ記録されていません</p>
                     <button
                       onClick={() => setIsAddingExpense(true)}
-                      className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-8 py-4 rounded-2xl hover:from-blue-600 hover:to-purple-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                      className="inline-flex items-center space-x-2 glass-button-primary text-white px-8 py-4 rounded-2xl transition-all duration-200 hover:shadow-glass-glow transform hover:-translate-y-0.5"
                     >
-                      <Plus className="w-5 h-5" />
-                      <span className="font-medium">最初の支出を追加</span>
+                      <Plus className="w-5 h-5 glass-icon" />
+                      <span className="font-medium glass-text-strong">最初の支出を追加</span>
                     </button>
                   </div>
                 )

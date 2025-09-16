@@ -21,6 +21,7 @@ interface SavingsGoalForm {
   description: string
   target_amount: number
   target_date: string
+  start_date?: string
 }
 
 export function SettingsPage() {
@@ -59,7 +60,8 @@ export function SettingsPage() {
     title: '',
     description: '',
     target_amount: 0,
-    target_date: ''
+    target_date: '',
+    start_date: ''
   })
 
   const fetchData = useCallback(async () => {
@@ -285,13 +287,15 @@ export function SettingsPage() {
       title: goal.title,
       description: goal.description,
       target_amount: goal.target_amount,
-      target_date: goal.target_date
+      target_date: goal.target_date,
+      start_date: goal.start_date || ''
     })
     // フォームの値も更新
     setGoalValue('title', goal.title)
     setGoalValue('description', goal.description)
     setGoalValue('target_amount', goal.target_amount)
     setGoalValue('target_date', goal.target_date)
+    setGoalValue('start_date', goal.start_date || '')
   }
 
   const updateSavingsGoal = async () => {
@@ -328,18 +332,18 @@ export function SettingsPage() {
     <div className="space-y-8">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold mb-3">
+        <h1 className="text-2xl font-bold mb-3 glass-text-strong">
           設定
         </h1>
-        <p className="text-sm text-gray-600">収入、固定支出、貯金目標を設定しましょう</p>
+        <p className="text-sm glass-text">収入、固定支出、貯金目標を設定しましょう</p>
       </div>
 
       {/* Monthly Income Section */}
-      <div className="bg-white/60 backdrop-blur-xl rounded-3xl shadow-sm border-2 border-gray-200 p-4 hover:shadow-md transition-all duration-500">
+      <div className="glass-card p-4 hover:shadow-glass-glow transition-all duration-500 glass-shine">
         <div className="flex items-center space-x-4 mb-8">
           <div>
-                      <h2 className="text-xl font-semibold text-gray-900">月収設定</h2>
-          <p className="text-sm text-gray-600">毎月の収入を設定してください</p>
+                      <h2 className="text-xl font-semibold glass-text-strong">月収設定</h2>
+          <p className="text-sm glass-text">毎月の収入を設定してください</p>
           </div>
         </div>
 
@@ -347,20 +351,20 @@ export function SettingsPage() {
         <form onSubmit={handleIncomeSubmit(handleIncomeUpdate)} className="space-y-6">
           <div className="flex flex-col md:flex-row md:items-end gap-4">
             <div className="flex-1">
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
+              <label className="block text-sm font-semibold glass-text-strong mb-3">
                 月収（円）
               </label>
               <input
                 type="number"
                 {...registerIncome('monthly_income', { required: true, min: 0 })}
-                className="w-full px-6 py-4 border border-gray-300/50 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 text-lg font-medium bg-white/50 backdrop-blur-sm"
+                className="glass-input w-full px-6 py-4 text-lg font-medium"
                 placeholder="300000"
               />
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full md:w-auto flex items-center justify-center space-x-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-2xl hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:-translate-y-1 font-semibold"
+              className="glass-button-strong w-full md:w-auto flex items-center justify-center space-x-3 px-8 py-4 transform hover:-translate-y-1 font-semibold"
             >
               <Save className="w-5 h-5" />
               <span>{loading ? '更新中...' : '更新'}</span>
@@ -370,11 +374,11 @@ export function SettingsPage() {
       </div>
 
       {/* Fixed Expenses Section */}
-      <div className="bg-white/60 backdrop-blur-xl rounded-3xl shadow-sm border-2 border-gray-200 p-4 hover:shadow-md transition-all duration-500">
+      <div className="glass-card p-4 hover:shadow-glass-glow transition-all duration-500 glass-shine">
         <div className="flex items-center space-x-4 mb-8">
           <div>
-                      <h2 className="text-xl font-semibold text-gray-900">固定支出管理</h2>
-          <p className="text-sm text-gray-600">毎月の固定支出を管理してください</p>
+                      <h2 className="text-xl font-semibold glass-text-strong">固定支出管理</h2>
+          <p className="text-sm glass-text">毎月の固定支出を管理してください</p>
           </div>
         </div>
 
@@ -383,37 +387,37 @@ export function SettingsPage() {
           {!showExpenseForm ? (
             <button
               onClick={() => setShowExpenseForm(true)}
-              className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-3 rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 transform hover:-translate-y-0.5 font-semibold"
+              className="glass-button-strong w-full flex items-center justify-center space-x-2 px-4 py-3 transform hover:-translate-y-0.5 font-semibold"
             >
               <Plus className="w-5 h-5" />
               <span>固定支出を追加</span>
             </button>
           ) : (
-            <form onSubmit={handleExpenseSubmitSP(addFixedExpenseSP)} className="space-y-4 p-4 bg-white/40 backdrop-blur-sm rounded-2xl border-2 border-gray-200">
+            <form onSubmit={handleExpenseSubmitSP(addFixedExpenseSP)} className="space-y-4 p-4 glass-card">
               <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">項目名</label>
+                  <label className="block text-sm font-medium glass-text-strong mb-2">項目名</label>
                   <input
                     type="text"
                     {...registerExpenseSP('name', { required: true })}
-                    className="w-full px-4 py-3 border border-gray-300/50 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/50 backdrop-blur-sm"
+                    className="glass-input w-full px-4 py-3"
                     placeholder="家賃"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">金額（円）</label>
+                  <label className="block text-sm font-medium glass-text-strong mb-2">金額（円）</label>
                   <input
                     type="number"
                     {...registerExpenseSP('amount', { required: true, min: 0 })}
-                    className="w-full px-4 py-3 border border-gray-300/50 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/50 backdrop-blur-sm"
+                    className="glass-input w-full px-4 py-3"
                     placeholder="80000"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">カテゴリ</label>
+                  <label className="block text-sm font-medium glass-text-strong mb-2">カテゴリ</label>
                   <select
                     {...registerExpenseSP('category')}
-                    className="w-full px-4 py-3 border border-gray-300/50 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/50 backdrop-blur-sm"
+                    className="glass-input w-full px-4 py-3"
                   >
                     {categories.map((category) => (
                       <option key={category} value={category}>{category}</option>
@@ -424,7 +428,7 @@ export function SettingsPage() {
               <div className="flex space-x-3">
                 <button
                   type="submit"
-                  className="flex-1 flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-3 rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 transform hover:-translate-y-0.5 font-semibold"
+                  className="glass-button-strong flex-1 flex items-center justify-center space-x-2 px-4 py-3 transform hover:-translate-y-0.5 font-semibold"
                 >
                   <Plus className="w-5 h-5" />
                   <span>追加</span>
@@ -432,7 +436,7 @@ export function SettingsPage() {
                 <button
                   type="button"
                   onClick={() => setShowExpenseForm(false)}
-                  className="px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-300 font-semibold"
+                  className="glass-button-strong px-4 py-3 font-semibold"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -446,28 +450,28 @@ export function SettingsPage() {
           <form onSubmit={handleExpenseSubmit(editingExpense ? updateFixedExpense : addFixedExpense)} className="mb-8">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">項目名</label>
+                <label className="block text-sm font-medium glass-text-strong mb-3">項目名</label>
                 <input
                   type="text"
                   {...registerExpense('name', { required: true })}
-                  className="w-full px-4 py-3 border border-gray-300/50 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/50 backdrop-blur-sm"
+                  className="glass-input w-full px-4 py-3"
                   placeholder="家賃"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">金額（円）</label>
+                <label className="block text-sm font-medium glass-text-strong mb-3">金額（円）</label>
                 <input
                   type="number"
                   {...registerExpense('amount', { required: true, min: 0 })}
-                  className="w-full px-4 py-3 border border-gray-300/50 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/50 backdrop-blur-sm"
+                  className="glass-input w-full px-4 py-3"
                   placeholder="80000"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">カテゴリ</label>
+                <label className="block text-sm font-medium glass-text-strong mb-3">カテゴリ</label>
                 <select
                   {...registerExpense('category')}
-                  className="w-full px-4 py-3 border border-gray-300/50 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/50 backdrop-blur-sm"
+                  className="glass-input w-full px-4 py-3"
                 >
                   {categories.map((category) => (
                     <option key={category} value={category}>{category}</option>
@@ -477,7 +481,7 @@ export function SettingsPage() {
               <div className="flex items-end space-x-2">
                 <button
                   type="submit"
-                  className="flex-1 flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-3 rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 transform hover:-translate-y-0.5 font-semibold"
+                  className="glass-button-strong flex-1 flex items-center justify-center space-x-2 px-4 py-3 transform hover:-translate-y-0.5 font-semibold"
                 >
                   <Plus className="w-5 h-5" />
                   <span>追加</span>
@@ -490,24 +494,24 @@ export function SettingsPage() {
         {/* Fixed Expenses List - SPでは非表示 */}
         <div className="hidden md:block space-y-4">
           {fixedExpenses.map((expense) => (
-            <div key={expense.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-6 bg-gradient-to-r from-white/80 to-blue-50/80 backdrop-blur-sm rounded-2xl border-2 border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
+            <div key={expense.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-6 glass-card hover:shadow-glass-glow transition-all duration-300 glass-shine">
               <div className="flex items-center space-x-4 mb-4 sm:mb-0">
-                <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"></div>
+                <div className="w-3 h-3 bg-gradient-to-r from-blue-500/30 to-indigo-600/30 backdrop-blur-sm border border-blue-400/30 rounded-full shadow-glass-glow"></div>
                 <div>
                   {editingExpense === expense.id ? (
                     <input
                       type="text"
                       value={editingExpenseForm.name}
-                      className="w-full px-3 py-1 border border-gray-300/50 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/50 backdrop-blur-sm text-lg font-semibold"
+                      className="glass-input w-full px-3 py-1 text-lg font-semibold"
                       onChange={(e) => setEditingExpenseForm(prev => ({ ...prev, name: e.target.value }))}
                     />
                   ) : (
-                    <h4 className="font-medium text-gray-900 text-base">{expense.name}</h4>
+                    <h4 className="font-medium glass-text-strong text-base">{expense.name}</h4>
                   )}
                   {editingExpense === expense.id ? (
                     <select
                       value={editingExpenseForm.category}
-                      className="w-full px-3 py-1 mt-1 border border-gray-300/50 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/50 backdrop-blur-sm text-sm"
+                      className="glass-input w-full px-3 py-1 mt-1 text-sm"
                       onChange={(e) => setEditingExpenseForm(prev => ({ ...prev, category: e.target.value }))}
                     >
                       {categories.map((category) => (
@@ -515,7 +519,7 @@ export function SettingsPage() {
                       ))}
                     </select>
                   ) : (
-                    <p className="text-sm text-gray-600 font-medium">{expense.category}</p>
+                    <p className="text-sm glass-text font-medium">{expense.category}</p>
                   )}
                 </div>
               </div>
@@ -525,13 +529,13 @@ export function SettingsPage() {
                     <input
                       type="number"
                       value={editingExpenseForm.amount}
-                      className="w-32 px-3 py-1 border border-gray-300/50 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/50 backdrop-blur-sm text-xl font-semibold"
+                      className="glass-input w-32 px-3 py-1 text-xl font-semibold"
                       onChange={(e) => setEditingExpenseForm(prev => ({ ...prev, amount: Number(e.target.value) }))}
                     />
-                    <span className="text-xl font-semibold text-gray-900">円</span>
+                    <span className="text-xl font-semibold glass-text-strong">円</span>
                   </div>
                 ) : (
-                  <span className="text-xl font-semibold text-gray-900">
+                  <span className="text-xl font-semibold glass-text-strong">
                     ¥{expense.amount.toLocaleString()}
                   </span>
                 )}
@@ -540,15 +544,15 @@ export function SettingsPage() {
                     <>
                       <button
                         onClick={updateFixedExpense}
-                        className="p-3 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-xl transition-all duration-300"
+                        className="p-3 text-green-400 hover:text-green-300 hover:bg-green-500/20 rounded-xl transition-all duration-300 glass-shine"
                       >
-                        <Save className="w-5 h-5" />
+                        <Save className="w-5 h-5 glass-icon" />
                       </button>
                       <button
                         onClick={() => {
                           setEditingExpense(null)
                         }}
-                        className="p-3 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-300"
+                        className="p-3 glass-icon hover:text-white hover:bg-glass-white-weak rounded-xl transition-all duration-300 glass-shine"
                       >
                         <X className="w-5 h-5" />
                       </button>
@@ -557,13 +561,13 @@ export function SettingsPage() {
                     <>
                       <button
                         onClick={() => startEditExpense(expense)}
-                        className="p-3 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300"
+                        className="p-3 glass-icon hover:text-blue-400 hover:bg-blue-500/20 rounded-xl transition-all duration-300 glass-shine"
                       >
                         <Edit2 className="w-5 h-5" />
                       </button>
                       <button
                         onClick={() => deleteFixedExpense(expense.id)}
-                        className="p-3 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-300"
+                        className="p-3 glass-icon hover:text-red-400 hover:bg-red-500/20 rounded-xl transition-all duration-300 glass-shine"
                       >
                         <Trash2 className="w-5 h-5" />
                       </button>
@@ -576,17 +580,17 @@ export function SettingsPage() {
         </div>
 
         {fixedExpenses.length > 0 && (
-          <div className="mt-8 p-4 bg-white/40 backdrop-blur-sm rounded-2xl border-2 border-gray-200">
+          <div className="mt-8 p-4 glass-card">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">固定支出合計</p>
-                <p className="text-xl font-semibold text-gray-900">¥{fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0).toLocaleString()}</p>
+                <p className="text-sm glass-text">固定支出合計</p>
+                <p className="text-xl font-semibold glass-text-strong">¥{fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0).toLocaleString()}</p>
               </div>
               {/* SPのみで詳細確認ボタンを表示 */}
               <div className="block md:hidden">
                 <button
                   onClick={() => setShowExpenseModal(true)}
-                  className="p-3 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-all duration-300"
+                  className="glass-button-strong p-3 glass-shine"
                 >
                   <span className="text-sm font-medium">詳細</span>
                 </button>
@@ -597,11 +601,11 @@ export function SettingsPage() {
       </div>
 
       {/* Savings Goals Section */}
-      <div className="bg-white/60 backdrop-blur-xl rounded-3xl shadow-sm border-2 border-gray-200 p-4 hover:shadow-md transition-all duration-500">
+      <div className="glass-card p-4 hover:shadow-glass-glow transition-all duration-500 glass-shine">
         <div className="flex items-center space-x-4 mb-8">
           <div>
-                      <h2 className="text-xl font-semibold text-gray-900">貯金目標管理</h2>
-          <p className="text-sm text-gray-600">貯金の目標を設定して管理しましょう</p>
+                      <h2 className="text-xl font-semibold glass-text-strong">貯金目標管理</h2>
+          <p className="text-sm glass-text">貯金の目標を設定して管理しましょう</p>
           </div>
         </div>
 
@@ -610,46 +614,54 @@ export function SettingsPage() {
           {!showGoalForm ? (
             <button
               onClick={() => setShowGoalForm(true)}
-              className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white px-4 py-3 rounded-xl hover:from-purple-600 hover:to-pink-700 transition-all duration-300 transform hover:-translate-y-0.5 font-semibold"
+              className="glass-button-strong w-full flex items-center justify-center space-x-2 px-4 py-3 transform hover:-translate-y-0.5 font-semibold"
             >
               <Plus className="w-5 h-5" />
               <span>貯金目標を追加</span>
             </button>
           ) : (
-            <form onSubmit={handleGoalSubmitSP(addSavingsGoalSP)} className="space-y-4 p-4 bg-white/40 backdrop-blur-sm rounded-2xl border-2 border-gray-200">
+            <form onSubmit={handleGoalSubmitSP(addSavingsGoalSP)} className="space-y-4 p-4 glass-card">
               <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">目標タイトル</label>
+                  <label className="block text-sm font-medium glass-text-strong mb-2">目標タイトル</label>
                   <input
                     type="text"
                     {...registerGoalSP('title', { required: true })}
-                    className="w-full px-4 py-3 border border-gray-300/50 rounded-xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-300 bg-white/50 backdrop-blur-sm"
+                    className="glass-input w-full px-4 py-3"
                     placeholder="海外旅行の資金"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">目標金額（円）</label>
+                  <label className="block text-sm font-medium glass-text-strong mb-2">目標金額（円）</label>
                   <input
                     type="number"
                     {...registerGoalSP('target_amount', { required: true, min: 0 })}
-                    className="w-full px-4 py-3 border border-gray-300/50 rounded-xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-300 bg-white/50 backdrop-blur-sm"
+                    className="glass-input w-full px-4 py-3"
                     placeholder="500000"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">達成予定日</label>
+                  <label className="block text-sm font-medium glass-text-strong mb-2">達成予定日</label>
                   <input
                     type="date"
                     {...registerGoalSP('target_date', { required: true })}
-                    className="w-full px-4 py-3 border border-gray-300/50 rounded-xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-300 bg-white/50 backdrop-blur-sm"
+                    className="glass-input w-full px-4 py-3"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">詳細・説明</label>
+                  <label className="block text-sm font-medium glass-text-strong mb-2">目標開始日</label>
+                  <input
+                    type="date"
+                    {...registerGoalSP('start_date')}
+                    className="glass-input w-full px-4 py-3"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium glass-text-strong mb-2">詳細・説明</label>
                   <textarea
                     {...registerGoalSP('description')}
                     rows={3}
-                    className="w-full px-4 py-3 border border-gray-300/50 rounded-xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-300 bg-white/50 backdrop-blur-sm"
+                    className="glass-input w-full px-4 py-3"
                     placeholder="ヨーロッパ周遊旅行のために貯金したい"
                   />
                 </div>
@@ -657,7 +669,7 @@ export function SettingsPage() {
               <div className="flex space-x-3">
                 <button
                   type="submit"
-                  className="flex-1 flex items-center justify-center space-x-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white px-4 py-3 rounded-xl hover:from-purple-600 hover:to-pink-700 transition-all duration-300 transform hover:-translate-y-0.5 font-semibold"
+                  className="glass-button-strong flex-1 flex items-center justify-center space-x-2 px-4 py-3 transform hover:-translate-y-0.5 font-semibold"
                 >
                   <Plus className="w-5 h-5" />
                   <span>追加</span>
@@ -665,7 +677,7 @@ export function SettingsPage() {
                 <button
                   type="button"
                   onClick={() => setShowGoalForm(false)}
-                  className="px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-300 font-semibold"
+                  className="glass-button-strong px-4 py-3 font-semibold"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -679,35 +691,35 @@ export function SettingsPage() {
           <form onSubmit={handleGoalSubmit(editingGoal ? updateSavingsGoal : addSavingsGoal)} className="mb-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">目標タイトル</label>
+                <label className="block text-sm font-medium glass-text-strong mb-3">目標タイトル</label>
                 <input
                   type="text"
                   {...registerGoal('title', { required: true })}
-                  className="w-full px-4 py-3 border border-gray-300/50 rounded-xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-300 bg-white/50 backdrop-blur-sm"
+                  className="glass-input w-full px-4 py-3"
                   placeholder="海外旅行の資金"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">目標金額（円）</label>
+                <label className="block text-sm font-medium glass-text-strong mb-3">目標金額（円）</label>
                 <input
                   type="number"
                   {...registerGoal('target_amount', { required: true, min: 0 })}
-                  className="w-full px-4 py-3 border border-gray-300/50 rounded-xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-300 bg-white/50 backdrop-blur-sm"
+                  className="glass-input w-full px-4 py-3"
                   placeholder="500000"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">達成予定日</label>
+                <label className="block text-sm font-medium glass-text-strong mb-3">達成予定日</label>
                 <input
                   type="date"
                   {...registerGoal('target_date', { required: true })}
-                  className="w-full px-4 py-3 border border-gray-300/50 rounded-xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-300 bg-white/50 backdrop-blur-sm"
+                  className="glass-input w-full px-4 py-3"
                 />
               </div>
               <div className="flex items-end space-x-2">
                 <button
                   type="submit"
-                  className="flex-1 flex items-center justify-center space-x-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white px-4 py-3 rounded-xl hover:from-purple-600 hover:to-pink-700 transition-all duration-300 transform hover:-translate-y-0.5 font-semibold"
+                  className="glass-button-strong flex-1 flex items-center justify-center space-x-2 px-4 py-3 transform hover:-translate-y-0.5 font-semibold"
                 >
                   <Plus className="w-5 h-5" />
                   <span>追加</span>
@@ -715,11 +727,11 @@ export function SettingsPage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">詳細・説明</label>
+              <label className="block text-sm font-medium glass-text-strong mb-3">詳細・説明</label>
               <textarea
                 {...registerGoal('description')}
                 rows={3}
-                className="w-full px-4 py-3 border border-gray-300/50 rounded-xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-300 bg-white/50 backdrop-blur-sm"
+                className="glass-input w-full px-4 py-3"
                 placeholder="ヨーロッパ周遊旅行のために貯金したい"
               />
             </div>
@@ -729,7 +741,7 @@ export function SettingsPage() {
         {/* Savings Goals List */}
         <div className="space-y-6">
           {savingsGoals.map((goal) => (
-            <div key={goal.id} className="p-4 bg-gradient-to-r from-purple-50/80 to-pink-50/80 backdrop-blur-sm rounded-2xl border-2 border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
+            <div key={goal.id} className="p-4 glass-card hover:shadow-glass-glow transition-all duration-300 glass-shine">
               <div className="flex items-start justify-between mb-6">
                 <div className="flex-1">
                   {editingGoal === goal.id ? (
@@ -737,20 +749,20 @@ export function SettingsPage() {
                       <input
                         type="text"
                         value={editingGoalForm.title}
-                        className="w-full px-4 py-2 border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-300 bg-white/50 backdrop-blur-sm text-lg font-semibold"
+                        className="glass-input w-full px-4 py-2 text-lg font-semibold"
                         onChange={(e) => setEditingGoalForm(prev => ({ ...prev, title: e.target.value }))}
                       />
                       <textarea
                         value={editingGoalForm.description}
                         rows={2}
-                        className="w-full px-4 py-2 border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-300 bg-white/50 backdrop-blur-sm"
+                        className="glass-input w-full px-4 py-2"
                         onChange={(e) => setEditingGoalForm(prev => ({ ...prev, description: e.target.value }))}
                       />
                     </div>
                   ) : (
                     <>
-                      <h4 className="text-lg font-semibold text-gray-900 mb-2">{goal.title}</h4>
-                      <p className="text-gray-600">{goal.description}</p>
+                      <h4 className="text-lg font-semibold glass-text-strong mb-2">{goal.title}</h4>
+                      <p className="glass-text">{goal.description}</p>
                     </>
                   )}
                 </div>
@@ -759,16 +771,16 @@ export function SettingsPage() {
                     <>
                       <button
                         onClick={updateSavingsGoal}
-                        className="p-3 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-xl transition-all duration-300"
+                        className="p-3 text-green-400 hover:text-green-300 hover:bg-green-500/20 rounded-xl transition-all duration-300 glass-shine"
                       >
-                        <Save className="w-5 h-5" />
+                        <Save className="w-5 h-5 glass-icon" />
                       </button>
                       <button
                         onClick={() => {
                           setEditingGoal(null)
                           resetGoal()
                         }}
-                        className="p-3 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-300"
+                        className="p-3 glass-icon hover:text-white hover:bg-glass-white-weak rounded-xl transition-all duration-300 glass-shine"
                       >
                         <X className="w-5 h-5" />
                       </button>
@@ -777,7 +789,7 @@ export function SettingsPage() {
                     <>
                       <button
                         onClick={() => startEditGoal(goal)}
-                        className="p-3 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-all duration-300"
+                        className="p-3 glass-icon hover:text-purple-400 hover:bg-purple-500/20 rounded-xl transition-all duration-300 glass-shine"
                       >
                         <Edit2 className="w-5 h-5" />
                       </button>
@@ -786,7 +798,7 @@ export function SettingsPage() {
                           setGoalToDelete(goal.id)
                           setShowDeleteGoalConfirmModal(true)
                         }}
-                        className="p-3 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-300"
+                        className="p-3 glass-icon hover:text-red-400 hover:bg-red-500/20 rounded-xl transition-all duration-300 glass-shine"
                       >
                         <Trash2 className="w-5 h-5" />
                       </button>
@@ -795,36 +807,51 @@ export function SettingsPage() {
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="flex justify-between items-center p-4 bg-white/60 backdrop-blur-sm rounded-xl">
-                  <span className="text-gray-600 font-medium">目標金額:</span>
+                <div className="flex justify-between items-center p-4 glass-card">
+                  <span className="glass-text font-medium">目標金額:</span>
                   {editingGoal === goal.id ? (
                     <div className="flex items-center space-x-2">
                       <input
                         type="number"
                         value={editingGoalForm.target_amount}
-                        className="w-32 px-3 py-1 border border-gray-300/50 rounded-lg focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-300 bg-white/50 backdrop-blur-sm text-lg font-semibold"
+                        className="glass-input w-32 px-3 py-1 text-lg font-semibold"
                         onChange={(e) => setEditingGoalForm(prev => ({ ...prev, target_amount: Number(e.target.value) }))}
                       />
-                      <span className="text-lg font-semibold text-gray-900">円</span>
+                      <span className="text-lg font-semibold glass-text-strong">円</span>
                     </div>
                   ) : (
-                    <span className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    <span className="text-lg font-semibold glass-text-strong">
                       ¥{goal.target_amount.toLocaleString()}
                     </span>
                   )}
                 </div>
-                <div className="flex justify-between items-center p-4 bg-white/60 backdrop-blur-sm rounded-xl">
-                  <span className="text-gray-600 font-medium">達成予定:</span>
+                <div className="flex justify-between items-center p-4 glass-card">
+                  <span className="glass-text font-medium">達成予定:</span>
                   {editingGoal === goal.id ? (
                                           <input
                         type="date"
                         value={editingGoalForm.target_date}
-                        className="px-3 py-1 border border-gray-300/50 rounded-lg focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-300 bg-white/50 backdrop-blur-sm"
+                        className="glass-input px-3 py-1"
                         onChange={(e) => setEditingGoalForm(prev => ({ ...prev, target_date: e.target.value }))}
                       />
                   ) : (
-                    <span className="font-semibold text-gray-900">
+                    <span className="font-semibold glass-text-strong">
                       {new Date(goal.target_date).toLocaleDateString('ja-JP')}
+                    </span>
+                  )}
+                </div>
+                <div className="flex justify-between items-center p-4 glass-card">
+                  <span className="glass-text font-medium">開始日:</span>
+                  {editingGoal === goal.id ? (
+                    <input
+                      type="date"
+                      value={editingGoalForm.start_date}
+                      className="glass-input px-3 py-1"
+                      onChange={(e) => setEditingGoalForm(prev => ({ ...prev, start_date: e.target.value }))}
+                    />
+                  ) : (
+                    <span className="font-semibold glass-text-strong">
+                      {goal.start_date ? new Date(goal.start_date).toLocaleDateString('ja-JP') : '未設定'}
                     </span>
                   )}
                 </div>
@@ -837,9 +864,9 @@ export function SettingsPage() {
       {/* Fixed Expenses Detail Modal - SPのみ */}
       {showExpenseModal && (
         <div className="fixed left-0 right-0 bottom-[56px] top-[20px] bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm max-h-[calc(100vh-180px)] overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <h3 className="text-lg font-bold text-gray-900">
+          <div className="glass-modal w-full max-w-sm max-h-[calc(100vh-180px)] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-white/20">
+              <h3 className="text-lg font-bold glass-text-strong">
                 {modalEditingExpense ? '固定支出を編集' : '固定支出詳細'}
               </h3>
               <button
@@ -847,31 +874,31 @@ export function SettingsPage() {
                   setShowExpenseModal(false)
                   setModalEditingExpense(null)
                 }}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-300"
+                className="p-2 glass-icon hover:text-white hover:bg-glass-white-weak rounded-xl transition-all duration-300 glass-shine"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
+            <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto glass-scrollbar">
               {fixedExpenses.map((expense) => (
-                <div key={expense.id} className="relative p-4 bg-gradient-to-r from-white/80 to-blue-50/80 backdrop-blur-sm rounded-xl border border-gray-200">
+                <div key={expense.id} className="relative p-4 glass-card glass-shine">
                   {modalEditingExpense === expense.id ? (
                     // 編集フォーム
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">項目名</label>
+                        <label className="block text-sm font-semibold glass-text-strong mb-2">項目名</label>
                         <input
                           type="text"
                           value={editingExpenseForm.name}
-                          className="w-full px-3 py-2 border border-gray-300/50 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/50 backdrop-blur-sm"
+                          className="glass-input w-full px-3 py-2"
                           onChange={(e) => setEditingExpenseForm(prev => ({ ...prev, name: e.target.value }))}
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">カテゴリ</label>
+                        <label className="block text-sm font-semibold glass-text-strong mb-2">カテゴリ</label>
                         <select
                           value={editingExpenseForm.category}
-                          className="w-full px-3 py-2 border border-gray-300/50 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/50 backdrop-blur-sm"
+                          className="glass-input w-full px-3 py-2"
                           onChange={(e) => setEditingExpenseForm(prev => ({ ...prev, category: e.target.value }))}
                         >
                           {categories.map((category) => (
@@ -880,25 +907,25 @@ export function SettingsPage() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">金額（円）</label>
+                        <label className="block text-sm font-semibold glass-text-strong mb-2">金額（円）</label>
                         <input
                           type="number"
                           value={editingExpenseForm.amount}
-                          className="w-full px-3 py-2 border border-gray-300/50 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/50 backdrop-blur-sm"
+                          className="glass-input w-full px-3 py-2"
                           onChange={(e) => setEditingExpenseForm(prev => ({ ...prev, amount: Number(e.target.value) }))}
                         />
                       </div>
                       <div className="flex space-x-3">
                         <button
                           onClick={updateFixedExpenseInModal}
-                          className="flex-1 flex items-center justify-center space-x-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-300 font-semibold"
+                          className="glass-button-primary flex-1 flex items-center justify-center space-x-2 px-4 py-2 font-semibold"
                         >
                           <Save className="w-4 h-4" />
                           <span>保存</span>
                         </button>
                         <button
                           onClick={() => setModalEditingExpense(null)}
-                          className="px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-all duration-300 font-semibold"
+                          className="glass-button px-4 py-2 font-semibold"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -918,7 +945,7 @@ export function SettingsPage() {
                               category: expense.category
                             })
                           }}
-                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-300"
+                          className="p-2 glass-icon hover:text-blue-400 hover:bg-blue-500/20 rounded-lg transition-all duration-300 glass-shine"
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
@@ -927,16 +954,16 @@ export function SettingsPage() {
                             setExpenseToDelete(expense.id)
                             setShowDeleteConfirmModal(true)
                           }}
-                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-300"
+                          className="p-2 glass-icon hover:text-red-400 hover:bg-red-500/20 rounded-lg transition-all duration-300 glass-shine"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                       
                       <div className="pr-16">
-                        <h4 className="font-medium text-gray-900 text-base mb-1">{expense.name}</h4>
-                        <p className="text-sm text-gray-600 font-medium mb-2">{expense.category}</p>
-                        <span className="text-xl font-semibold text-gray-900">
+                        <h4 className="font-medium glass-text-strong text-base mb-1">{expense.name}</h4>
+                        <p className="text-sm glass-text font-medium mb-2">{expense.category}</p>
+                        <span className="text-xl font-semibold glass-text-strong">
                           ¥{expense.amount.toLocaleString()}
                         </span>
                       </div>
@@ -946,10 +973,10 @@ export function SettingsPage() {
               ))}
             </div>
             {!modalEditingExpense && (
-              <div className="p-4 border-t border-gray-200">
+              <div className="p-4 border-t border-white/20">
                 <div className="flex justify-between items-center">
-                  <span className="text-base font-medium text-gray-700">合計</span>
-                  <span className="text-xl font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                  <span className="text-base font-medium glass-text">合計</span>
+                  <span className="text-xl font-semibold glass-text-strong">
                     ¥{fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0).toLocaleString()}
                   </span>
                 </div>
@@ -962,20 +989,20 @@ export function SettingsPage() {
       {/* Delete Confirmation Modal */}
       {showDeleteConfirmModal && (
         <div className="fixed left-0 right-0 bottom-[56px] top-[20px] bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+          <div className="glass-modal w-full max-w-sm">
             <div className="p-6 text-center">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Trash2 className="w-8 h-8 text-red-600" />
+              <div className="w-16 h-16 bg-red-500/20 backdrop-blur-sm border border-red-400/30 rounded-full flex items-center justify-center mx-auto mb-4 shadow-glass-glow">
+                <Trash2 className="w-8 h-8 text-red-400 glass-icon" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">削除の確認</h3>
-              <p className="text-gray-600 mb-6">この固定支出を削除しますか？</p>
+              <h3 className="text-lg font-bold glass-text-strong mb-2">削除の確認</h3>
+              <p className="glass-text mb-6">この固定支出を削除しますか？</p>
               <div className="flex space-x-3">
                 <button
                   onClick={() => {
                     setShowDeleteConfirmModal(false)
                     setExpenseToDelete(null)
                   }}
-                  className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-300 font-semibold"
+                  className="glass-button-strong flex-1 px-4 py-3 font-semibold"
                 >
                   キャンセル
                 </button>
@@ -987,7 +1014,7 @@ export function SettingsPage() {
                       setExpenseToDelete(null)
                     }
                   }}
-                  className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all duration-300 font-semibold"
+                  className="flex-1 px-4 py-3 bg-red-500/20 backdrop-blur-sm border border-red-400/30 text-red-400 rounded-xl hover:bg-red-500/30 hover:border-red-400/50 transition-all duration-300 font-semibold glass-shine"
                 >
                   削除
                 </button>
@@ -1000,20 +1027,20 @@ export function SettingsPage() {
       {/* Goal Delete Confirmation Modal */}
       {showDeleteGoalConfirmModal && (
         <div className="fixed left-0 right-0 bottom-[56px] top-[20px] bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+          <div className="glass-modal w-full max-w-sm">
             <div className="p-6 text-center">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Trash2 className="w-8 h-8 text-red-600" />
+              <div className="w-16 h-16 bg-red-500/20 backdrop-blur-sm border border-red-400/30 rounded-full flex items-center justify-center mx-auto mb-4 shadow-glass-glow">
+                <Trash2 className="w-8 h-8 text-red-400 glass-icon" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">削除の確認</h3>
-              <p className="text-gray-600 mb-6">この貯金目標を削除しますか？</p>
+              <h3 className="text-lg font-bold glass-text-strong mb-2">削除の確認</h3>
+              <p className="glass-text mb-6">この貯金目標を削除しますか？</p>
               <div className="flex space-x-3">
                 <button
                   onClick={() => {
                     setShowDeleteGoalConfirmModal(false)
                     setGoalToDelete(null)
                   }}
-                  className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-300 font-semibold"
+                  className="glass-button-strong flex-1 px-4 py-3 font-semibold"
                 >
                   キャンセル
                 </button>
@@ -1025,7 +1052,7 @@ export function SettingsPage() {
                       setGoalToDelete(null)
                     }
                   }}
-                  className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all duration-300 font-semibold"
+                  className="flex-1 px-4 py-3 bg-red-500/20 backdrop-blur-sm border border-red-400/30 text-red-400 rounded-xl hover:bg-red-500/30 hover:border-red-400/50 transition-all duration-300 font-semibold glass-shine"
                 >
                   削除
                 </button>

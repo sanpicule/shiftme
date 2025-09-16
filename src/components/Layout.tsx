@@ -36,25 +36,25 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
   const closeLogoutModal = () => setShowLogoutModal(false)
 
   return (
-    <div className="h-screen bg-white flex overflow-hidden">
+    <div className="h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex overflow-hidden">
       {/* Sidebar - Desktop only, always visible */}
-      <div className="hidden md:block w-64 h-screen bg-white border-r border-gray-200 shadow-lg">
+      <div className="hidden md:block w-64 h-screen glass-nav border-r border-white/20 shadow-glass">
         {/* Sidebar Header */}
-        <div className="flex items-center p-4 border-b border-gray-200">
+        <div className="flex items-center p-4 border-b border-white/20">
           <div className="flex items-center space-x-3">
-            <div className="relative group">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25 group-hover:shadow-xl group-hover:shadow-blue-500/40 transition-all duration-300 group-hover:scale-105">
-                <PiggyBank className="w-5 h-5 text-white" />
-              </div>
-            </div>
-            <h1 className="text-xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                <div className="relative group glass-shine">
+                  <div className="w-10 h-10 bg-gradient-to-br from-gray-500/30 to-gray-600/30 backdrop-blur-sm border border-gray-400/30 rounded-xl flex items-center justify-center shadow-glass-glow group-hover:shadow-glass-glow group-hover:scale-105 transition-all duration-300">
+                    <PiggyBank className="w-5 h-5 glass-icon" />
+                  </div>
+                </div>
+            <h1 className="text-xl font-black glass-text-strong">
               Shiftme
             </h1>
           </div>
         </div>
 
         {/* Sidebar Navigation */}
-        <div className="p-4 space-y-2 overflow-y-auto h-[calc(100vh-80px)]">
+        <div className="p-4 space-y-2 overflow-y-auto h-[calc(100vh-80px)] glass-scrollbar">
           {navigation.map((item) => {
             const Icon = item.icon
             const isActive = currentPage === item.id
@@ -63,30 +63,30 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
                 key={item.id}
                 onClick={() => onPageChange(item.id)}
                 className={`
-                  w-full flex items-center space-x-3 p-3 rounded-xl text-sm font-medium transition-all duration-300 group relative
+                  w-full flex items-center space-x-3 p-3 rounded-xl text-sm font-medium transition-all duration-300 group relative glass-shine
                   ${isActive 
-                    ? 'bg-blue-100 text-blue-700 border border-blue-200' 
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    ? 'bg-glass-white-strong text-white border border-white/30 shadow-glass-glow' 
+                    : 'glass-text hover:text-white hover:bg-glass-white-weak'
                   }
                 `}
               >
-                <div className={`w-10 h-10 rounded-xl transition-all duration-300 grid place-items-center ${isActive ? 'bg-blue-200' : 'bg-gray-100'}`}>
-                  <Icon className={`w-5 h-5 ${isActive ? 'text-blue-600' : 'text-gray-500 group-hover:text-gray-700'}`} />
+                <div className={`w-10 h-10 rounded-xl transition-all duration-300 grid place-items-center backdrop-blur-sm ${isActive ? 'bg-glass-black border border-white/30' : 'bg-glass-white-weak border border-white/10'}`}>
+                  <Icon className={`w-5 h-5 ${isActive ? 'glass-icon' : 'glass-icon group-hover:text-white/90'}`} />
                 </div>
-                <span>{item.name}</span>
+                <span className="text-shadow">{item.name}</span>
               </button>
             )
           })}
           
-          <div className="pt-4 border-t border-gray-200">
+          <div className="pt-4 border-t border-white/20">
             <button
               onClick={openLogoutModal}
-              className="w-full flex items-center space-x-3 p-3 rounded-xl text-sm font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 transition-all duration-300 group"
+              className="w-full flex items-center space-x-3 p-3 rounded-xl text-sm font-medium glass-text hover:text-red-400 hover:bg-red-500/20 transition-all duration-300 group glass-shine"
             >
-              <div className="w-10 h-10 rounded-xl bg-gray-100 transition-all duration-300 grid place-items-center">
-                <LogOut className="w-5 h-5 text-gray-500 group-hover:text-red-600 transition-colors" />
+              <div className="w-10 h-10 rounded-xl bg-glass-white-weak border border-white/10 transition-all duration-300 grid place-items-center group-hover:bg-red-500/20 group-hover:border-red-400/30">
+                <LogOut className="w-5 h-5 glass-icon group-hover:text-red-400 transition-colors" />
               </div>
-              <span>ログアウト</span>
+              <span className="text-shadow">ログアウト</span>
             </button>
           </div>
         </div>
@@ -95,15 +95,15 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
       {/* Main Content Area */}
       <div className="flex-1 overflow-hidden">
         {/* Mobile Header */}
-        <header className="md:hidden bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
-          <div className="flex items-center justify-center px-4 py-3">
+        <header className="md:hidden glass-nav border-b border-white/20 shadow-glass">
+          <div className="flex items-center px-4 py-3">
             <div className="flex items-center space-x-3">
-              <div className="relative group">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/25">
-                  <PiggyBank className="w-4 h-4 text-white" />
+                <div className="relative group glass-shine">
+                  <div className="w-8 h-8 bg-gradient-to-br from-gray-500/30 to-gray-600/30 backdrop-blur-sm border border-gray-400/30 rounded-lg flex items-center justify-center shadow-glass-glow">
+                    <PiggyBank className="w-4 h-4 glass-icon" />
+                  </div>
                 </div>
-              </div>
-              <h1 className="text-lg font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <h1 className="text-lg font-black glass-text-strong">
                 Shiftme
               </h1>
             </div>
@@ -111,13 +111,13 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
         </header>
 
         {/* Main Content */}
-        <main className="h-full overflow-y-auto p-6 md:p-8 md:py-10 pb-36 md:pb-8">
+        <main className="h-full overflow-y-auto p-6 md:p-8 md:py-10 pb-36 md:pb-8 glass-scrollbar">
           {children}
         </main>
 
         {/* Mobile Bottom Navigation */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40">
-          <div className="grid grid-cols-5 gap-1 p-2 pb-4">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 glass-nav border-t border-white/20 shadow-glass z-40">
+          <div className="grid grid-cols-5 gap-1 p-2 pb-6">
             {navigation.map((item) => {
               const Icon = item.icon
               const isActive = currentPage === item.id
@@ -126,14 +126,14 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
                   key={item.id}
                   onClick={() => onPageChange(item.id)}
                   className={`
-                    flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-300
+                    flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-300 glass-shine
                     ${isActive 
-                      ? 'text-blue-600 bg-blue-50' 
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      ? 'glass-text-strong bg-glass-white-strong border border-white/30' 
+                      : 'glass-text hover:text-white hover:bg-glass-white-weak'
                     }
                   `}
                 >
-                  <Icon className={`w-6 h-6 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
+                  <Icon className={`w-6 h-6 ${isActive ? 'glass-icon' : 'glass-icon'}`} />
                 </button>
               )
             })}
@@ -141,9 +141,9 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
             {/* Logout Button */}
             <button
               onClick={openLogoutModal}
-              className="flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-300 text-gray-600 hover:text-red-600 hover:bg-red-50"
+              className="flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-300 glass-text hover:text-red-400 hover:bg-red-500/20 glass-shine"
             >
-              <LogOut className="w-6 h-6 text-gray-500" />
+              <LogOut className="w-6 h-6 glass-icon" />
             </button>
           </div>
         </div>

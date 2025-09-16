@@ -52,31 +52,31 @@ export function ExpenseCalendar({ expenses, onDateClick }: ExpenseCalendarProps)
     <div className="space-y-6">
       {/* Calendar Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">
+        <h3 className="text-lg font-semibold glass-text-strong">
           {format(currentDate, 'yyyy年MM月', { locale: ja })}
         </h3>
         <div className="flex items-center space-x-2">
           <button
             onClick={prevMonth}
-            className="p-2 hover:bg-gray-100/50 rounded-lg transition-colors"
+            className="p-2 hover:bg-glass-white-weak rounded-lg transition-colors glass-shine border border-white/20"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-5 h-5 glass-icon" />
           </button>
           <button
             onClick={nextMonth}
-            className="p-2 hover:bg-gray-100/50 rounded-lg transition-colors"
+            className="p-2 hover:bg-glass-white-weak rounded-lg transition-colors glass-shine border border-white/20"
           >
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-5 h-5 glass-icon" />
           </button>
         </div>
       </div>
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 border border-gray-200 rounded-lg overflow-hidden">
+      <div className="grid grid-cols-7 border border-white/20 rounded-lg overflow-hidden backdrop-blur-sm bg-glass-white-weak">
         {/* Day Headers */}
         {['日', '月', '火', '水', '木', '金', '土'].map((day, index) => (
-          <div key={day} className={`p-3 text-center text-sm font-semibold border-b border-gray-400 last:border-r-0 bg-slate-300 ${
-            index === 0 ? 'text-red-600' : index === 6 ? 'text-blue-600' : 'text-gray-700'
+          <div key={day} className={`p-3 text-center text-sm font-semibold border-b border-white/30 last:border-r-0 bg-glass-white-weak ${
+            index === 0 ? 'text-red-400' : index === 6 ? 'text-blue-400' : 'glass-text'
           }`}>
             {day}
           </div>
@@ -94,23 +94,23 @@ export function ExpenseCalendar({ expenses, onDateClick }: ExpenseCalendarProps)
               key={day.toISOString()}
               onClick={() => inCurrentMonth && handleDateClick(day)}
               className={`
-                p-2 min-h-[80px] border-r border-b border-gray-200 last:border-r-0 relative transition-all duration-200 hover:shadow-md flex flex-col items-start
+                p-2 min-h-[80px] border-r border-b border-white/20 last:border-r-0 relative transition-all duration-200 hover:shadow-glass-glow flex flex-col items-start glass-shine
                 ${inCurrentMonth 
-                  ? 'hover:bg-gray-50/50 cursor-pointer' 
+                  ? 'hover:bg-glass-white-weak cursor-pointer' 
                   : 'cursor-default'
                 }
-                ${isToday(day) && inCurrentMonth
-                  ? 'bg-gradient-to-br from-blue-100 to-blue-50 border-blue-400 shadow-md ring-2 ring-blue-200' 
-                  : ''
-                }
+                  ${isToday(day) && inCurrentMonth
+                    ? 'bg-gradient-to-br from-gray-500/30 to-gray-600/30 border-gray-400/50 shadow-glass-glow ring-2 ring-gray-400/30'
+                    : ''
+                  }
               `}
             >
               <div className={`text-sm font-semibold w-full text-center ${
-                !inCurrentMonth ? 'text-gray-400' :
-                dayOfWeek === 0 ? 'text-red-600' : 
-                dayOfWeek === 6 ? 'text-blue-600' : 
-                'text-gray-900'
-              }`}>
+                !inCurrentMonth ? 'text-white/40' :
+                dayOfWeek === 0 ? 'text-gray-400' :
+                dayOfWeek === 6 ? 'text-gray-300' :
+                'glass-text'
+              } ${isToday(day) && inCurrentMonth ? 'text-green-400' : ''}`}>
                 {format(day, 'd')}
               </div>
               
@@ -118,31 +118,29 @@ export function ExpenseCalendar({ expenses, onDateClick }: ExpenseCalendarProps)
                 <div className="space-y-1">
                   {/* Desktop: Show expense details, Mobile: Show only marker */}
                   <div className="hidden md:block">
-                    <div className="text-xs font-semibold text-red-600 bg-red-50 px-1.5 py-0.5 rounded truncate">
+                    <div className="text-xs font-semibold text-gray-300 bg-gray-500/20 backdrop-blur-sm px-1.5 py-0.5 rounded truncate border border-gray-400/30">
                       ¥{dayTotal.toLocaleString()}
                     </div>
                     {dayExpenses.length > 1 && (
-                      <div className="text-xs text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded">
+                      <div className="text-xs glass-text bg-glass-white-weak px-1.5 py-0.5 rounded border border-white/20">
                         {dayExpenses.length}件
                       </div>
                     )}
                   </div>
                   {/* Mobile: Simple marker */}
-                  <div className="md:hidden flex justify-center">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  </div>
+                    <div className="md:hidden flex justify-center">
+                      <div className="w-2 h-2 bg-blue-400 rounded-full shadow-lg"></div>
+                    </div>
                 </div>
               )}
               
               {isToday(day) && inCurrentMonth && (
-                <div className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                <div className="absolute top-1 right-1 w-2 h-2 bg-gray-400 rounded-full animate-pulse shadow-lg"></div>
               )}
             </button>
           )
         })}
       </div>
-
-
     </div>
   )
 }

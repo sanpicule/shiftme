@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { User, Mail, Calendar, Award, Target, PiggyBank, TrendingUp } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useUserSettings } from '../hooks/useUserSettings'
@@ -15,13 +15,7 @@ export function ProfilePage() {
   const memberSince = user?.created_at ? new Date(user.created_at) : new Date()
   const daysSinceMember = Math.floor((new Date().getTime() - memberSince.getTime()) / (1000 * 60 * 60 * 24))
 
-  useEffect(() => {
-    if (user) {
-      fetchFixedExpenses()
-    }
-  }, [user])
-
-  const fetchFixedExpenses = async () => {
+  const fetchFixedExpenses = useCallback(async () => {
     if (!user) return
 
     try {
@@ -36,7 +30,13 @@ export function ProfilePage() {
       console.error('Error fetching fixed expenses:', error)
       setFixedExpenses([])
     }
-  }
+  }, [user])
+
+  useEffect(() => {
+    if (user) {
+      fetchFixedExpenses()
+    }
+  }, [user, fetchFixedExpenses])
 
   const totalFixedExpenses = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
   const monthlyAvailableAmount = (userSettings?.monthly_income || 0) - totalFixedExpenses
@@ -83,34 +83,34 @@ export function ProfilePage() {
     <div className="space-y-8">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">プロフィール</h1>
+        <h1 className="text-3xl font-bold glass-text-strong mb-2">プロフィール</h1>
       </div>
 
       {/* Profile Card */}
-      <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-8">
+      <div className="glass-card p-8 hover:shadow-glass-glow transition-all duration-500 glass-shine">
         <div className="flex flex-col md:flex-row items-center md:items-start space-y-6 md:space-y-0 md:space-x-8">
           {/* Avatar */}
           <div className="relative">
-            <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-purple-600 rounded-full flex items-center justify-center">
-              <User className="w-12 h-12 text-white" />
+            <div className="w-24 h-24 bg-gradient-to-br from-blue-500/30 to-purple-600/30 backdrop-blur-sm border border-blue-400/30 rounded-full flex items-center justify-center shadow-glass-glow">
+              <User className="w-12 h-12 glass-icon" />
             </div>
-            <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center border-4 border-white">
-              <Award className="w-4 h-4 text-white" />
+            <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-gradient-to-br from-green-500/30 to-emerald-600/30 backdrop-blur-sm border-4 border-glass-white rounded-full flex items-center justify-center shadow-glass-glow">
+              <Award className="w-4 h-4 glass-icon" />
             </div>
           </div>
 
           {/* Profile Info */}
           <div className="flex-1 text-center md:text-left">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <h2 className="text-2xl font-bold glass-text-strong mb-2">
               {user?.email?.split('@')[0] || 'ユーザー'}
             </h2>
-            <div className="space-y-2 text-gray-600">
+            <div className="space-y-2 glass-text">
               <div className="flex items-center justify-center md:justify-start space-x-2">
-                <Mail className="w-4 h-4" />
+                <Mail className="w-4 h-4 glass-icon" />
                 <span>{user?.email}</span>
               </div>
               <div className="flex items-center justify-center md:justify-start space-x-2">
-                <Calendar className="w-4 h-4" />
+                <Calendar className="w-4 h-4 glass-icon" />
                 <span>
                   {format(memberSince, 'yyyy年MM月dd日', { locale: ja })}から利用開始
                 </span>
@@ -121,22 +121,22 @@ export function ProfilePage() {
           {/* Stats */}
           <div className="grid grid-cols-2 gap-6 text-center">
             <div>
-              <div className="text-2xl font-bold text-blue-600">{daysSinceMember}</div>
-              <div className="text-sm text-gray-600">利用日数</div>
+              <div className="text-2xl font-bold glass-text-strong">{daysSinceMember}</div>
+              <div className="text-sm glass-text">利用日数</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-purple-600">
+              <div className="text-2xl font-bold glass-text-strong">
                 {completedAchievements.length}/{totalAchievements}
               </div>
-              <div className="text-sm text-gray-600">達成率</div>
+              <div className="text-sm glass-text">達成率</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20">
-        <div className="border-b border-gray-200/50">
+      <div className="glass-card hover:shadow-glass-glow transition-all duration-500 glass-shine">
+        <div className="border-b border-white/20">
           <nav className="flex space-x-8 px-8">
             {[
               { id: 'overview' as const, name: '概要', icon: User },
@@ -148,14 +148,14 @@ export function ProfilePage() {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`
-                    flex items-center space-x-2 py-4 px-2 border-b-2 font-medium text-sm transition-colors
+                    flex items-center space-x-2 py-4 px-2 border-b-2 font-medium text-sm transition-colors glass-shine
                     ${activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'border-blue-400/50 glass-text-strong'
+                      : 'border-transparent glass-text hover:text-white hover:border-white/30'
                     }
                   `}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-4 h-4 glass-icon" />
                   <span>{tab.name}</span>
                 </button>
               )
@@ -169,21 +169,21 @@ export function ProfilePage() {
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">基本情報</h3>
+                  <h3 className="text-lg font-semibold glass-text-strong">基本情報</h3>
                   <div className="space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">メールアドレス:</span>
-                      <span className="font-medium">{user?.email}</span>
+                      <span className="glass-text">メールアドレス:</span>
+                      <span className="font-medium glass-text-strong">{user?.email}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">月収:</span>
-                      <span className="font-medium">
+                      <span className="glass-text">月収:</span>
+                      <span className="font-medium glass-text-strong">
                         ¥{userSettings?.monthly_income?.toLocaleString() || '未設定'}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">登録日:</span>
-                      <span className="font-medium">
+                      <span className="glass-text">登録日:</span>
+                      <span className="font-medium glass-text-strong">
                         {format(memberSince, 'yyyy年MM月dd日', { locale: ja })}
                       </span>
                     </div>
@@ -191,23 +191,23 @@ export function ProfilePage() {
                 </div>
 
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">収支情報</h3>
+                  <h3 className="text-lg font-semibold glass-text-strong">収支情報</h3>
                   <div className="space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">月収:</span>
-                      <span className="font-medium text-green-600">
+                      <span className="glass-text">月収:</span>
+                      <span className="font-medium text-green-400">
                         ¥{userSettings?.monthly_income?.toLocaleString() || '未設定'}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">固定支出:</span>
-                      <span className="font-medium text-red-600">
+                      <span className="glass-text">固定支出:</span>
+                      <span className="font-medium text-red-400">
                         ¥{totalFixedExpenses.toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">月間利用可能額:</span>
-                      <span className="font-medium text-blue-600">
+                      <span className="glass-text">月間利用可能額:</span>
+                      <span className="font-medium text-blue-400">
                         ¥{monthlyAvailableAmount.toLocaleString()}
                       </span>
                     </div>
@@ -215,19 +215,19 @@ export function ProfilePage() {
                 </div>
 
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">アクティビティ</h3>
+                  <h3 className="text-lg font-semibold glass-text-strong">アクティビティ</h3>
                   <div className="space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">利用日数:</span>
-                      <span className="font-medium">{daysSinceMember}日</span>
+                      <span className="glass-text">利用日数:</span>
+                      <span className="font-medium glass-text-strong">{daysSinceMember}日</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">達成した実績:</span>
-                      <span className="font-medium">{completedAchievements.length}個</span>
+                      <span className="glass-text">達成した実績:</span>
+                      <span className="font-medium glass-text-strong">{completedAchievements.length}個</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">設定完了:</span>
-                      <span className={`font-medium ${userSettings?.setup_completed ? 'text-green-600' : 'text-red-600'}`}>
+                      <span className="glass-text">設定完了:</span>
+                      <span className={`font-medium ${userSettings?.setup_completed ? 'text-green-400' : 'text-red-400'}`}>
                         {userSettings?.setup_completed ? '完了' : '未完了'}
                       </span>
                     </div>
@@ -241,9 +241,9 @@ export function ProfilePage() {
           {activeTab === 'achievements' && (
             <div className="space-y-6">
               <div className="text-center mb-8">
-                <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-full">
-                  <Award className="w-5 h-5" />
-                  <span className="font-medium">
+                <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-500/30 to-purple-500/30 backdrop-blur-sm border border-blue-400/30 text-white px-6 py-3 rounded-full shadow-glass-glow glass-shine">
+                  <Award className="w-5 h-5 glass-icon" />
+                  <span className="font-medium glass-text-strong">
                     {completedAchievements.length}/{totalAchievements} 実績達成
                   </span>
                 </div>
@@ -256,55 +256,46 @@ export function ProfilePage() {
                     <div
                       key={achievement.id}
                       className={`
-                        p-6 rounded-xl border transition-all duration-200
+                        p-6 rounded-xl border transition-all duration-200 glass-shine
                         ${achievement.completed
-                          ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 shadow-lg'
-                          : 'bg-gray-50/50 border-gray-200'
+                          ? 'glass-card border-green-400/30 shadow-glass-glow'
+                          : 'glass-card border-white/20'
                         }
                       `}
                     >
                       <div className="flex items-start space-x-4">
                         <div className={`
-                          p-3 rounded-xl
+                          p-3 rounded-xl backdrop-blur-sm border shadow-glass-glow
                           ${achievement.completed
-                            ? 'bg-gradient-to-br from-green-400 to-green-600'
-                            : 'bg-gray-300'
+                            ? 'bg-gradient-to-br from-green-500/30 to-green-600/30 border-green-400/30'
+                            : 'bg-glass-white-weak border-white/20'
                           }
                         `}>
-                          <Icon className="w-6 h-6 text-white" />
+                          <Icon className={`w-6 h-6 ${achievement.completed ? 'glass-icon' : 'glass-icon'}`} />
                         </div>
                         <div className="flex-1">
-                          <h4 className={`font-semibold mb-1 ${achievement.completed ? 'text-green-800' : 'text-gray-600'}`}>
+                          <h4 className={`font-semibold mb-1 ${achievement.completed ? 'glass-text-strong' : 'glass-text'}`}>
                             {achievement.title}
                           </h4>
-                          <p className={`text-sm ${achievement.completed ? 'text-green-600' : 'text-gray-500'}`}>
+                          <p className={`text-sm ${achievement.completed ? 'glass-text' : 'glass-text'}`}>
                             {achievement.description}
                           </p>
                           {achievement.completed && achievement.date && (
-                            <p className="text-xs text-green-500 mt-2">
+                            <p className="text-xs text-green-400 mt-2">
                               {format(new Date(achievement.date), 'yyyy年MM月dd日', { locale: ja })}達成
                             </p>
                           )}
-                                </div>
-      </div>
-
-      {/* Logout Confirm Modal */}
-      {/* 削除済み */}
-    </div>
-  )
-})}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )}
 
         </div>
       </div>
-
-      {/* Settings and Logout Buttons */}
-      {/* 削除済み */}
-
-      {/* Logout Confirm Modal */}
-      {/* 削除済み */}
     </div>
   )
 }
