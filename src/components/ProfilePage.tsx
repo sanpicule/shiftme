@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { User, Mail, Calendar, Award, TrendingUp, Target, PiggyBank } from 'lucide-react'
+import { User, Mail, Calendar, Award, Target, PiggyBank, TrendingUp } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useUserSettings } from '../hooks/useUserSettings'
 import { format } from 'date-fns'
@@ -9,7 +9,7 @@ import { supabase, FixedExpense } from '../lib/supabase'
 export function ProfilePage() {
   const { user } = useAuth()
   const { userSettings } = useUserSettings()
-  const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'statistics'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'achievements'>('overview')
   const [fixedExpenses, setFixedExpenses] = useState<FixedExpense[]>([])
 
   const memberSince = user?.created_at ? new Date(user.created_at) : new Date()
@@ -141,7 +141,6 @@ export function ProfilePage() {
             {[
               { id: 'overview' as const, name: '概要', icon: User },
               { id: 'achievements' as const, name: '実績', icon: Award },
-              { id: 'statistics' as const, name: '統計', icon: TrendingUp },
             ].map((tab) => {
               const Icon = tab.icon
               return (
@@ -298,97 +297,6 @@ export function ProfilePage() {
             </div>
           )}
 
-          {/* Statistics Tab */}
-          {activeTab === 'statistics' && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-xl">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="p-2 bg-blue-500 rounded-lg">
-                      <Calendar className="w-5 h-5 text-white" />
-                    </div>
-                    <h3 className="font-semibold text-blue-800">利用統計</h3>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-blue-600">総利用日数:</span>
-                      <span className="font-bold text-blue-800">{daysSinceMember}日</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-blue-600">平均利用頻度:</span>
-                      <span className="font-bold text-blue-800">毎日</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-r from-green-50 to-green-100 p-6 rounded-xl">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="p-2 bg-green-500 rounded-lg">
-                      <Target className="w-5 h-5 text-white" />
-                    </div>
-                    <h3 className="font-semibold text-green-800">収支統計</h3>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-green-600">月収:</span>
-                      <span className="font-bold text-green-800">¥{userSettings?.monthly_income?.toLocaleString() || '0'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-green-600">固定支出:</span>
-                      <span className="font-bold text-green-800">¥{totalFixedExpenses.toLocaleString()}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-6 rounded-xl">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="p-2 bg-purple-500 rounded-lg">
-                      <Award className="w-5 h-5 text-white" />
-                    </div>
-                    <h3 className="font-semibold text-purple-800">実績統計</h3>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-purple-600">達成実績:</span>
-                      <span className="font-bold text-purple-800">{completedAchievements.length}個</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-purple-600">達成率:</span>
-                      <span className="font-bold text-purple-800">
-                        {Math.round((completedAchievements.length / totalAchievements) * 100)}%
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Fixed Expenses Details */}
-              {fixedExpenses && fixedExpenses.length > 0 && (
-                <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-6 rounded-xl">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="p-2 bg-orange-500 rounded-lg">
-                      <Target className="w-5 h-5 text-white" />
-                    </div>
-                    <h3 className="font-semibold text-orange-800">固定支出詳細</h3>
-                  </div>
-                  <div className="space-y-3">
-                    {fixedExpenses.map((expense, index) => (
-                      <div key={index} className="flex justify-between items-center p-3 bg-white/50 rounded-lg">
-                        <span className="text-orange-700 font-medium">{expense.name}</span>
-                        <span className="text-orange-800 font-bold">¥{expense.amount.toLocaleString()}</span>
-                      </div>
-                    ))}
-                    <div className="flex justify-between items-center p-3 bg-orange-200/50 rounded-lg border-t border-orange-300">
-                      <span className="text-orange-800 font-semibold">合計</span>
-                      <span className="text-orange-800 font-bold text-lg">
-                        ¥{totalFixedExpenses.toLocaleString()}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </div>
 

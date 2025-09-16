@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { Plus, Trash2, Edit2, Save, X } from 'lucide-react'
 import { useUserSettings } from '../hooks/useUserSettings'
@@ -32,7 +32,6 @@ export function SettingsPage() {
   const [editingExpense, setEditingExpense] = useState<string | null>(null)
   const [editingGoal, setEditingGoal] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [isEditingIncome, setIsEditingIncome] = useState(false)
   const [showExpenseForm, setShowExpenseForm] = useState(false)
   const [showGoalForm, setShowGoalForm] = useState(false)
   const [showExpenseModal, setShowExpenseModal] = useState(false)
@@ -63,16 +62,7 @@ export function SettingsPage() {
     target_date: ''
   })
 
-  useEffect(() => {
-    if (user) {
-      fetchData()
-    }
-    if (userSettings) {
-      setIncomeValue('monthly_income', userSettings.monthly_income)
-    }
-  }, [user, userSettings])
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!user) return
 
     try {
@@ -93,14 +83,22 @@ export function SettingsPage() {
     } catch (error) {
       console.error('Error fetching data:', error)
     }
-  }
+  }, [user])
+
+  useEffect(() => {
+    if (user) {
+      fetchData()
+    }
+    if (userSettings) {
+      setIncomeValue('monthly_income', userSettings.monthly_income)
+    }
+  }, [user, userSettings, setIncomeValue, fetchData])
 
   const handleIncomeUpdate = async (data: IncomeForm) => {
     setLoading(true)
     try {
       await updateUserSettings({ monthly_income: data.monthly_income })
       showSuccess('月収を更新しました', `新しい月収: ¥${data.monthly_income.toLocaleString()}`)
-      setIsEditingIncome(false) // SPでフォームを閉じる
     } catch (error) {
       console.error('Error updating income:', error)
       showError('更新に失敗しました', 'もう一度お試しください')
@@ -345,59 +343,10 @@ export function SettingsPage() {
           </div>
         </div>
 
-        {/* SPのみでフォームを非表示にする */}
-        <div className="block md:hidden">
-          {!isEditingIncome ? (
-            <div className="flex items-center justify-between p-4 bg-white/40 backdrop-blur-sm rounded-2xl border-2 border-gray-200">
-              <div>
-                <p className="text-sm text-gray-600">現在の月収</p>
-                <p className="text-xl font-semibold text-gray-900">¥{userSettings?.monthly_income?.toLocaleString() || '未設定'}</p>
-              </div>
-              <button
-                onClick={() => setIsEditingIncome(true)}
-                className="p-3 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-all duration-300"
-              >
-                <Edit2 className="w-5 h-5" />
-              </button>
-            </div>
-          ) : (
-            <form onSubmit={handleIncomeSubmit(handleIncomeUpdate)} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  月収（円）
-                </label>
-                <input
-                  type="number"
-                  {...registerIncome('monthly_income', { required: true, min: 0 })}
-                  className="w-full px-6 py-4 border border-gray-300/50 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 text-base font-medium bg-white/50 backdrop-blur-sm"
-                  placeholder="300000"
-                />
-              </div>
-              <div className="flex space-x-3">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 flex items-center justify-center space-x-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-2xl hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:-translate-y-1 font-semibold"
-                >
-                  <Save className="w-5 h-5" />
-                  <span>{loading ? '更新中...' : '更新'}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsEditingIncome(false)}
-                  className="px-8 py-4 border-2 border-gray-300 text-gray-700 rounded-2xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-300 font-semibold"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </form>
-          )}
-        </div>
-
-        {/* PCでは従来通り表示 */}
-        <div className="hidden md:block">
-          <form onSubmit={handleIncomeSubmit(handleIncomeUpdate)} className="space-y-6">
-            <div>
+        {/* 統一されたフォーム表示 */}
+        <form onSubmit={handleIncomeSubmit(handleIncomeUpdate)} className="space-y-6">
+          <div className="flex flex-col md:flex-row md:items-end gap-4">
+            <div className="flex-1">
               <label className="block text-sm font-semibold text-gray-700 mb-3">
                 月収（円）
               </label>
@@ -411,13 +360,13 @@ export function SettingsPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center space-x-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-2xl hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:-translate-y-1 font-semibold"
+              className="w-full md:w-auto flex items-center justify-center space-x-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-2xl hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:-translate-y-1 font-semibold"
             >
               <Save className="w-5 h-5" />
               <span>{loading ? '更新中...' : '更新'}</span>
             </button>
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
 
       {/* Fixed Expenses Section */}
