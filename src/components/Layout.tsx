@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { LogOut, PiggyBank, Home, Settings, User, TrendingUp } from 'lucide-react'
+import { LogOut, Home, Settings, User, TrendingUp } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { LogoutConfirmModal } from './LogoutConfirmModal'
 
@@ -44,7 +44,7 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
           <div className="flex items-center space-x-3">
                 <div className="relative group glass-shine">
                   <div className="w-10 h-10 bg-gradient-to-br from-gray-500/30 to-gray-600/30 backdrop-blur-sm border border-gray-400/30 rounded-xl flex items-center justify-center shadow-glass-glow group-hover:shadow-glass-glow group-hover:scale-105 transition-all duration-300">
-                    <PiggyBank className="w-5 h-5 glass-icon" />
+                    <img src="/shiftme-icon.png" alt="Shiftme" className="w-8 h-8 rounded-lg" />
                   </div>
                 </div>
             <h1 className="text-xl font-black glass-text-strong">
@@ -100,7 +100,7 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
             <div className="flex items-center space-x-3">
                 <div className="relative group glass-shine">
                   <div className="w-8 h-8 bg-gradient-to-br from-gray-500/30 to-gray-600/30 backdrop-blur-sm border border-gray-400/30 rounded-lg flex items-center justify-center shadow-glass-glow">
-                    <PiggyBank className="w-4 h-4 glass-icon" />
+                    <img src="/shiftme-icon.png" alt="Shiftme" className="w-6 h-6 rounded-md" />
                   </div>
                 </div>
               <h1 className="text-lg font-black glass-text-strong">
