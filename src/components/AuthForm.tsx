@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { PiggyBank, Mail, Lock, Eye, EyeOff, Zap, Target, Shield, TrendingUp, Calendar } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, Zap, Target, Shield, TrendingUp, Calendar } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
 export function AuthForm() {
@@ -64,7 +64,7 @@ export function AuthForm() {
             <div className="flex items-center mb-6">
                 <div className="relative group glass-shine">
                   <div className="w-20 h-20 bg-gradient-to-br from-gray-500/30 via-gray-600/30 to-gray-700/30 backdrop-blur-sm border border-gray-400/30 rounded-3xl flex items-center justify-center shadow-glass-glow group-hover:shadow-glass-glow transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
-                    <PiggyBank className="w-10 h-10 glass-icon" />
+                    <img src="/shiftme-icon.png" alt="Shiftme" className="w-18 h-18 rounded-xl" />
                   </div>
                 </div>
               <h1 className="ml-6 text-5xl font-black glass-text-strong">
@@ -132,7 +132,7 @@ export function AuthForm() {
               <div className="flex items-center justify-center mb-6">
                 <div className="relative group glass-shine">
                   <div className="w-12 h-12 bg-gradient-to-br from-gray-500/30 via-gray-600/30 to-gray-700/30 backdrop-blur-sm border border-gray-400/30 rounded-xl flex items-center justify-center shadow-glass-glow group-hover:shadow-glass-glow transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
-                    <PiggyBank className="w-6 h-6 glass-icon" />
+                    <img src="/shiftme-icon.png" alt="Shiftme" className="w-12 h-12 rounded-lg" />
                   </div>
                 </div>
                 <h1 className="ml-4 text-3xl font-black glass-text-strong">

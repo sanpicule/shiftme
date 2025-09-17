@@ -1,12 +1,8 @@
-const CACHE_NAME = 'shiftme-v2';
+const CACHE_NAME = 'shiftme-v3';
 const urlsToCache = [
   '/',
   '/manifest.json',
-  '/icon.svg',
-  '/icon-192.png',
-  '/icon-512.png',
-  '/apple-touch-icon.png',
-  '/favicon.ico'
+  '/shiftme-icon.png'
 ];
 
 // インストール時のキャッシュ
@@ -94,8 +90,8 @@ self.addEventListener('push', (event) => {
     const data = event.data.json();
     const options = {
       body: data.body,
-      icon: '/icon-192.png',
-      badge: '/icon-192.png',
+      icon: '/shiftme-icon.png',
+      badge: '/shiftme-icon.png',
       vibrate: [100, 50, 100],
       data: {
         dateOfArrival: Date.now(),
@@ -105,7 +101,7 @@ self.addEventListener('push', (event) => {
         {
           action: 'explore',
           title: '開く',
-          icon: '/icon-192.png'
+          icon: '/shiftme-icon.png'
         },
         {
           action: 'close',
