@@ -43,7 +43,21 @@ cd shiftme-savings-app
 npm install
 ```
 
-### 4. 環境変数の設定
+### 4. Gitフックのセットアップ
+
+コミットメッセージに自動で絵文字を追加するため、以下のコマンドを実行してください：
+
+```bash
+./setup-hooks.sh
+```
+
+このセットアップにより、以下のようなコミットメッセージに自動で絵文字が追加されます：
+- `fix:` → 🐛
+- `feat:` → ✨
+- `docs:` → 📚
+- その他多数のプレフィックスに対応
+
+### 5. 環境変数の設定
 
 プロジェクトのルートに`.env`ファイルを作成し、SupabaseプロジェクトのURLとAnonキーを設定します。`.env.example`ファイルを参考にしてください。
 
@@ -52,7 +66,7 @@ VITE_SUPABASE_URL=YOUR_SUPABASE_URL
 VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
 ```
 
-### 5. 開発サーバーの起動
+### 6. 開発サーバーの起動
 
 ```bash
 npm run dev
@@ -60,7 +74,7 @@ npm run dev
 
 ブラウザで `http://localhost:3001` を開いてください。
 
-### 6. ビルド
+### 7. ビルド
 
 本番用のファイルを生成するには、以下のコマンドを実行します。
 
