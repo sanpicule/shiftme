@@ -207,59 +207,6 @@ export function AnalyticsPage() {
       .sort((a, b) => b.amount - a.amount)
   }
 
-  // 開始日（目標開始日 or 最初の支出月）から今日までの各月の使用率（その月の支出 / 月予算）
-  const getUsageSinceStartData = () => {
-    const now = new Date()
-    const goal = savingsGoals[0]
-
-    const firstDate = allExpenses.length > 0 ? new Date(allExpenses[0].expense_date) : now
-    const startDate = goal?.start_date ? new Date(goal.start_date) : firstDate
-    const startMonth = startOfMonth(startDate)
-
-    const monthsCount = Math.max(
-      1,
-      (now.getFullYear() - startMonth.getFullYear()) * 12 + (now.getMonth() - startMonth.getMonth()) + 1
-    )
-
-    const monthlyIncome = userSettings?.monthly_income || 0
-    const totalFixed = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
-    const monthlyNeededForGoal = goal
-      ? Math.ceil(
-          goal.target_amount /
-            Math.max(
-              1,
-              Math.ceil(
-                (new Date(goal.target_date).getTime() - new Date().getTime()) /
-                  (1000 * 60 * 60 * 24 * 30)
-              )
-            )
-        )
-      : 0
-    const monthlyBudget = monthlyIncome - totalFixed - monthlyNeededForGoal
-
-    const labels: string[] = []
-    const rates: number[] = []
-
-    for (let i = monthsCount - 1; i >= 0; i--) {
-      const monthDate = subMonths(now, i)
-      const monthStart = startOfMonth(monthDate)
-      const monthEnd = endOfMonth(monthDate)
-
-      const monthExpenses = allExpenses.filter(expense => {
-        const expenseDate = new Date(expense.expense_date)
-        return expenseDate >= monthStart && expenseDate <= monthEnd
-      })
-      const monthSum = monthExpenses.reduce((sum, expense) => sum + expense.amount, 0)
-
-      const usageRate = monthlyBudget > 0 ? (monthSum / monthlyBudget) * 100 : 0
-      labels.push(format(monthDate, 'MM月', { locale: ja }))
-      rates.push(Math.max(0, usageRate))
-    }
-
-    return { labels, rates }
-  }
-
-  const usageSinceStart = getUsageSinceStartData()
 
   // 月次の貯蓄額シリーズ（開始日〜今日、全期間データ使用。マイナスもあり）
   const getMonthlySavingsSeries = () => {
@@ -394,6 +341,137 @@ export function AnalyticsPage() {
     )
   }
 
+  // 今月のみ選択時の処理
+  if (timeRange === 'current') {
+    const hasExpenses = expenses.length > 0
+
+    return (
+      <div className="space-y-6">
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold glass-text-strong mb-2">今月の支出</h1>
+            <p className="glass-text text-sm sm:text-base">{format(new Date(), 'yyyy年MM月', { locale: ja })}の支出記録</p>
+          </div>
+          <div>
+            <select
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value as 'current' | 'all')}
+              className="glass-input px-4 py-2 w-full sm:w-auto"
+            >
+              <option value="current">今月のみ</option>
+              <option value="all">全期間</option>
+            </select>
+          </div>
+        </div>
+
+        {!hasExpenses ? (
+          // 記録がない場合
+          <div className="glass-card p-8 sm:p-12 text-center">
+            <div className="max-w-md mx-auto space-y-4">
+              <div className="flex items-center justify-center">
+                <BarChart3 className="w-16 h-16 sm:w-20 sm:h-20 glass-icon" />
+              </div>
+              <h3 className="text-xl sm:text-2xl font-bold glass-text-strong">表示するデータがありません</h3>
+              <p className="glass-text text-sm sm:text-base">ダッシュボードより支出を追加してください。</p>
+            </div>
+          </div>
+        ) : (
+          // 記録がある場合
+          <>
+            {/* 合計金額カード */}
+            <div className="glass-card p-6 sm:p-8 text-center glass-shine">
+              <p className="glass-text text-sm sm:text-base mb-2">今月の合計支出</p>
+              <p className="text-4xl sm:text-5xl md:text-6xl font-bold glass-text-strong mb-1">
+                ¥{totalExpenses.toLocaleString()}
+              </p>
+              <p className="glass-text text-xs sm:text-sm">{expenses.length}件の記録</p>
+            </div>
+
+            {/* カテゴリ別内訳 */}
+            {categoryData.length > 0 && (
+              <div className="glass-card p-4 sm:p-6">
+                <div className="flex items-center space-x-3 mb-4 sm:mb-6">
+                  <PieChart className="w-6 h-6 sm:w-7 sm:h-7 glass-icon" />
+                  <h2 className="text-lg sm:text-xl font-bold glass-text-strong">カテゴリ別内訳</h2>
+                </div>
+
+                {/* スマホ最適化：リストのみ表示 */}
+                <div className="space-y-3">
+                  {categoryData.map((category, index) => (
+                    <div 
+                      key={index} 
+                      className="flex items-center justify-between p-3 sm:p-4 bg-white/5 hover:bg-white/10 rounded-lg sm:rounded-xl border border-white/10 transition-all"
+                    >
+                      <div className="flex items-center space-x-3 flex-1 min-w-0">
+                        <div
+                          className="w-3 h-3 sm:w-4 sm:h-4 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: category.color }}
+                        />
+                        <span className="font-medium glass-text-strong text-sm sm:text-base truncate">
+                          {category.category}
+                        </span>
+                      </div>
+                      <div className="text-right ml-4">
+                        <div className="font-bold glass-text-strong text-sm sm:text-base">
+                          ¥{category.amount.toLocaleString()}
+                        </div>
+                        <div className="text-xs sm:text-sm glass-text">
+                          {category.percentage.toFixed(1)}%
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* デスクトップ用：円グラフを追加表示 */}
+                <div className="hidden lg:flex items-center justify-center mt-8">
+                  <div className="relative w-64 h-64">
+                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                      {categoryData.map((category, index) => {
+                        const startAngle = categoryData
+                          .slice(0, index)
+                          .reduce((sum, cat) => sum + (cat.percentage / 100) * 360, 0)
+                        const endAngle = startAngle + (category.percentage / 100) * 360
+                        const largeArcFlag = category.percentage > 50 ? 1 : 0
+                        
+                        const x1 = 50 + 40 * Math.cos((startAngle * Math.PI) / 180)
+                        const y1 = 50 + 40 * Math.sin((startAngle * Math.PI) / 180)
+                        const x2 = 50 + 40 * Math.cos((endAngle * Math.PI) / 180)
+                        const y2 = 50 + 40 * Math.sin((endAngle * Math.PI) / 180)
+
+                        return (
+                          <path
+                            key={index}
+                            d={`M 50 50 L ${x1} ${y1} A 40 40 0 ${largeArcFlag} 1 ${x2} ${y2} Z`}
+                            fill={category.color}
+                            fillOpacity={0.5}
+                            stroke={category.color}
+                            strokeWidth={1.5}
+                            className="hover:opacity-80 transition-opacity"
+                          />
+                        )
+                      })}
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold glass-text-strong">
+                          ¥{totalExpenses.toLocaleString()}
+                        </div>
+                        <div className="text-sm glass-text">合計</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    )
+  }
+
+  // 全期間選択時の従来の表示
   return (
     <div className="space-y-8">
       {/* Page Header */}
@@ -449,8 +527,8 @@ export function AnalyticsPage() {
                   <div className="flex items-center justify-between text-xs">
                     <span className="glass-text">月予算: ¥{(series.monthlyBudget || 0).toLocaleString()}</span>
                     <div className="flex items-center space-x-3">
-                      <span className="text-emerald-300 text-xs">貯蓄（+）</span>
-                      <span className="text-red-300 text-xs">超過（−）</span>
+                      <span className="text-emerald-600 text-xs">貯蓄（+）</span>
+                      <span className="text-red-600 text-xs">超過（−）</span>
                     </div>
                   </div>
                   {series.labels.slice(startIndex).map((label, idx) => {
@@ -459,7 +537,7 @@ export function AnalyticsPage() {
                     return (
                       <div key={label} className="flex items-center justify-between px-3 py-2 rounded-md bg-white/5 border border-white/10">
                         <span className="text-xs glass-text">{label}</span>
-                        <span className={`text-sm font-semibold ${positive ? 'text-emerald-300' : 'text-red-300'}`}>¥{Math.round(v).toLocaleString()}</span>
+                        <span className={`text-sm font-semibold ${positive ? 'text-emerald-600' : 'text-red-600'}`}>¥{Math.round(v).toLocaleString()}</span>
                       </div>
                     )
                   })}
@@ -528,10 +606,8 @@ export function AnalyticsPage() {
         <div className="grid grid-cols-1 gap-2 md:col-span-1">
           <div className="glass-card p-4 md:p-6 glass-shine">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
-              <div className="flex items-center space-x-2 md:space-x-0">
-                <div className="p-2 md:p-3 bg-gradient-to-br from-gray-500/30 to-gray-600/30 backdrop-blur-sm border border-gray-400/30 rounded-lg md:rounded-xl shadow-glass-glow">
-                  <BarChart3 className="w-4 h-4 md:w-6 md:h-6 glass-icon" />
-                </div>
+              <div className="flex items-center space-x-2">
+                <BarChart3 className="w-5 h-5 md:w-7 md:h-7 glass-icon" />
                 <div className="md:hidden">
                   <p className="text-xs font-medium glass-text">総支出</p>
                   <p className="text-lg font-bold glass-text-strong">¥{totalExpenses.toLocaleString()}</p>
@@ -546,10 +622,8 @@ export function AnalyticsPage() {
 
           <div className="glass-card p-4 md:p-6 glass-shine">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
-              <div className="flex items-center space-x-2 md:space-x-0">
-                <div className="p-2 md:p-3 bg-gradient-to-br from-gray-700/30 to-gray-800/30 backdrop-blur-sm border border-gray-600/30 rounded-lg md:rounded-xl shadow-glass-glow">
-                  <Target className="w-4 h-4 md:w-6 md:h-6 glass-icon" />
-                </div>
+              <div className="flex items-center space-x-2">
+                <Target className="w-5 h-5 md:w-7 md:h-7 glass-icon" />
                 <div className="md:hidden">
                   <p className="text-xs font-medium glass-text">支出記録数</p>
                   <p className="text-lg font-bold glass-text-strong">{expenses.length}件</p>
@@ -564,270 +638,66 @@ export function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Monthly Trend + Achievement (side by side) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Monthly Trend Chart */}
-        <div className="glass-card p-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="p-3 bg-gradient-to-br from-blue-500/30 to-blue-600/30 backdrop-blur-sm border border-blue-400/30 rounded-xl shadow-glass-glow">
-              <BarChart3 className="w-6 h-6 glass-icon" />
-            </div>
-            <h2 className="text-xl font-bold glass-text-strong">月別支出推移</h2>
-          </div>
-
-          <div className="space-y-4">
-            {timeRange === 'current' ? (
-              // 今月のみの場合は特別な表示
-              monthlyData.map((data, index) => {
-                const percentage = data.budget > 0 ? (data.expenses / data.budget) * 100 : 0
-                const isOverBudget = percentage > 100
-
-                return (
-                  <div key={index} className="space-y-4">
-                    <div className="text-center">
-                      <h3 className="text-lg text-start text-white font-semibold mb-2">{data.month}の支出分析</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
-                        <div className="glass-card p-4">
-                          <p className="text-sm glass-text font-medium">今月の支出</p>
-                          <p className="text-2xl font-bold glass-text-strong">¥{data.expenses.toLocaleString()}</p>
-                        </div>
-                        <div className="glass-card p-4">
-                          <p className="text-sm glass-text font-medium">予算</p>
-                          <p className="text-2xl font-bold glass-text-strong">¥{data.budget.toLocaleString()}</p>
-                        </div>
-                        <div className={`glass-card p-4 ${isOverBudget ? 'border border-red-400/30' : ''}`}>
-                          <p className={`text-sm font-medium ${isOverBudget ? 'text-red-400' : 'glass-text'}`}>使用率</p>
-                          <p className={`text-2xl font-bold ${isOverBudget ? 'text-red-400' : 'glass-text-strong'}`}>
-                            {percentage.toFixed(1)}%
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="space-y-2 glass-card p-4">
-                      <span className="font-medium glass-text">予算に対する支出</span>
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center justify-between w-full space-x-4">
-                          <span className="text-sm glass-text">予算: ¥{data.budget.toLocaleString()}</span>
-                          <span className={`font-semibold ${isOverBudget ? 'text-red-400' : 'glass-text-strong'}`}>¥{data.expenses.toLocaleString()}</span>
-                        </div>
-                      </div>
-                      <div className="relative">
-                        <div className="w-full bg-white/20 border border-white/20 rounded-full h-4 backdrop-blur-sm">
-                          <div
-                            className={`h-4 rounded-full transition-all duration-500 ${
-                              isOverBudget 
-                                ? 'bg-gradient-to-r from-red-400 to-red-600' 
-                                : 'bg-gradient-to-r from-gray-400 to-gray-600'
-                            }`}
-                            style={{ width: `${Math.min(percentage, 100)}%` }}
-                          />
-                        </div>
-                        {isOverBudget && (
-                          <div className="absolute top-[3px] right-0 -mt-1 -mr-1">
-                            <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
-                              <span className="text-white text-xs font-bold">!</span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex justify_between text-sm glass-text">
-                        <span>0%</span>
-                        <span className={isOverBudget ? 'text-red-400 font-medium' : 'glass-text-strong'}>
-                          {percentage.toFixed(1)}%
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })
-            ) : (
-              // 複数月の場合は従来の表示
-              monthlyData.map((data, index) => {
-                const percentage = data.budget > 0 ? (data.expenses / data.budget) * 100 : 0
-                const isOverBudget = percentage > 100
-
-                return (
-                  <div key={index} className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium text-white">{data.month}</span>
-                      <div className="flex items-center space-x-4">
-                        <span className="text-sm text-white">
-                          予算: ¥{data.budget.toLocaleString()}
-                        </span>
-                        <span className={`font-semibold ${isOverBudget ? 'text-red-600' : 'text-white'}`}>
-                          ¥{data.expenses.toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="relative">
-                      <div className="w-full bg-white rounded-full h-3">
-                        <div
-                          className={`h-3 rounded-full transition-all duration-500 ${
-                            isOverBudget 
-                              ? 'bg-gradient-to-r from-red-400 to-red-600' 
-                              : 'bg-gradient-to-r from-blue-400 to-blue-600'
-                          }`}
-                          style={{ width: `${Math.min(percentage, 100)}%` }}
-                        />
-                      </div>
-                      {isOverBudget && (
-                        <div className="absolute top-[2px] right-0 -mt-1 -mr-1">
-                          <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-                            <span className="text-white text-xs">!</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex justify-between text-xs text-white">
-                      <span>0%</span>
-                      <span className={isOverBudget ? 'text-red-600 font-medium' : 'text-white'}>
-                        {percentage.toFixed(1)}%
-                      </span>
-                    </div>
-                  </div>
-                )
-              })
-            )}
-          </div>
+      {/* Monthly Trend Chart */}
+      <div className="glass-card p-6">
+        <div className="flex items-center space-x-3 mb-6">
+          <BarChart3 className="w-7 h-7 glass-icon" />
+          <h2 className="text-xl font-bold glass-text-strong">月別支出推移</h2>
         </div>
 
-        {/* Achievement Rate (Last 6 Months) Line Chart */}
-        <div className="glass-card p-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="p-3 bg-gradient-to-br from-gray-600/30 to-gray-700/30 backdrop-blur-sm border border-gray-500/30 rounded-xl shadow-glass-glow">
-              <BarChart3 className="w-6 h-6 glass-icon" />
-            </div>
-            <h2 className="text-xl font-bold glass-text-strong">予算使用率推移</h2>
-          </div>
-
-          {(() => {
-            const width = 600
-            const height = 220
-            const paddingLeft = 40
-            const paddingRight = 16
-            const paddingTop = 16
-            const paddingBottom = 40
-            const innerWidth = width - paddingLeft - paddingRight
-            const innerHeight = height - paddingTop - paddingBottom
- 
-            // スケール: 最大値に応じて縦幅を動的確保（最低でも100%が入る）
-            const maxRate = Math.max(100, ...usageSinceStart.rates)
-            const tickStep = 50
-            const tickMax = Math.ceil(maxRate / tickStep) * tickStep
-            // 月間隔圧縮（SPのみ間隔を狭める）。見た目サイズはそのままに中央寄せで圧縮。
-            const numPoints = Math.max(1, usageSinceStart.rates.length - 1)
-            const compression = isMobile ? 0.7 : 1
-            const compressedWidth = innerWidth * compression
-            const xStart = paddingLeft + (innerWidth - compressedWidth) / 2
-            const xAt = (idx: number) => xStart + (compressedWidth * idx) / numPoints
-            const yAt = (rate: number) => paddingTop + innerHeight * (1 - rate / maxRate)
- 
-            type Pt = { x: number; y: number; rate: number }
-            const pts: Pt[] = usageSinceStart.rates.map((rate, idx) => ({
-              x: xAt(idx),
-              y: yAt(rate),
-              rate,
-            }))
- 
-            // Mobile: simpler list (no SVG)
-            if (isMobile) {
-              const startIndex = Math.max(0, usageSinceStart.labels.length - 6)
-              return (
-                <div className="space-y-2">
-                  {usageSinceStart.labels.slice(startIndex).map((label, idx) => {
-                    const rate = usageSinceStart.rates[startIndex + idx]
-                    const over = rate > 100
-                    return (
-                      <div key={label} className="flex items-center justify-between px-3 py-2 rounded-md bg-white/5 border border-white/10">
-                        <span className="text-xs glass-text">{label}</span>
-                        <span className={`text-sm font-semibold ${over ? 'text-red-300' : 'text-blue-300'}`}>{rate.toFixed(1)}%</span>
-                      </div>
-                    )
-                  })}
-                </div>
-              )
-            }
+        <div className="space-y-4">
+          {monthlyData.map((data, index) => {
+            const percentage = data.budget > 0 ? (data.expenses / data.budget) * 100 : 0
+            const isOverBudget = percentage > 100
 
             return (
-              <div className="w-full overflow-x-auto">
-                <svg viewBox={`0 0 ${width} ${height}`} className="w-full min-w-[600px]">
-                  {/* Axes */}
-                  <line x1={paddingLeft} y1={paddingTop} x2={paddingLeft} y2={height - paddingBottom} stroke="#ffffff55" strokeWidth={1} />
-                  <line x1={paddingLeft} y1={height - paddingBottom} x2={width - paddingRight} y2={height - paddingBottom} stroke="#ffffff55" strokeWidth={1} />
- 
-                  {/* Grid & labels (dynamic up to tickMax) */}
-                  {Array.from({ length: Math.floor(tickMax / tickStep) + 1 }, (_, i) => i * tickStep).map((tick) => {
-                    const y = paddingTop + innerHeight * (1 - tick / maxRate)
-                    return (
-                      <g key={tick}>
-                        <line x1={paddingLeft} y1={y} x2={width - paddingRight} y2={y} stroke="#ffffff22" strokeWidth={1} />
-                        <text x={8} y={y + 4} fontSize={12} fill="#ffffffaa">{tick}%</text>
-                      </g>
-                    )
-                  })}
- 
-                  {/* 100% reference line */}
-                  <line x1={paddingLeft} y1={paddingTop + innerHeight * (1 - 100 / maxRate)} x2={width - paddingRight} y2={paddingTop + innerHeight * (1 - 100 / maxRate)} stroke="#ef4444" strokeDasharray="4 4" strokeWidth={1.5} />
- 
-                  {/* Line with threshold-aware coloring (split at 100%) */}
-                  {pts.slice(0, -1).map((p1, i) => {
-                    const p2 = pts[i + 1]
-                    const r1 = p1.rate
-                    const r2 = p2.rate
-                    const over1 = r1 > 100
-                    const over2 = r2 > 100
- 
-                     // 交差判定（100%ライン）
-                    if ((r1 - 100) * (r2 - 100) < 0) {
-                       // tで補間点（100%に相当）
-                      const t = (100 - r1) / (r2 - r1)
-                      const xm = p1.x + (p2.x - p1.x) * t
-                      const ym = yAt(100)
-                      // 低い側→100%までは青、高い側→100%からは赤
-                      return (
-                        <g key={i}>
-                          <line x1={p1.x} y1={p1.y} x2={xm} y2={ym} stroke={over1 ? '#f87171' : '#60a5fa'} strokeWidth={2.5} />
-                          <line x1={xm} y1={ym} x2={p2.x} y2={p2.y} stroke={over2 ? '#f87171' : '#60a5fa'} strokeWidth={2.5} />
-                        </g>
-                      )
-                    }
- 
-                    return (
-                      <line key={i} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={over1 || over2 ? '#f87171' : '#60a5fa'} strokeWidth={2.5} />
-                    )
-                  })}
- 
-                  {/* Dots */}
-                  {usageSinceStart.rates.map((rate, idx) => {
-                    const x = xAt(idx)
-                    const y = yAt(rate)
-                    return (
-                      <g key={idx}>
-                        <circle cx={x} cy={y} r={4} fill={rate > 100 ? '#fca5a5' : '#93c5fd'} stroke={rate > 100 ? '#dc2626' : '#2563eb'} strokeWidth={1} />
-                      </g>
-                    )
-                  })}
- 
-                  {/* X labels */}
-                  {usageSinceStart.labels.map((label, idx) => {
-                    const x = paddingLeft + (innerWidth * idx) / Math.max(1, usageSinceStart.labels.length - 1)
-                    return (
-                      <text key={idx} x={x} y={height - paddingBottom + 20} textAnchor="middle" fontSize={12} fill="#ffffffdd">{label}</text>
-                    )
-                  })}
-                </svg>
+              <div key={index} className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium text-gray-800">{data.month}</span>
+                  <div className="flex items-center space-x-4">
+                    <span className="text-sm text-gray-800">
+                      予算: ¥{data.budget.toLocaleString()}
+                    </span>
+                    <span className={`font-semibold ${isOverBudget ? 'text-red-600' : 'text-gray-800'}`}>
+                      ¥{data.expenses.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+                <div className="relative">
+                  <div className="w-full bg-gray-300 rounded-full h-3">
+                    <div
+                      className={`h-3 rounded-full transition-all duration-500 ${
+                        isOverBudget 
+                          ? 'bg-gradient-to-r from-red-400 to-red-600' 
+                          : 'bg-gradient-to-r from-blue-400 to-blue-600'
+                      }`}
+                      style={{ width: `${Math.min(percentage, 100)}%` }}
+                    />
+                  </div>
+                  {isOverBudget && (
+                    <div className="absolute top-[2px] right-0 -mt-1 -mr-1">
+                      <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                        <span className="text-gray-800 text-xs">!</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="flex justify-between text-xs text-gray-800">
+                  <span>0%</span>
+                  <span className={isOverBudget ? 'text-red-600 font-medium' : 'text-gray-800'}>
+                    {percentage.toFixed(1)}%
+                  </span>
+                </div>
               </div>
             )
-          })()}
+          })}
         </div>
       </div>
 
       {/* Savings Goal Progress */}
       <div className="glass-card p-6">
         <div className="flex items-center space-x-3 mb-4">
-          <div className="p-3 bg-gradient-to-br from-gray-600/30 to-gray-700/30 backdrop-blur-sm border border-gray-500/30 rounded-xl shadow-glass-glow">
-            <Target className="w-6 h-6 glass-icon" />
-          </div>
+          <Target className="w-7 h-7 glass-icon" />
           <h2 className="text-xl font-bold glass-text-strong">貯蓄目標の進捗</h2>
         </div>
 
@@ -839,21 +709,21 @@ export function AnalyticsPage() {
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-2">
               <div>
                 <p className="glass-text text-sm">目標</p>
-                <p className="text-2xl font-bold text-white">{sp.title || '未設定'}</p>
+                <p className="text-2xl font-bold text-gray-800">{sp.title || '未設定'}</p>
               </div>
               <div className="text-right">
                 <p className="glass-text text-sm">目標金額</p>
-                <p className="text-2xl font-bold text-white">¥{sp.target.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-gray-800">¥{sp.target.toLocaleString()}</p>
               </div>
             </div>
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="glass-text text-sm">今日の理想到達額（ペース）</span>
-                <span className="font-semibold text-blue-300">¥{Math.floor(sp.idealAccumulated).toLocaleString()}</span>
+                <span className="font-semibold text-blue-600">¥{Math.floor(sp.idealAccumulated).toLocaleString()}</span>
               </div>
               <div className="relative">
-                <div className="w-full bg-white/10 border border-white/20 rounded-full h-3 backdrop-blur-sm">
+                <div className="w-full bg-gray-300 rounded-full h-3 backdrop-blur-sm">
                   <div
                     className="h-3 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-500"
                     style={{ width: `${sp.percentIdeal}%` }}
@@ -866,14 +736,14 @@ export function AnalyticsPage() {
                 <span className="glass-text-strong font-semibold">¥{Math.floor(sp.accumulated).toLocaleString()}</span>
               </div>
               <div className="relative">
-                <div className="w-full bg-white/20 border border-white/20 rounded-full h-3 backdrop-blur-sm">
+                <div className="w-full bg-gray-300 rounded-full h-3 backdrop-blur-sm">
                   <div
                     className={`h-3 rounded-full transition-all duration-500 bg-gradient-to-r from-green-400 to-green-600`}
                     style={{ width: `${sp.percent}%` }}
                   />
                 </div>
                 {sp.percent >= 100 && (
-                  <div className="absolute -top-1 right-0 -mr-1">
+                  <div className="absolute -top-[3px] right-0 -mr-1">
                     <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
                       <span className="text-white text-xs">✓</span>
                     </div>
@@ -881,7 +751,7 @@ export function AnalyticsPage() {
                 )}
               </div>
               <div className="flex items-center justify-between">
-                <div className={`${sp.aheadAmount >= 0 ? 'text-green-300' : 'text-red-300'} text-right font-medium`}>
+                <div className={`${sp.aheadAmount >= 0 ? 'text-green-600' : 'text-red-600'} text-right font-medium`}>
                   {sp.aheadAmount >= 0 ? '先行' : '遅れ'} ¥{Math.abs(Math.floor(sp.aheadAmount)).toLocaleString()}
                 </div>
               </div>
@@ -890,15 +760,15 @@ export function AnalyticsPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="glass-card p-3">
                 <p className="glass-text text-xs">残り金額</p>
-                <p className="text-lg font-semibold text-white">¥{Math.ceil(sp.remaining).toLocaleString()}</p>
+                <p className="text-lg font-semibold text-gray-800">¥{Math.ceil(sp.remaining).toLocaleString()}</p>
               </div>
               <div className="glass-card p-3">
                 <p className="glass-text text-xs">目標日</p>
-                <p className="text-lg font-semibold text-white">{format(new Date(sp.targetDate), 'yyyy/MM/dd')}</p>
+                <p className="text-lg font-semibold text-gray-800">{format(new Date(sp.targetDate), 'yyyy/MM/dd')}</p>
               </div>
               <div className="glass-card p-3">
                 <p className="glass-text text-xs">分析期間</p>
-                <p className="text-lg font-semibold text-white">開始 {sp.startDate ? format(new Date(sp.startDate), 'yyyy/MM/dd') : '—'} 〜 今日</p>
+                <p className="text-lg font-semibold text-gray-800">開始 {sp.startDate ? format(new Date(sp.startDate), 'yyyy/MM/dd') : '—'} 〜 今日</p>
               </div>
             </div>
           </div>)
@@ -911,9 +781,7 @@ export function AnalyticsPage() {
       {/* Category Breakdown */}
       <div className="glass-card p-6">
         <div className="flex items-center space-x-3 mb-6">
-          <div className="p-3 bg-gradient-to-br from-gray-600/30 to-gray-700/30 backdrop-blur-sm border border-gray-500/30 rounded-xl shadow-glass-glow">
-            <PieChart className="w-6 h-6 glass-icon" />
-          </div>
+          <PieChart className="w-7 h-7 glass-icon" />
           <h2 className="text-xl font-bold glass-text-strong">カテゴリ別支出</h2>
         </div>
 

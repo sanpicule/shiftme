@@ -1,5 +1,4 @@
-import React, { useState } from 'react'
-import { Home, Settings, User, TrendingUp } from 'lucide-react'
+import { useState } from 'react'
 import { Dashboard } from './Dashboard'
 import { SettingsPage } from './SettingsPage'
 import { ProfilePage } from './ProfilePage'
@@ -12,6 +11,7 @@ export function MainApp() {
   const [currentPage, setCurrentPage] = useState<Page>('dashboard')
 
   const handlePageChange = (page: Page) => {
+    window.scrollTo(0, 0)
     if (page === currentPage) return
     setCurrentPage(page)
   }
@@ -25,7 +25,7 @@ export function MainApp() {
       case 'settings':
         return <SettingsPage />
       case 'profile':
-        return <ProfilePage onPageChange={handlePageChange} />
+        return <ProfilePage />
       default:
         return <Dashboard />
     }

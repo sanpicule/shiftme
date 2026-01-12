@@ -1,4 +1,3 @@
-import React from 'react'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ToastProvider } from './components/ToastContainer'
 import { AuthForm } from './components/AuthForm'
