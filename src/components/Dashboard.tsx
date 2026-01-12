@@ -222,7 +222,7 @@ export function Dashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <LoadingSpinner size="lg" text="データを読み込み中..." />
+        <LoadingSpinner size="lg" />
       </div>
     )
   }

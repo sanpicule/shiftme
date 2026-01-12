@@ -14,7 +14,7 @@ function AppContent() {
   // Show loading until all necessary data is loaded
   if (authLoading || (user && settingsLoading) || (user && !userSettings)) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="glass-card p-8">
           <LoadingSpinner size="lg" text="データを取得しています" />
         </div>

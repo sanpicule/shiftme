@@ -333,9 +333,9 @@ export function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="glass-card p-8">
-          <LoadingSpinner size="md" />
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="p-8">
+          <LoadingSpinner size="lg" />
         </div>
       </div>
     )
