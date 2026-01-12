@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, startOfWeek, endOfWeek } from 'date-fns'
 import { ja } from 'date-fns/locale'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -40,6 +40,10 @@ export function ExpenseCalendar({ expenses, onDateClick }: ExpenseCalendarProps)
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))
   }
 
+  const goToToday = () => {
+    setCurrentDate(new Date())
+  }
+
   const handleDateClick = (date: Date) => {
     onDateClick(date)
   }
@@ -57,14 +61,20 @@ export function ExpenseCalendar({ expenses, onDateClick }: ExpenseCalendarProps)
         </h3>
         <div className="flex items-center space-x-2">
           <button
+            onClick={goToToday}
+            className="px-3 py-1.5 text-sm font-medium glass-text hover:bg-glass-white-weak rounded-lg transition-colors glass-shine border border-gray-200"
+          >
+            今月
+          </button>
+          <button
             onClick={prevMonth}
-            className="p-2 hover:bg-glass-white-weak rounded-lg transition-colors glass-shine border border-white/20"
+            className="p-2 hover:bg-glass-white-weak rounded-full transition-colors glass-shine border border-gray-200"
           >
             <ChevronLeft className="w-5 h-5 glass-icon" />
           </button>
           <button
             onClick={nextMonth}
-            className="p-2 hover:bg-glass-white-weak rounded-lg transition-colors glass-shine border border-white/20"
+            className="p-2 hover:bg-glass-white-weak rounded-full transition-colors glass-shine border border-gray-200"
           >
             <ChevronRight className="w-5 h-5 glass-icon" />
           </button>
@@ -72,10 +82,10 @@ export function ExpenseCalendar({ expenses, onDateClick }: ExpenseCalendarProps)
       </div>
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 border border-white/20 rounded-lg overflow-hidden backdrop-blur-sm bg-glass-white-weak">
+      <div className="grid grid-cols-7 border border-gray-200 rounded-lg overflow-hidden backdrop-blur-sm bg-glass-white-weak">
         {/* Day Headers */}
         {['日', '月', '火', '水', '木', '金', '土'].map((day, index) => (
-          <div key={day} className={`p-3 text-center text-sm font-semibold border-b border-white/30 last:border-r-0 bg-glass-white-weak ${
+          <div key={day} className={`p-3 text-center text-sm font-semibold border-b border-gray-200 last:border-r-0 bg-gray-200/50 ${
             index === 0 ? 'text-red-400' : index === 6 ? 'text-blue-400' : 'glass-text'
           }`}>
             {day}
@@ -94,21 +104,21 @@ export function ExpenseCalendar({ expenses, onDateClick }: ExpenseCalendarProps)
               key={day.toISOString()}
               onClick={() => inCurrentMonth && handleDateClick(day)}
               className={`
-                p-2 min-h-[80px] border-r border-b border-white/20 last:border-r-0 relative transition-all duration-200 hover:shadow-glass-glow flex flex-col items-start glass-shine
+                p-2 min-h-[80px] border-r border-b border-gray-200 last:border-r-0 relative transition-all duration-200 md:hover:shadow-glass-glow flex flex-col items-start glass-shine
                 ${inCurrentMonth 
                   ? 'hover:bg-glass-white-weak cursor-pointer' 
                   : 'cursor-default'
                 }
                   ${isToday(day) && inCurrentMonth
-                    ? 'bg-gradient-to-br from-gray-500/30 to-gray-600/30 border-gray-400/50 shadow-glass-glow ring-2 ring-gray-400/30'
+                    ? 'border border-green-400 bg-green-500/10'
                     : ''
                   }
               `}
             >
               <div className={`text-sm font-semibold w-full text-center ${
                 !inCurrentMonth ? 'text-white/40' :
-                dayOfWeek === 0 ? 'text-gray-400' :
-                dayOfWeek === 6 ? 'text-gray-300' :
+                dayOfWeek === 0 ? 'text-red-400' :
+                dayOfWeek === 6 ? 'text-blue-300' :
                 'glass-text'
               } ${isToday(day) && inCurrentMonth ? 'text-green-400' : ''}`}>
                 {format(day, 'd')}
@@ -129,7 +139,7 @@ export function ExpenseCalendar({ expenses, onDateClick }: ExpenseCalendarProps)
                   </div>
                   {/* Mobile: Simple marker */}
                     <div className="md:hidden flex justify-center">
-                      <div className="w-2 h-2 bg-blue-400 rounded-full shadow-lg"></div>
+                      <div className="w-2 h-2 bg-blue-600 rounded-full shadow-lg"></div>
                     </div>
                 </div>
               )}

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { format, startOfMonth, endOfMonth } from 'date-fns'
 import { ja } from 'date-fns/locale'
-import { Calendar, AlertTriangle, CheckCircle, Edit2, Trash2, Plus, X, Save, DollarSign, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react'
+import { Calendar, AlertTriangle, CheckCircle, Edit2, Trash2, Plus, X, Save, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react'
 import { ExpenseCalendar } from './ExpenseCalendar'
 import { LoadingSpinner } from './LoadingSpinner'
 import { useUserSettings } from '../hooks/useUserSettings'
@@ -222,9 +222,7 @@ export function Dashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="glass-card p-8">
-          <LoadingSpinner size="lg" text="データを読み込み中..." />
-        </div>
+        <LoadingSpinner size="lg" text="データを読み込み中..." />
       </div>
     )
   }
@@ -257,7 +255,7 @@ export function Dashboard() {
         <div className="absolute top-4 right-4 md:hidden z-20">
           <button
             onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}
-            className="p-2 bg-glass-white-weak backdrop-blur-sm hover:bg-glass-white-strong transition-all duration-300 rounded-full glass-text hover:scale-110 border border-white/20"
+            className="p-2 backdrop-blur-sm transition-all duration-300 rounded-full glass-text border border-gray-200"
             aria-label={isDetailsExpanded ? '詳細を隠す' : '詳細を確認'}
           >
             {isDetailsExpanded ? (
@@ -269,7 +267,7 @@ export function Dashboard() {
         </div>
 
         {/* Budget Overview Card */}
-        <div className="bg-gradient-to-r from-gray-500/20 via-gray-600/20 to-gray-700/20 backdrop-blur-md border border-white/30 rounded-2xl shadow-glass p-6">
+        <div>
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between">
             {/* Left Side - Remaining Budget */}
             <div className="flex-1 lg:mb-0 w-full">
@@ -278,7 +276,7 @@ export function Dashboard() {
                 <button
                   onClick={() => setHideRemaining(!hideRemaining)}
                   aria-label={hideRemaining ? '金額を表示' : '金額を非表示'}
-                  className="p-1 rounded-md hover:bg-glass-white-weak border border-white/20 transition-colors"
+                  className="p-1 rounded-full border border-gray-200 transition-colors"
                 >
                   {hideRemaining ? (
                     <Eye className="w-3.5 h-3.5 glass-icon" />
@@ -303,11 +301,11 @@ export function Dashboard() {
                     
                     return (
                       <>
-                        <div className="bg-glass-white-weak backdrop-blur-sm rounded-xl p-3 text-center border border-white/20">
+                        <div className="backdrop-blur-sm rounded-xl p-3 text-center border border-gray-200">
                           <div className="text-xs glass-text mb-1">1日あたり</div>
                           <div className="text-base font-bold glass-text-strong">¥{dailyBudget.toLocaleString()}</div>
                         </div>
-                        <div className="bg-glass-white-weak backdrop-blur-sm rounded-xl p-3 text-center border border-white/20">
+                        <div className="backdrop-blur-sm rounded-xl p-3 text-center border border-gray-200">
                           <div className="text-xs glass-text mb-1">1週間あたり</div>
                           <div className="text-base font-bold glass-text-strong">¥{weeklyBudget.toLocaleString()}</div>
                         </div>
@@ -370,35 +368,35 @@ export function Dashboard() {
       </div>
 
       {/* Budget Tips */}
-      <div className="glass-card p-4 md:p-6">
-        <h3 className="text-base md:text-lg font-bold glass-text-strong mb-3 md:mb-4">💡 今月のアドバイス</h3>
+      <div>
+        <h3 className="text-base md:text-lg font-bold text-gray-900/90 mb-3 md:mb-4">💡 今月のアドバイス</h3>
         <div className="space-y-3">
             {remainingBudget < 0 && (
               <div className="flex items-start space-x-2 md:space-x-3 p-3 bg-red-500/20 backdrop-blur-sm rounded-xl border border-red-400/30">
                 <AlertTriangle className="w-4 h-4 md:w-5 md:h-5 text-red-400 mt-0.5 glass-icon" />
                 <div>
-                  <p className="font-medium text-red-300 text-sm md:text-base text-shadow">予算を超過しています</p>
-                  <p className="text-xs md:text-sm text-red-200 text-shadow">支出を見直すか、来月の計画を調整しましょう</p>
+                  <p className="font-medium text-red-600 text-sm md:text-base text-shadow">予算を超過しています</p>
+                  <p className="text-xs md:text-sm text-red-500 text-shadow">支出を見直すか、来月の計画を調整しましょう</p>
                 </div>
               </div>
             )}
 
             {remainingBudget > 0 && remainingBudget < budgetAfterFixed * 0.2 && (
-              <div className="flex items-start space-x-2 md:space-x-3 p-3 bg-gray-500/20 backdrop-blur-sm rounded-xl border border-gray-400/30">
-                <AlertTriangle className="w-4 h-4 md:w-5 md:h-5 text-gray-400 mt-0.5 glass-icon" />
+              <div className="flex items-start space-x-2 md:space-x-3 p-3 bg-yellow-500/20 backdrop-blur-sm rounded-xl border border-yellow-400/30">
+                <AlertTriangle className="w-4 h-4 md:w-5 md:h-5 text-yellow-800 mt-0.5 glass-icon" />
                 <div>
-                  <p className="font-medium text-gray-300 text-sm md:text-base text-shadow">予算残りわずかです</p>
-                  <p className="text-xs md:text-sm text-gray-200 text-shadow">残り{Math.ceil((new Date(endOfMonth(currentDate)).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))}日間、計画的に使いましょう</p>
+                  <p className="font-medium text-yellow-900 text-sm md:text-base text-shadow">予算残りわずかです</p>
+                  <p className="text-xs md:text-sm text-yellow-900 text-shadow">残り{Math.ceil((new Date(endOfMonth(currentDate)).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))}日間、計画的に使いましょう</p>
                 </div>
               </div>
             )}
 
             {remainingBudget >= budgetAfterFixed * 0.2 && (
-              <div className="flex items-start space-x-2 md:space-x-3 p-3 bg-gray-600/20 backdrop-blur-sm rounded-xl border border-gray-500/30">
-                <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-gray-400 mt-0.5 glass-icon" />
+              <div className="flex items-start space-x-2 md:space-x-3 p-3 bg-green-500/20 rounded-xl border border-green-400">
+                <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-green-400 mt-0.5 glass-icon" />
                 <div>
-                  <p className="font-medium text-gray-300 text-sm md:text-base text-shadow">順調に管理できています</p>
-                  <p className="text-xs md:text-sm text-gray-200 text-shadow">この調子で貯金目標を達成しましょう！</p>
+                  <p className="font-medium text-gray-800 text-sm md:text-base text-shadow">順調に管理できています</p>
+                  <p className="text-xs md:text-sm text-gray-800 text-shadow">この調子で貯金目標を達成しましょう！</p>
                 </div>
               </div>
             )}
@@ -419,13 +417,13 @@ export function Dashboard() {
             justifyContent: 'center',
             zIndex: 9999,
             '& .MuiBackdrop-root': {
-              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              backgroundColor: 'rgba(255, 255, 255)',
               backdropFilter: 'blur(8px)',
             },
           }}
         >
         <Box
-          className="glass-modal glass-shine glass-scrollbar"
+          className="glass-modal glass-shine glass-scrollbar overflow-y-scroll"
           sx={{
             position: 'absolute',
             top: '50%',
@@ -458,14 +456,11 @@ export function Dashboard() {
             {/* Modal Header */}
             <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/20 bg-transparent">
               <div className="flex items-center space-x-3">
-                <div className="p-3 bg-gradient-to-br from-gray-500/30 to-gray-600/30 backdrop-blur-sm border border-gray-400/30 rounded-xl shadow-glass-glow">
-                  <Calendar className="w-6 h-6 glass-icon" />
-                </div>
+                <Calendar className="w-8 h-8 glass-icon" />
                 <div>
                   <h2 className="text-xl font-bold glass-text-strong">
                     {format(selectedDate, 'MM月dd日（E）', { locale: ja })}
                   </h2>
-                  <p className="text-sm glass-text">支出の管理</p>
                 </div>
               </div>
               <button
@@ -477,13 +472,13 @@ export function Dashboard() {
             </div>
 
             {/* Modal Content */}
-            <div className="p-4 sm:p-6 max-h[calc(90vh-120px)] overflow-y-auto glass-scrollbar">
+            <div className="p-4 sm:p-6 h-[90vh] overflow-y-scroll glass-scrollbar">
               {/* Add Expense Button */}
               {!isAddingExpense && !editingExpense && (
                 <div className="mb-6">
                   <button
                     onClick={() => setIsAddingExpense(true)}
-                    className="w-full flex items-center justify-center space-x-3 glass-button-primary text-white px-4 sm:px-6 py-4 hover:shadow-glass-glow transform hover:-translate-y-0.5"
+                    className="w-full flex items-center justify-center space-x-3 glass-button-primary text-white px-4 sm:px-6 py-4"
                   >
                     <Plus className="w-5 h-5 glass-icon" />
                     <span className="font-medium glass-text-strong">新しい支出を追加</span>
@@ -496,23 +491,10 @@ export function Dashboard() {
                 <div className="mb-6 p-6 glass-card">
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-gradient-to-br from-gray-500/30 to-gray-600/30 backdrop-blur-sm border border-gray-400/30 rounded-lg">
-                        <DollarSign className="w-5 h-5 glass-icon" />
-                      </div>
                       <h3 className="text-lg font-semibold glass-text-strong">
                         {editingExpense ? '支出を編集' : '支出を追加'}
                       </h3>
                     </div>
-                    <button
-                      onClick={() => {
-                        setIsAddingExpense(false)
-                        setEditingExpense(null)
-                        reset()
-                      }}
-                      className="glass-text p-2 hover:bg-glass-white-weak rounded-lg transition-colors border border-white/10"
-                    >
-                      <X className="w-5 h-5 glass-icon" />
-                    </button>
                   </div>
                   
                   <form onSubmit={handleSubmit(editingExpense ? updateExpense : addExpense)} className="space-y-6">
@@ -564,13 +546,13 @@ export function Dashboard() {
                       <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="flex-1 px-6 py-3 glass-button-primary text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium flex items-center justify-center space-x-2"
+                        className="flex-1 px-6 py-3 glass-button-primary text-white bg-gray-800 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium flex items-center justify-center space-x-2"
                       >
                         {isSubmitting ? (
                           <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
                         ) : (
                           <>
-                            <Save className="w-4 h-4 glass-icon" />
+                            <Save className="w-4 h-4 text-white" />
                             <span>{editingExpense ? '更新' : '追加'}</span>
                           </>
                         )}
@@ -584,7 +566,7 @@ export function Dashboard() {
               {selectedDate && expenses.filter(expense => 
                 format(new Date(expense.expense_date), 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
               ).length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-4 overflow-auto">
                   <h3 className="text-lg font-semibold glass-text-strong flex items-center space-x-2">
                     <span>この日の支出</span>
                     <span className="text-sm font-normal glass-text">({expenses.filter(expense => 
@@ -598,35 +580,35 @@ export function Dashboard() {
                     ).map((expense) => (
                       <div
                         key={expense.id}
-                        className="flex flex-col sm:flex-row sm:items-center justify-between p-4 glass-card hover:shadow-glass-glow transition-all duration-200"
+                        className="flex items-start justify-between p-4 glass-card transition-all duration-200"
                       >
-                        <div className="flex-1 mb-3 sm:mb-0">
-                          <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+                        <div className="flex-1 sm:mb-0">
+                          <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-3">
+                            <span className="bg-glass-white-weak text-gray-800 text-sm font-medium rounded-full w-fit">
+                              カテゴリ：{expense.category}
+                            </span>
                             <span className="text-xl font-bold glass-text-strong">
                               ¥{expense.amount.toLocaleString()}
-                            </span>
-                            <span className="px-3 py-1 bg-glass-white-weak text-white text-sm font-medium rounded-full w-fit">
-                              {expense.category}
                             </span>
                           </div>
                           {expense.description && (
                             <p className="text-sm glass-text mt-2">{expense.description}</p>
                           )}
                         </div>
-                        <div className="flex items-center space-x-2 sm:ml-4">
+                        <div className="flex items-center space-x-4 sm:ml-4">
                           <button 
                             onClick={() => startEditExpense(expense)}
-                            className="p-3 glass-text hover:bg-glass-white-weak rounded-xl transition-colors border border-white/10"
+                            className="glass-text hover:bg-glass-white-weak rounded-xl transition-colors border border-white/10"
                             title="編集"
                           >
                             <Edit2 className="w-5 h-5 glass-icon" />
                           </button>
                           <button 
                             onClick={() => deleteExpense(expense.id)}
-                            className="p-3 glass-text hover:bg-glass-white-weak rounded-xl transition-colors border border-white/10"
+                            className="text-red-400 hover:bg-red-500/20 rounded-xl transition-all duration-300 glass-shine"
                             title="削除"
                           >
-                            <Trash2 className="w-5 h-5 glass-icon" />
+                            <Trash2 className="w-5 h-5" />
                           </button>
                         </div>
                       </div>
@@ -634,7 +616,7 @@ export function Dashboard() {
                   </div>
                   
                   {/* Day Total */}
-                  <div className="mt-6 p-6 glass-card">
+                  <div>
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-semibold glass-text">この日の合計</span>
                       <span className="text-3xl font-bold glass-text-strong">
@@ -655,7 +637,7 @@ export function Dashboard() {
                     <p className="glass-text mb-6">この日の支出はまだ記録されていません</p>
                     <button
                       onClick={() => setIsAddingExpense(true)}
-                      className="inline-flex items-center space-x-2 glass-button-primary text-white px-8 py-4 rounded-2xl transition-all duration-200 hover:shadow-glass-glow transform hover:-translate-y-0.5"
+                      className="inline-flex items-center space-x-2 glass-button-primary text-white px-8 py-4 rounded-2xl"
                     >
                       <Plus className="w-5 h-5 glass-icon" />
                       <span className="font-medium glass-text-strong">最初の支出を追加</span>

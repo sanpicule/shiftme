@@ -1,4 +1,3 @@
-import React from 'react'
 import { Loader2 } from 'lucide-react'
 
 interface LoadingSpinnerProps {
@@ -22,7 +21,7 @@ export function LoadingSpinner({ size = 'md', text, className = '' }: LoadingSpi
 
   return (
     <div className={`flex flex-col items-center justify-center space-y-4 ${className}`}>
-      <div className={`${sizeClasses[size]} text-blue-600 animate-spin`}>
+      <div className={`${sizeClasses[size]} text-gray-600 animate-spin`}>
         <Loader2 className={`${iconSizes[size]} w-full h-full`} />
       </div>
       
