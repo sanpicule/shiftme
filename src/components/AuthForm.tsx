@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Mail, Lock, Eye, EyeOff, Zap, Target, Shield, TrendingUp, Calendar } from 'lucide-react'
+import { Eye, EyeOff, Target, Shield, TrendingUp, Calendar } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
 export function AuthForm() {
@@ -36,26 +36,7 @@ export function AuthForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 relative overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-          {/* Animated gradient orbs */}
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-gray-500/20 via-gray-400/15 to-gray-600/10 rounded-full blur-3xl glass-float"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-gray-600/20 via-gray-500/15 to-gray-700/10 rounded-full blur-3xl glass-float" style={{ animationDelay: '2s' }}></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-gray-400/10 via-gray-500/8 to-gray-600/10 rounded-full blur-3xl glass-float" style={{ animationDelay: '4s' }}></div>
-
-          {/* Floating geometric shapes */}
-          <div className="absolute top-20 left-20 w-32 h-32 bg-gradient-to-br from-gray-400/15 to-gray-500/10 rounded-full blur-2xl glass-float" style={{ animationDelay: '1s' }}></div>
-          <div className="absolute top-40 right-32 w-24 h-24 bg-gradient-to-br from-gray-500/20 to-gray-600/15 rounded-full blur-2xl glass-float" style={{ animationDelay: '3s' }}></div>
-          <div className="absolute bottom-32 left-32 w-28 h-28 bg-gradient-to-br from-gray-600/15 to-gray-700/10 rounded-full blur-2xl glass-float" style={{ animationDelay: '5s' }}></div>
-        
-        {/* Subtle grid pattern overlay */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
-        
-        {/* Radial gradient overlay for depth */}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/20 via-transparent to-transparent"></div>
-      </div>
-
+    <div className="min-h-screen relative overflow-hidden">
       <div className="relative z-10 min-h-screen flex flex-col lg:flex-row lg:justify-center lg:max-w-7xl lg:mx-auto">
         {/* Left Side - Features & Description (Hidden on mobile, shown on desktop) */}
         <div className="hidden lg:flex lg:w-1/2 lg:flex-col lg:justify-center lg:px-12 lg:py-12">
@@ -125,26 +106,26 @@ export function AuthForm() {
         </div>
 
         {/* Right Side - Auth Form */}
-        <div className="flex-1 flex items-center justify-center px-4 py-8 lg:px-12 lg:py-12">
+        <div className="px-12 flex-1 flex items-center justify-center py-8 lg:px-12 lg:py-12">
           <div className="w-full max-w-md">
             {/* Mobile Logo Section (shown only on mobile) */}
-            <div className="lg:hidden text-center mb-8">
-              <div className="flex items-center justify-center mb-6">
+            <div className="lg:hidden">
+              <div className="flex items-center mb-6">
                 <div className="relative group glass-shine">
                   <div className="w-12 h-12 bg-gradient-to-br from-gray-500/30 via-gray-600/30 to-gray-700/30 backdrop-blur-sm border border-gray-400/30 rounded-xl flex items-center justify-center shadow-glass-glow group-hover:shadow-glass-glow transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
                     <img src="/shiftme-icon.png" alt="Shiftme" className="w-12 h-12 rounded-lg" />
                   </div>
                 </div>
                 <h1 className="ml-4 text-3xl font-black glass-text-strong">
+                  <p className="text-xs font-thin">夢を叶える貯金アプリ</p>
                   Shiftme
                 </h1>
               </div>
-              <p className="text-lg glass-text-strong font-semibold">夢を叶える貯金アプリ</p>
             </div>
 
             {/* Auth Form */}
-            <div className="glass-modal py-8 px-8 hover:shadow-glass-glow transition-all duration-500 glass-shine">
-              <div className="text-center mb-6">
+            <div className="glass-shine mt-20">
+              <div className="mb-6">
                 <h2 className="text-xl font-bold glass-text-strong mb-1">
                   {isLogin ? 'ログイン' : '新規登録'}
                 </h2>
@@ -155,17 +136,16 @@ export function AuthForm() {
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label htmlFor="email" className="block text-sm font-bold glass-text-strong mb-2">
+                  <label htmlFor="email" className="block text-sm font-bold glass-text-strong mb-1">
                     メールアドレス
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 glass-icon" />
                     <input
                       id="email"
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="glass-input w-full pl-12 pr-4 py-3"
+                      className="glass-input w-full pr-4 py-3"
                       placeholder="example@email.com"
                       required
                     />
@@ -173,26 +153,26 @@ export function AuthForm() {
                 </div>
 
                 <div>
-                  <label htmlFor="password" className="block text-sm font-bold glass-text-strong mb-2">
+                  <label htmlFor="password" className="block text-sm font-bold glass-text-strong mb-1">
                     パスワード
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 glass-icon" />
                     <input
                       id="password"
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="glass-input w-full pl-12 pr-12 py-3"
+                      className="glass-input w-full py-3"
                       placeholder="••••••••"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 glass-icon hover:text-white transition-colors p-1"
+                      disabled={!password}
+                      className={`absolute right-4 top-1/2 transform -translate-y-1/2 glass-icon p-1 ${password ? "" : "opacity-50 cursor-not-allowed"}`}
                     >
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      {!showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
                 </div>
@@ -210,19 +190,15 @@ export function AuthForm() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-2 px-6 font-bold text-base bg-white/90 backdrop-blur-md border-2 border-white/50 rounded-2xl text-gray-900 transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 hover:shadow-2xl hover:shadow-white/30 disabled:opacity-50 disabled:cursor-not-allowed glass-shine relative overflow-hidden"
-                >
-                  {/* 背景のアニメーション効果 */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-white/10 to-white/20 opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
-                  
+                  className="w-full text-base bg-white/90 backdrop-blur-md rounded-2xl text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed glass-shine relative overflow-hidden"
+                > 
                   {loading ? (
                     <div className="flex items-center justify-center space-x-2 relative z-10">
                       <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-900 border-t-transparent"></div>
                       <span>処理中...</span>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-center space-x-2 relative z-10">
-                      <Zap className="w-4 h-4" />
+                    <div className="space-x-2 z-10 bg-gray-800 text-white p-3 rounded-2xl">
                       <span>{isLogin ? 'ログイン' : '新規登録'}</span>
                     </div>
                   )}
