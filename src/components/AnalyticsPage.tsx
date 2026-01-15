@@ -345,6 +345,28 @@ export function AnalyticsPage() {
   if (timeRange === 'current') {
     const hasExpenses = expenses.length > 0
 
+    // 今月の予算情報を計算
+    const now = new Date()
+    const monthStart = startOfMonth(now)
+    const monthEnd = endOfMonth(now)
+
+    const monthExpenses = expenses.filter(expense => {
+      const expenseDate = new Date(expense.expense_date)
+      return expenseDate >= monthStart && expenseDate <= monthEnd
+    })
+
+    const totalExpensesThisMonth = monthExpenses.reduce((sum, expense) => sum + expense.amount, 0)
+    const totalFixed = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
+    const monthlyIncome = userSettings?.monthly_income || 0
+    const savingsGoal = savingsGoals[0]
+    const monthlyNeededForGoal = savingsGoal
+      ? Math.ceil(savingsGoal.target_amount / Math.max(1, Math.ceil((new Date(savingsGoal.target_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30))))
+      : 0
+
+    const budget = monthlyIncome - totalFixed - monthlyNeededForGoal
+    const remaining = budget - totalExpensesThisMonth
+    const budgetPercentage = budget > 0 ? (totalExpensesThisMonth / budget) * 100 : 0
+
     return (
       <div className="space-y-6">
         {/* Page Header */}
@@ -365,7 +387,7 @@ export function AnalyticsPage() {
           </div>
         </div>
 
-        {!hasExpenses ? (
+        {!hasExpenses && budget <= 0 ? (
           // 記録がない場合
           <div className="glass-card p-8 sm:p-12 text-center">
             <div className="max-w-md mx-auto space-y-4">
@@ -379,13 +401,76 @@ export function AnalyticsPage() {
         ) : (
           // 記録がある場合
           <>
+            {/* 予算概要カード */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="glass-card p-6 sm:p-8 glass-shine">
+                <p className="glass-text text-sm sm:text-base mb-2">今月の予算</p>
+                <p className="text-3xl sm:text-4xl font-bold glass-text-strong">
+                  ¥{budget.toLocaleString()}
+                </p>
+                <p className="glass-text text-xs sm:text-sm mt-2">使える金額</p>
+              </div>
+
+              <div className="glass-card p-6 sm:p-8 glass-shine">
+                <p className="glass-text text-sm sm:text-base mb-2">実支出</p>
+                <p className="text-3xl sm:text-4xl font-bold glass-text-strong">
+                  ¥{totalExpensesThisMonth.toLocaleString()}
+                </p>
+                <p className="glass-text text-xs sm:text-sm mt-2">{monthExpenses.length}件の記録</p>
+              </div>
+
+              <div className="glass-card p-6 sm:p-8 glass-shine">
+                <p className="glass-text text-sm sm:text-base mb-2">残り</p>
+                <p className={`text-3xl sm:text-4xl font-bold ${remaining >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  ¥{remaining.toLocaleString()}
+                </p>
+                <p className="glass-text text-xs sm:text-sm mt-2">
+                  {remaining >= 0 ? '節約できている' : '超過している'}
+                </p>
+              </div>
+            </div>
+
+            {/* 予算使用率バー */}
+            <div className="glass-card p-6 sm:p-8">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-semibold glass-text-strong">予算の使用率</h3>
+                <span className={`text-2xl font-bold ${budgetPercentage > 100 ? 'text-red-400' : budgetPercentage > 80 ? 'text-yellow-400' : 'text-blue-400'}`}>
+                  {budgetPercentage.toFixed(1)}%
+                </span>
+              </div>
+              <div className="relative">
+                <div className="w-full bg-white/10 rounded-full h-4 border border-white/20">
+                  <div
+                    className={`h-4 rounded-full transition-all duration-500 ${
+                      budgetPercentage > 100
+                        ? 'bg-gradient-to-r from-red-400 to-red-600'
+                        : budgetPercentage > 80
+                        ? 'bg-gradient-to-r from-yellow-400 to-yellow-600'
+                        : 'bg-gradient-to-r from-blue-400 to-blue-600'
+                    }`}
+                    style={{ width: `${Math.min(budgetPercentage, 100)}%` }}
+                  />
+                </div>
+                {budgetPercentage > 100 && (
+                  <div className="absolute top-1/2 -translate-y-1/2 right-0 -mr-8">
+                    <span className="text-red-400 font-semibold text-sm">超過</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex justify-between text-xs glass-text mt-3">
+                <span>0%</span>
+                <span>50%</span>
+                <span>100%</span>
+              </div>
+            </div>
+
             {/* 合計金額カード */}
             <div className="glass-card p-6 sm:p-8 text-center glass-shine">
               <p className="glass-text text-sm sm:text-base mb-2">今月の合計支出</p>
               <p className="text-4xl sm:text-5xl md:text-6xl font-bold glass-text-strong mb-1">
-                ¥{totalExpenses.toLocaleString()}
+                ¥{totalExpensesThisMonth.toLocaleString()}
               </p>
-              <p className="glass-text text-xs sm:text-sm">{expenses.length}件の記録</p>
+              <p className="glass-text text-xs sm:text-sm">{monthExpenses.length}件の記録</p>
             </div>
 
             {/* カテゴリ別内訳 */}
