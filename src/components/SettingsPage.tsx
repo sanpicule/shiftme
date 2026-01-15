@@ -259,7 +259,7 @@ export function SettingsPage() {
       </div>
 
       {/* Monthly Income Section */}
-      <div className="glass-card p-4 hover:shadow-glass-glow transition-all duration-500 glass-shine">
+      <div className="border border-gray-300 rounded-xl p-4 glass-shine">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-xl font-semibold text-gray-800">月収設定</h2>
@@ -293,7 +293,7 @@ export function SettingsPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex items-center justify-center space-x-2 px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/30 text-gray-800 rounded-xl hover:bg-white/15 hover:border-white/40 transition-all duration-300 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center justify-center space-x-2 px-6 py-4 bg-gray-800 backdrop-blur-sm text-white rounded-xl hover:bg-white/15 hover:border-white/40 transition-all duration-300 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save className="w-5 h-5" />
                   <span>{loading ? '更新中...' : '更新'}</span>
@@ -319,7 +319,7 @@ export function SettingsPage() {
       </div>
 
       {/* Fixed Expenses Section */}
-      <div className="glass-card p-4 hover:shadow-glass-glow transition-all duration-500 glass-shine">
+      <div className="border border-gray-300 rounded-xl p-4 glass-shine">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-xl font-semibold text-gray-800">固定支出管理</h2>
@@ -493,7 +493,7 @@ export function SettingsPage() {
       </div>
 
       {/* Savings Goals Section */}
-      <div className="glass-card p-4 hover:shadow-glass-glow transition-all duration-500 glass-shine">
+      <div className="border border-gray-300 rounded-xl p-4 glass-shine">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-xl font-semibold text-gray-800">貯金目標管理</h2>

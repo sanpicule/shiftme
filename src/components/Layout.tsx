@@ -20,16 +20,14 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
   return (
     <div className="h-screen flex overflow-hidden">
       {/* Sidebar - Desktop only, always visible */}
-      <div className="hidden md:block w-64 h-screen glass-nav border-r border-white/20 shadow-glass">
+      <div className="hidden md:block w-64 h-screen bg-gray-800">
         {/* Sidebar Header */}
         <div className="flex items-center p-4 border-b border-white/20">
           <div className="flex items-center space-x-3">
-                <div className="relative group glass-shine">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-glass-glow group-hover:shadow-glass-glow group-hover:scale-105 transition-all duration-300">
-                    <img src="/shiftme-icon.png" alt="Shiftme" className="w-8 h-8 rounded-lg" />
-                  </div>
-                </div>
-            <h1 className="text-xl font-black glass-text-strong">
+              <div className="relative group glass-shine">
+                <img src="/shiftme-icon.png" alt="Shiftme" className="w-8 h-8 rounded-lg" />
+              </div>
+            <h1 className="text-xl text-white font-bold">
               Shiftme
             </h1>
           </div>
@@ -45,15 +43,15 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
                 key={item.id}
                 onClick={() => onPageChange(item.id)}
                 className={`
-                  w-full flex items-center space-x-3 p-3 rounded-xl text-sm font-medium transition-all duration-300 group relative glass-shine
+                  w-full flex items-center space-x-3 p-3 rounded-xl text-sm font-bold group relative glass-shine
                   ${isActive 
-                    ? 'bg-glass-white-strong text-white border border-white/30 shadow-glass-glow' 
-                    : 'glass-text hover:text-white hover:bg-glass-white-weak'
+                    ? 'bg-white text-gray-800 border border-white/30 shadow-glass-glow' 
+                    : 'text-white hover:text-white hover:bg-glass-white-weak'
                   }
                 `}
               >
-                <div className={`w-10 h-10 rounded-xl transition-all duration-300 grid place-items-center backdrop-blur-sm ${isActive ? 'bg-glass-black border border-white/30' : 'bg-glass-white-weak border border-white/10'}`}>
-                  <Icon className={`w-5 h-5 ${isActive ? 'glass-icon' : 'glass-icon group-hover:text-white/90'}`} />
+                <div>
+                  <Icon className={`w-5 h-5 ${isActive ? 'text-gray-800' : 'text-white group-hover:text-white/90'}`} />
                 </div>
                 <span className="text-shadow">{item.name}</span>
               </button>
@@ -65,15 +63,10 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
       {/* Main Content Area */}
       <div className="flex-1 overflow-hidden">
         {/* Mobile Header */}
-        <header className="md:hidden bg-white">
+        <header className="md:hidden border-b border-gray-800/20">
           <div className="flex items-center px-4 py-3">
-            <div className="flex items-center space-x-1">
-              <div className="relative group glass-shine">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center">
-                  <img src="/shiftme-icon.png" alt="Shiftme" className="w-8 h-8 rounded-md" />
-                </div>
-              </div>
-              <h1 className="text-lg text-black/70 font-black">
+            <div className="flex items-center space-x-2">
+              <h1 className="text-xl text-gray-800 font-bold">
                 Shiftme
               </h1>
             </div>
@@ -81,7 +74,7 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
         </header>
 
         {/* Main Content */}
-        <main className="h-full overflow-y-auto p-6 md:p-8 md:py-10 pb-48 md:pb-8 glass-scrollbar">
+        <main className="h-full overflow-y-auto p-4 md:p-8 md:py-10 pb-48 md:pb-8 glass-scrollbar">
           {children}
         </main>
 

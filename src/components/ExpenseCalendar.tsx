@@ -53,11 +53,11 @@ export function ExpenseCalendar({ expenses, onDateClick }: ExpenseCalendarProps)
   const isCurrentMonth = (date: Date) => date.getMonth() === currentDate.getMonth()
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Calendar Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold glass-text-strong">
-          {format(currentDate, 'yyyy年MM月', { locale: ja })}
+        <h3 className="text-2xl font-semibold glass-text-strong">
+          {format(currentDate, 'yyyy年M月', { locale: ja })}
         </h3>
         <div className="flex items-center space-x-2">
           <button
@@ -104,7 +104,7 @@ export function ExpenseCalendar({ expenses, onDateClick }: ExpenseCalendarProps)
               key={day.toISOString()}
               onClick={() => inCurrentMonth && handleDateClick(day)}
               className={`
-                p-2 min-h-[80px] border-r border-b border-gray-200 last:border-r-0 relative transition-all duration-200 md:hover:shadow-glass-glow flex flex-col items-start glass-shine
+                px-1 md:p-2 min-h-[80px] border-r border-b border-gray-200 last:border-r-0 relative transition-all duration-200 md:hover:shadow-glass-glow flex flex-col items-start glass-shine
                 ${inCurrentMonth 
                   ? 'hover:bg-glass-white-weak cursor-pointer' 
                   : 'cursor-default'
@@ -127,20 +127,16 @@ export function ExpenseCalendar({ expenses, onDateClick }: ExpenseCalendarProps)
               {dayExpenses.length > 0 && inCurrentMonth && (
                 <div className="space-y-1">
                   {/* Desktop: Show expense details, Mobile: Show only marker */}
-                  <div className="hidden md:block">
-                    <div className="text-xs font-semibold text-gray-300 bg-gray-500/20 backdrop-blur-sm px-1.5 py-0.5 rounded truncate border border-gray-400/30">
+                  <div>
+                    <div className="mx-auto text-[8px] md:text-xs font-semibold text-white bg-gray-500 backdrop-blur-sm px-1 py-0.5 rounded truncate border border-gray-400/30">
                       ¥{dayTotal.toLocaleString()}
                     </div>
                     {dayExpenses.length > 1 && (
-                      <div className="text-xs glass-text bg-glass-white-weak px-1.5 py-0.5 rounded border border-white/20">
+                      <div className="text-[12px] mt-1 md:text-xs md:px-1.5 py-0.5 text-start">
                         {dayExpenses.length}件
                       </div>
                     )}
                   </div>
-                  {/* Mobile: Simple marker */}
-                    <div className="md:hidden flex justify-center">
-                      <div className="w-2 h-2 bg-blue-600 rounded-full shadow-lg"></div>
-                    </div>
                 </div>
               )}
               

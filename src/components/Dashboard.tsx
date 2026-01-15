@@ -240,8 +240,26 @@ export function Dashboard() {
   const budgetAfterFixed = monthlyIncome - totalFixedExpenses - monthlyNeededForGoal
   const remainingBudget = budgetAfterFixed - totalMonthlyExpenses
 
+  const remainingDays = Math.ceil((new Date(endOfMonth(currentDate)).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+  const dailyBudget = Math.floor(remainingBudget / Math.max(1, remainingDays))
+  const weeklyBudget = Math.floor(remainingBudget / Math.max(1, Math.ceil(remainingDays / 7)))
+
+  const totalExpenses = () => {
+    if (!selectedDate) return 0
+    return expenses.filter(expense => 
+      format(new Date(expense.expense_date), 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
+    ).reduce((sum, expense) => sum + expense.amount, 0)
+  }
+
+  const dailyRemaining = () => {
+    if (dailyBudget - totalExpenses() < 0) {
+      return 0
+    }
+    return dailyBudget - totalExpenses()
+  }
+
   return (
-    <div className="space-y-6 md:space-y-8">
+    <div className="space-y-4 md:space-y-8">
       {/* Main Budget Display - Hero Section with Glass Effect */}
       <div className="relative overflow-hidden">
         {/* Background Pattern */}
@@ -252,7 +270,7 @@ export function Dashboard() {
         </div>
 
         {/* Details Toggle Button - Top Right */}
-        <div className="absolute top-4 right-4 md:hidden z-20">
+        <div className="absolute top-4 right-0 md:hidden z-20">
           <button
             onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}
             className="p-2 backdrop-blur-sm transition-all duration-300 rounded-full glass-text border border-gray-200"
@@ -288,82 +306,44 @@ export function Dashboard() {
               <div className="text-2xl md:text-4xl font-bold glass-text-strong">
                 {hideRemaining ? '¥••••••' : `¥${remainingBudget.toLocaleString()}`}
               </div>
-              
-              {/* Quick Stats - 2 columns - Hidden on mobile when collapsed */}
-              <div className={`md:block overflow-hidden transition-all duration-500 ease-in-out ${
-                isDetailsExpanded ? 'mt-4 max-h-96 opacity-100' : 'max-h-0 opacity-0 md:max-h-none md:opacity-100'
-              }`}>
-                <div className="grid grid-cols-2 gap-3 mt-2">
-                  {(() => {
-                    const remainingDays = Math.ceil((new Date(endOfMonth(currentDate)).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
-                    const dailyBudget = Math.floor(remainingBudget / Math.max(1, remainingDays))
-                    const weeklyBudget = Math.floor(remainingBudget / Math.max(1, Math.ceil(remainingDays / 7)))
-                    
-                    return (
-                      <>
-                        <div className="backdrop-blur-sm rounded-xl p-3 text-center border border-gray-200">
-                          <div className="text-xs glass-text mb-1">1日あたり</div>
-                          <div className="text-base font-bold glass-text-strong">¥{dailyBudget.toLocaleString()}</div>
-                        </div>
-                        <div className="backdrop-blur-sm rounded-xl p-3 text-center border border-gray-200">
-                          <div className="text-xs glass-text mb-1">1週間あたり</div>
-                          <div className="text-base font-bold glass-text-strong">¥{weeklyBudget.toLocaleString()}</div>
-                        </div>
-                      </>
-                    )
-                  })()}
-                </div>
-              </div>
-            </div>
 
-            {/* Right Side - Savings Goal - Hidden on mobile when collapsed */}
-            {savingsGoal && (
-              <div className={`lg:ml-8 overflow-hidden transition-all duration-500 ease-in-out ${
-                isDetailsExpanded ? 'mt-4 max-h-96 opacity-100' : 'max-h-0 opacity-0 md:max-h-none md:opacity-100'
-              }`}>
-                <div className="space-y-3">
-                  <div className="flex items-center">
-                    <div className="bg-glass-white-weak backdrop-blur-sm rounded-lg px-3 py-2 glass-text text-sm font-medium w-24 border border-white/20">
-                      いつまでに
-                    </div>
-                    <div className="glass-text-strong font-semibold ml-3">
-                      {format(new Date(savingsGoal.target_date), 'yyyy年M月', { locale: ja })}
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center">
-                    <div className="bg-glass-white-weak backdrop-blur-sm rounded-lg px-3 py-2 glass-text text-sm font-medium w-24 border border-white/20">
-                      いくら
-                    </div>
-                    <div className="glass-text-strong font-semibold ml-3">
+              {savingsGoal && (
+                <div className={`mt-4 overflow-hidden transition-all duration-500 ease-in-out ${
+                  isDetailsExpanded ? 'mt-4 max-h-96 opacity-100' : 'max-h-0 opacity-0 md:max-h-none md:opacity-100'
+                }`}>
+                  <div className="flex flex-col space-y-1">
+                    <div className="glass-text-strong font-semibold">
+                      {format(new Date(savingsGoal.target_date), 'yyyy年M月', { locale: ja })}までに
+                    </div>    
+                    <div className="glass-text-strong text-lg font-semibold">
                       ¥{savingsGoal.target_amount.toLocaleString()}
                     </div>
                   </div>
-                  
-                  <div className="flex items-center">
-                    <div className="bg-glass-white-weak backdrop-blur-sm rounded-lg px-3 py-2 glass-text text-sm font-medium w-24 border border-white/20">
-                      目標
-                    </div>
-                    <div className="glass-text-strong font-semibold ml-3">
-                      {savingsGoal.title}
-                    </div>
+                </div>
+              )}
+              
+              {/* Quick Stats - 2 columns - Hidden on mobile when collapsed */}
+              <div className={`md:block overflow-hidden transition-all duration-500 ease-in-out ${
+                isDetailsExpanded ? 'mt-2 max-h-96 opacity-100' : 'max-h-0 opacity-0 md:max-h-none md:opacity-100'
+              }`}>
+                <div className="grid grid-cols-2 gap-3 mt-2">
+                  <div className="backdrop-blur-sm rounded-xl p-3 border border-gray-200">
+                    <div className="text-xs glass-text mb-1">1日あたり</div>
+                    <div className="text-base font-bold glass-text-strong">¥{dailyBudget.toLocaleString()}</div>
+                  </div>
+                  <div className="backdrop-blur-sm rounded-xl p-3 border border-gray-200">
+                    <div className="text-xs glass-text mb-1">1週間あたり</div>
+                    <div className="text-base font-bold glass-text-strong">¥{weeklyBudget.toLocaleString()}</div>
                   </div>
                 </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Calendar Section */}
       <div>
-        <div className="flex items-center space-x-2 md:space-x-3 mb-4 md:mb-6">
-          <div>
-            <h2 className="text-lg md:text-xl font-bold glass-text-strong">支出カレンダー</h2>
-            <p className="text-xs md:text-sm glass-text">日付をクリックして支出を入力・確認できます</p>
-          </div>
-        </div>
-
         <ExpenseCalendar expenses={expenses} onDateClick={handleDateClick} />
       </div>
 
@@ -486,6 +466,14 @@ export function Dashboard() {
                 </div>
               )}
 
+              <div className="mb-4 text-md glass-text">
+                あと
+                <span className='font-bold text-gray-800 text-3xl glass-text-strong mx-1'>
+                  {dailyRemaining().toLocaleString()}
+                </span>
+                円使えます！
+              </div>
+
               {/* Add/Edit Expense Form */}
               {(isAddingExpense || editingExpense) && (
                 <div className="mb-6 p-6 glass-card">
@@ -605,7 +593,7 @@ export function Dashboard() {
                           </button>
                           <button 
                             onClick={() => deleteExpense(expense.id)}
-                            className="text-red-400 hover:bg-red-500/20 rounded-xl transition-all duration-300 glass-shine"
+                            className="text-red-400 md:hover:bg-red-500/20 rounded-xl transition-all duration-300 glass-shine"
                             title="削除"
                           >
                             <Trash2 className="w-5 h-5" />
@@ -620,9 +608,7 @@ export function Dashboard() {
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-semibold glass-text">この日の合計</span>
                       <span className="text-3xl font-bold glass-text-strong">
-                        ¥{expenses.filter(expense => 
-                          format(new Date(expense.expense_date), 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
-                        ).reduce((sum, expense) => sum + expense.amount, 0).toLocaleString()}
+                        ¥{totalExpenses().toLocaleString()}
                       </span>
                     </div>
                   </div>
