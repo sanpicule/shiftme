@@ -439,7 +439,7 @@ export function AnalyticsPage() {
                 </span>
               </div>
               <div className="relative">
-                <div className="w-full bg-white/10 rounded-full h-4 border border-white/20">
+                <div className="w-full bg-gray-400 rounded-full h-4 border border-white/20">
                   <div
                     className={`h-4 rounded-full transition-all duration-500 ${
                       budgetPercentage > 100
