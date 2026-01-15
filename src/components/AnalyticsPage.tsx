@@ -464,15 +464,6 @@ export function AnalyticsPage() {
               </div>
             </div>
 
-            {/* 合計金額カード */}
-            <div className="glass-card p-6 sm:p-8 text-center glass-shine">
-              <p className="glass-text text-sm sm:text-base mb-2">今月の合計支出</p>
-              <p className="text-4xl sm:text-5xl md:text-6xl font-bold glass-text-strong mb-1">
-                ¥{totalExpensesThisMonth.toLocaleString()}
-              </p>
-              <p className="glass-text text-xs sm:text-sm">{monthExpenses.length}件の記録</p>
-            </div>
-
             {/* カテゴリ別内訳 */}
             {categoryData.length > 0 && (
               <div className="glass-card p-4 sm:p-6">
