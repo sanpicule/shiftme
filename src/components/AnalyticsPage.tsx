@@ -117,7 +117,30 @@ export function AnalyticsPage() {
   const getMonthlyData = (): MonthlyData[] => {
     const months: MonthlyData[] = []
     const now = new Date()
-    
+
+    const calculateMonthlyBudget = (monthDate: Date) => {
+      const monthlyIncome = userSettings?.monthly_income || 0
+      const totalFixed = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
+      const savingsGoal = savingsGoals[0]
+      const monthlyNeededForGoal = savingsGoal
+        ? Math.ceil(savingsGoal.target_amount / Math.max(1, Math.ceil((new Date(savingsGoal.target_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30))))
+        : 0
+
+      let income = monthlyIncome
+
+      // ボーナス月の場合はボーナス額を加算
+      if (userSettings?.bonus_months) {
+        const bonusMonthsArray = userSettings.bonus_months.split(',').map(m => parseInt(m.trim()))
+        const currentMonth = monthDate.getMonth() + 1
+        if (bonusMonthsArray.includes(currentMonth)) {
+          income += (userSettings?.bonus_amount || 0)
+        }
+      }
+
+      const budget = income - totalFixed - monthlyNeededForGoal
+      return budget
+    }
+
     if (timeRange === 'current') {
       // 今月のみの場合
       const monthStart = startOfMonth(now)
@@ -129,14 +152,7 @@ export function AnalyticsPage() {
       })
 
       const totalExpenses = monthExpenses.reduce((sum, expense) => sum + expense.amount, 0)
-      const totalFixed = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
-      const monthlyIncome = userSettings?.monthly_income || 0
-      const savingsGoal = savingsGoals[0]
-      const monthlyNeededForGoal = savingsGoal
-        ? Math.ceil(savingsGoal.target_amount / Math.max(1, Math.ceil((new Date(savingsGoal.target_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30))))
-        : 0
-      
-      const budget = monthlyIncome - totalFixed - monthlyNeededForGoal
+      const budget = calculateMonthlyBudget(now)
 
       months.push({
         month: format(now, 'MM月', { locale: ja }),
@@ -165,14 +181,7 @@ export function AnalyticsPage() {
         })
 
         const totalExpenses = monthExpenses.reduce((sum, expense) => sum + expense.amount, 0)
-        const totalFixed = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
-        const monthlyIncome = userSettings?.monthly_income || 0
-        const savingsGoal = savingsGoals[0]
-        const monthlyNeededForGoal = savingsGoal
-          ? Math.ceil(savingsGoal.target_amount / Math.max(1, Math.ceil((new Date(savingsGoal.target_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30))))
-          : 0
-        
-        const budget = monthlyIncome - totalFixed - monthlyNeededForGoal
+        const budget = calculateMonthlyBudget(monthDate)
 
         months.push({
           month: format(monthDate, 'MM月', { locale: ja }),
@@ -219,7 +228,6 @@ export function AnalyticsPage() {
       (now.getFullYear() - startMonth.getFullYear()) * 12 + (now.getMonth() - startMonth.getMonth()) + 1
     )
 
-    const monthlyIncome = userSettings?.monthly_income || 0
     const totalFixed = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
     const goal = savingsGoals[0]
     const monthlyNeededForGoal = goal
@@ -234,15 +242,27 @@ export function AnalyticsPage() {
             )
         )
       : 0
-    const monthlyBudget = monthlyIncome - totalFixed - monthlyNeededForGoal // 月別支出推移の予算と一致
 
     const labels: string[] = []
     const values: number[] = []
+    let monthlyBudget = 0
 
     for (let i = monthsCount - 1; i >= 0; i--) {
       const monthDate = subMonths(now, i)
       const monthStart = startOfMonth(monthDate)
       const monthEnd = endOfMonth(monthDate)
+
+      // 月別の予算を計算（ボーナス対応）
+      let monthlyIncome = userSettings?.monthly_income || 0
+      if (userSettings?.bonus_months) {
+        const bonusMonthsArray = userSettings.bonus_months.split(',').map(m => parseInt(m.trim()))
+        const currentMonth = monthDate.getMonth() + 1
+        if (bonusMonthsArray.includes(currentMonth)) {
+          monthlyIncome += (userSettings?.bonus_amount || 0)
+        }
+      }
+      monthlyBudget = monthlyIncome - totalFixed - monthlyNeededForGoal
+
       const monthExpensesSum = allExpenses
         .filter(e => {
           const d = new Date(e.expense_date)
@@ -284,7 +304,6 @@ export function AnalyticsPage() {
       (now.getFullYear() - startMonth.getFullYear()) * 12 + (now.getMonth() - startMonth.getMonth()) + 1
     )
 
-    const monthlyIncome = userSettings?.monthly_income || 0
     const totalFixed = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
 
     // 実績: 全期間（allExpenses）の各月ごとの余剰を積み上げ
@@ -293,6 +312,17 @@ export function AnalyticsPage() {
       const monthDate = subMonths(now, i)
       const monthStart = startOfMonth(monthDate)
       const monthEnd = endOfMonth(monthDate)
+
+      // 月別の収入を計算（ボーナス対応）
+      let monthlyIncome = userSettings?.monthly_income || 0
+      if (userSettings?.bonus_months) {
+        const bonusMonthsArray = userSettings.bonus_months.split(',').map(m => parseInt(m.trim()))
+        const currentMonth = monthDate.getMonth() + 1
+        if (bonusMonthsArray.includes(currentMonth)) {
+          monthlyIncome += (userSettings?.bonus_amount || 0)
+        }
+      }
+
       const monthVariable = allExpenses
         .filter(e => {
           const d = new Date(e.expense_date)
@@ -357,7 +387,17 @@ export function AnalyticsPage() {
 
     const totalExpensesThisMonth = monthExpenses.reduce((sum, expense) => sum + expense.amount, 0)
     const totalFixed = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
-    const monthlyIncome = userSettings?.monthly_income || 0
+    let monthlyIncome = userSettings?.monthly_income || 0
+
+    // ボーナス月の場合はボーナス額を加算
+    if (userSettings?.bonus_months) {
+      const bonusMonthsArray = userSettings.bonus_months.split(',').map(m => parseInt(m.trim()))
+      const currentMonth = now.getMonth() + 1
+      if (bonusMonthsArray.includes(currentMonth)) {
+        monthlyIncome += (userSettings?.bonus_amount || 0)
+      }
+    }
+
     const savingsGoal = savingsGoals[0]
     const monthlyNeededForGoal = savingsGoal
       ? Math.ceil(savingsGoal.target_amount / Math.max(1, Math.ceil((new Date(savingsGoal.target_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30))))

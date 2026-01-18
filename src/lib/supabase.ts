@@ -21,6 +21,8 @@ export interface UserSettings {
   id: string
   user_id: string
   monthly_income: number
+  bonus_amount: number
+  bonus_months: string
   setup_completed: boolean
   created_at: string
   updated_at: string

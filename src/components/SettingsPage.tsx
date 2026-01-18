@@ -8,6 +8,8 @@ import { useAuth } from '../contexts/AuthContext'
 
 interface IncomeForm {
   monthly_income: number
+  bonus_amount: number
+  bonus_months: string
 }
 
 interface FixedExpenseForm {
@@ -88,14 +90,20 @@ export function SettingsPage() {
     }
     if (userSettings) {
       setIncomeValue('monthly_income', userSettings.monthly_income)
+      setIncomeValue('bonus_amount', userSettings.bonus_amount || 0)
+      setIncomeValue('bonus_months', userSettings.bonus_months || '')
     }
   }, [user, userSettings, setIncomeValue, fetchData])
 
   const handleIncomeUpdate = async (data: IncomeForm) => {
     setLoading(true)
     try {
-      await updateUserSettings({ monthly_income: data.monthly_income })
-      showSuccess('月収を更新しました', `新しい月収: ¥${data.monthly_income.toLocaleString()}`)
+      await updateUserSettings({
+        monthly_income: data.monthly_income,
+        bonus_amount: data.bonus_amount,
+        bonus_months: data.bonus_months
+      })
+      showSuccess('収入設定を更新しました', `月収: ¥${data.monthly_income.toLocaleString()}`)
       setEditingIncome(false)
     } catch (error) {
       console.error('Error updating income:', error)
@@ -258,12 +266,12 @@ export function SettingsPage() {
         <p className="text-sm text-gray-800">収入、固定支出、貯金目標を設定しましょう</p>
       </div>
 
-      {/* Monthly Income Section */}
+      {/* Income Section */}
       <div className="border border-gray-300 rounded-xl p-4 glass-shine">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-xl font-semibold text-gray-800">月収設定</h2>
-            <p className="text-sm text-gray-800">毎月の収入を設定してください</p>
+            <h2 className="text-xl font-semibold text-gray-800">収入設定</h2>
+            <p className="text-sm text-gray-800">毎月の収入とボーナスを設定してください</p>
           </div>
           {!editingIncome && (
             <button
@@ -277,8 +285,8 @@ export function SettingsPage() {
 
         {editingIncome ? (
           <form onSubmit={handleIncomeSubmit(handleIncomeUpdate)} className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-end gap-4">
-              <div className="flex-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
                 <label className="block text-sm font-semibold text-gray-800 mb-3">
                   月収（円）
                 </label>
@@ -289,31 +297,72 @@ export function SettingsPage() {
                   placeholder="300000"
                 />
               </div>
-              <div className="flex gap-2">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex items-center justify-center space-x-2 px-6 py-4 bg-gray-800 backdrop-blur-sm text-white rounded-xl hover:bg-white/15 hover:border-white/40 transition-all duration-300 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Save className="w-5 h-5" />
-                  <span>{loading ? '更新中...' : '更新'}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setEditingIncome(false)}
-                  className="px-4 py-4 bg-white/5 backdrop-blur-sm border border-white/20 text-gray-800 rounded-xl hover:bg-white/10 hover:border-white/30 transition-all duration-300 font-semibold"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-3">
+                  ボーナス額（円）
+                </label>
+                <input
+                  type="number"
+                  {...registerIncome('bonus_amount', { min: 0 })}
+                  className="glass-input w-full px-6 py-4 text-lg font-medium text-gray-800"
+                  placeholder="500000"
+                />
               </div>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-800 mb-3">
+                ボーナス支給月（カンマ区切り、例：3,9）
+              </label>
+              <input
+                type="text"
+                {...registerIncome('bonus_months')}
+                className="glass-input w-full px-6 py-4 text-lg font-medium text-gray-800"
+                placeholder="3,9"
+              />
+              <p className="text-xs text-gray-600 mt-2">3月と9月にボーナスを支給する場合は「3,9」と入力</p>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={() => setEditingIncome(false)}
+                className="px-6 py-4 bg-white/5 backdrop-blur-sm border border-white/20 text-gray-800 rounded-xl hover:bg-white/10 hover:border-white/30 transition-all duration-300 font-semibold"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex items-center justify-center space-x-2 px-6 py-4 bg-gray-800 backdrop-blur-sm text-white rounded-xl hover:bg-white/15 hover:border-white/40 transition-all duration-300 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Save className="w-5 h-5" />
+                <span>{loading ? '更新中...' : '更新'}</span>
+              </button>
             </div>
           </form>
         ) : (
-          <div className="flex justify-between items-center py-2">
-            <span className="text-gray-800 font-medium">現在の月収</span>
-            <span className="text-2xl font-semibold text-gray-800">
-              ¥{userSettings?.monthly_income?.toLocaleString() || '0'}
-            </span>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center py-2">
+              <span className="text-gray-800 font-medium">月収</span>
+              <span className="text-2xl font-semibold text-gray-800">
+                ¥{userSettings?.monthly_income?.toLocaleString() || '0'}
+              </span>
+            </div>
+            {(userSettings?.bonus_amount || 0) > 0 && (
+              <>
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-gray-800 font-medium">ボーナス額</span>
+                  <span className="text-2xl font-semibold text-gray-800">
+                    ¥{userSettings?.bonus_amount?.toLocaleString() || '0'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-gray-800 font-medium">支給月</span>
+                  <span className="text-lg font-semibold text-gray-800">
+                    {userSettings?.bonus_months || '未設定'}月
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
