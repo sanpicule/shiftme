@@ -163,19 +163,14 @@ export function Dashboard() {
 
       const currentMonthTotal = currentMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0)
 
-      // 現在の月の収入を計算
-      let currentMonthIncome = userSettings?.monthly_income || 0
+      // 基本的な月の収入を計算
+      let baseCurrentMonthIncome = userSettings?.monthly_income || 0
       if (userSettings?.bonus_months) {
         const bonusMonthsArray = userSettings.bonus_months.split(',').map(m => parseInt(m.trim()))
         const currentMonthNumber = currentDate.getMonth() + 1
         if (bonusMonthsArray.includes(currentMonthNumber)) {
-          currentMonthIncome += (userSettings?.bonus_amount || 0)
+          baseCurrentMonthIncome += (userSettings?.bonus_amount || 0)
         }
-      }
-
-      // 前月の繰越を加算
-      if (monthlyCarryover && monthlyCarryover.carryover_amount !== 0) {
-        currentMonthIncome += monthlyCarryover.carryover_amount
       }
 
       const currentMonthFixedExpenses = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
@@ -184,11 +179,18 @@ export function Dashboard() {
         ? Math.ceil(savingsGoal.target_amount / Math.max(1, Math.ceil((new Date(savingsGoal.target_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30))))
         : 0
 
-      const currentBudgetAfterFixed = currentMonthIncome - currentMonthFixedExpenses - monthlyNeededForGoal
-      const currentMonthRemaining = currentBudgetAfterFixed - currentMonthTotal
+      // 基本予算（表示用と同じ計算）
+      const baseBudget = baseCurrentMonthIncome - currentMonthFixedExpenses - monthlyNeededForGoal
 
-      // 現在の月の繰越を保存（0でない場合）
-      if (currentMonthRemaining !== 0) {
+      // 実装用：前月の繰越を加算した実際の予算
+      const carryover = monthlyCarryover?.carryover_amount || 0
+      const actualBudget = baseBudget + carryover
+
+      // 次月への繰越：実際の予算から今月の支出を引いたもの
+      const carryoverForNextMonth = actualBudget - currentMonthTotal
+
+      // 繰越を保存（0でない場合）
+      if (carryoverForNextMonth !== 0) {
         try {
           const { data: existingCarryover } = await supabase
             .from('monthly_carryover')
@@ -201,7 +203,7 @@ export function Dashboard() {
           if (existingCarryover) {
             await supabase
               .from('monthly_carryover')
-              .update({ carryover_amount: currentMonthRemaining })
+              .update({ carryover_amount: carryoverForNextMonth })
               .eq('id', existingCarryover.id)
           } else {
             await supabase
@@ -210,7 +212,7 @@ export function Dashboard() {
                 user_id: user.id,
                 year: currentDate.getFullYear(),
                 month: currentDate.getMonth() + 1,
-                carryover_amount: currentMonthRemaining
+                carryover_amount: carryoverForNextMonth
               })
           }
         } catch (error) {
@@ -343,32 +345,38 @@ export function Dashboard() {
   const isBeforeStartMonth = startMonth && currentDate < startOfMonth(startMonth)
 
   // Calculations
-  let monthlyIncome = userSettings?.monthly_income || 0
+  let baseMonthlyIncome = userSettings?.monthly_income || 0
 
   // ボーナス月の場合はボーナス額を加算
   if (userSettings?.bonus_months) {
     const bonusMonthsArray = userSettings.bonus_months.split(',').map(m => parseInt(m.trim()))
     const currentMonth = currentDate.getMonth() + 1
     if (bonusMonthsArray.includes(currentMonth)) {
-      monthlyIncome += (userSettings?.bonus_amount || 0)
+      baseMonthlyIncome += (userSettings?.bonus_amount || 0)
     }
-  }
-
-  // スタート月より前でなければ、前月の繰越を加算
-  if (!isBeforeStartMonth && monthlyCarryover && monthlyCarryover.carryover_amount !== 0) {
-    monthlyIncome += monthlyCarryover.carryover_amount
   }
 
   const totalFixedExpenses = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
   const totalMonthlyExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0)
 
-  const savingsGoal = savingsGoals[0] // Assuming one active goal
+  const savingsGoal = savingsGoals[0]
   const monthlyNeededForGoal = savingsGoal
     ? Math.ceil(savingsGoal.target_amount / Math.max(1, Math.ceil((new Date(savingsGoal.target_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30))))
     : 0
 
-  const budgetAfterFixed = monthlyIncome - totalFixedExpenses - monthlyNeededForGoal
-  const remainingBudget = budgetAfterFixed - totalMonthlyExpenses
+  // 基本予算（毎月固定、表示用）
+  const baseMonthlyBudget = baseMonthlyIncome - totalFixedExpenses - monthlyNeededForGoal
+  // 表示上の残高（基本予算から支出を引いたもの、毎月同じに見える）
+  const displayedRemaining = baseMonthlyBudget - totalMonthlyExpenses
+
+  // 実装用：繰越を加算した実際の予算
+  const carryoverAmount = isBeforeStartMonth ? 0 : (monthlyCarryover?.carryover_amount || 0)
+  const actualMonthlyBudget = baseMonthlyBudget + carryoverAmount
+  // 次月への繰越となる実際の残高
+  const actualRemaining = actualMonthlyBudget - totalMonthlyExpenses
+
+  // UIに表示する残高は displayedRemaining を使う
+  const remainingBudget = displayedRemaining
 
   // 表示月の今日または月末までの残り日数を計算
   const now = new Date()
