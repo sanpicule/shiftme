@@ -9,10 +9,10 @@ interface ExpenseCalendarProps {
   onDateClick: (date: Date) => void
   currentDate: Date
   onMonthChange: (date: Date) => void
-  monthlySavingsAmount: number
+  actualMonthlySavings: number
 }
 
-export function ExpenseCalendar({ expenses, onDateClick, currentDate, onMonthChange, monthlySavingsAmount }: ExpenseCalendarProps) {
+export function ExpenseCalendar({ expenses, onDateClick, currentDate, onMonthChange, actualMonthlySavings }: ExpenseCalendarProps) {
 
 
 
@@ -62,8 +62,8 @@ export function ExpenseCalendar({ expenses, onDateClick, currentDate, onMonthCha
           <h3 className="text-2xl font-semibold glass-text-strong">
             {format(currentDate, 'yyyy年M月', { locale: ja })}
           </h3>
-          <div className={`text-sm mt-1 ${monthlySavingsAmount >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-            今月の貯金: ¥{Math.abs(monthlySavingsAmount).toLocaleString()} {monthlySavingsAmount < 0 ? '(赤字)' : ''}
+          <div className={`text-sm mt-1 ${actualMonthlySavings >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+            今月の貯金: ¥{Math.abs(actualMonthlySavings).toLocaleString()} {actualMonthlySavings < 0 ? '(赤字)' : ''}
           </div>
         </div>
         <div className="flex items-center space-x-2">
