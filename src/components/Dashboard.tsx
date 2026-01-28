@@ -5,7 +5,7 @@ import { Calendar, AlertTriangle, CheckCircle, Edit2, Trash2, Plus, X, Save, Che
 import { ExpenseCalendar } from './ExpenseCalendar'
 import { LoadingSpinner } from './LoadingSpinner'
 import { useUserSettings } from '../hooks/useUserSettings'
-import { supabase, FixedExpense, SavingsGoal, Expense, MonthlyCarryover } from '../lib/supabase'
+import { supabase, FixedExpense, SavingsGoal, Expense } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useForm } from 'react-hook-form'
 import { Modal, Box } from '@mui/material'
@@ -33,7 +33,6 @@ export function Dashboard() {
   const [fixedExpenses, setFixedExpenses] = useState<FixedExpense[]>([])
   const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([])
   const [expenses, setExpenses] = useState<Expense[]>([])
-  const [monthlyCarryover, setMonthlyCarryover] = useState<MonthlyCarryover | null>(null)
   const [loading, setLoading] = useState(true)
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
@@ -55,105 +54,6 @@ export function Dashboard() {
     }
   }, [user, currentDate])
 
-  useEffect(() => {
-    const calculateCarryover = async () => {
-      if (!user || loading) return
-
-      try {
-        let firstExpenseDate: Date | null = null
-        if (expenses.length > 0) {
-          const sortedExpenses = [...expenses].sort((a, b) =>
-            new Date(a.expense_date).getTime() - new Date(b.expense_date).getTime()
-          )
-          firstExpenseDate = new Date(sortedExpenses[0].expense_date)
-        }
-
-        const currentMonthStart = startOfMonth(currentDate)
-        const isBeforeFirstExpense = firstExpenseDate && currentDate < startOfMonth(firstExpenseDate)
-
-        if (isBeforeFirstExpense) {
-          setMonthlyCarryover(null)
-          return
-        }
-
-        const currentMonthEnd = endOfMonth(currentDate)
-
-        const currentMonthExpenses = expenses.filter(expense => {
-          const expenseDate = new Date(expense.expense_date)
-          return expenseDate >= currentMonthStart && expenseDate <= currentMonthEnd
-        })
-
-        const currentMonthTotal = currentMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0)
-
-        let baseCurrentMonthIncome = userSettings?.monthly_income || 0
-        if (userSettings?.bonus_months) {
-          const bonusMonthsArray = userSettings.bonus_months.split(',').map(m => parseInt(m.trim()))
-          const currentMonthNumber = currentDate.getMonth() + 1
-          if (bonusMonthsArray.includes(currentMonthNumber)) {
-            baseCurrentMonthIncome += (userSettings?.bonus_amount || 0)
-          }
-        }
-
-        const currentMonthFixedExpenses = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
-        const savingsGoal = savingsGoals[0]
-        const monthlyNeededForGoal = savingsGoal
-          ? Math.ceil(savingsGoal.target_amount / Math.max(1, Math.ceil((new Date(savingsGoal.target_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30))))
-          : 0
-
-        const baseBudget = baseCurrentMonthIncome - currentMonthFixedExpenses - monthlyNeededForGoal
-
-        const { data: prevMonthCarryover } = await supabase
-          .from('monthly_carryover')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('year', currentDate.getFullYear())
-          .eq('month', currentDate.getMonth() - 1)
-          .maybeSingle()
-
-        const prevCarryover = prevMonthCarryover?.carryover_amount || 0
-        const actualBudget = baseBudget + prevCarryover
-        const carryoverForThisMonth = actualBudget - currentMonthTotal
-
-        const { data: existingCarryover } = await supabase
-          .from('monthly_carryover')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('year', currentDate.getFullYear())
-          .eq('month', currentDate.getMonth() + 1)
-          .maybeSingle()
-
-        if (existingCarryover) {
-          await supabase
-            .from('monthly_carryover')
-            .update({ carryover_amount: carryoverForThisMonth })
-            .eq('id', existingCarryover.id)
-        } else {
-          await supabase
-            .from('monthly_carryover')
-            .insert({
-              user_id: user.id,
-              year: currentDate.getFullYear(),
-              month: currentDate.getMonth() + 1,
-              carryover_amount: carryoverForThisMonth
-            })
-        }
-
-        setMonthlyCarryover({
-          carryover_amount: carryoverForThisMonth,
-          user_id: user.id,
-          year: currentDate.getFullYear(),
-          month: currentDate.getMonth() + 1,
-          id: existingCarryover?.id || '',
-          created_at: existingCarryover?.created_at || new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-      } catch (error) {
-        console.error('Error calculating carryover:', error)
-      }
-    }
-
-    calculateCarryover()
-  }, [expenses, fixedExpenses, savingsGoals, userSettings, currentDate])
 
   // コンポーネントのアンマウント時にスクロールを復活
   useEffect(() => {
@@ -209,19 +109,9 @@ export function Dashboard() {
         .lte('expense_date', format(monthEnd, 'yyyy-MM-dd'))
         .order('expense_date', { ascending: false })
 
-      // Fetch previous month's carryover (which applies to this month)
-      const { data: carryoverData } = await supabase
-        .from('monthly_carryover')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('year', currentDate.getMonth() === 0 ? currentDate.getFullYear() - 1 : currentDate.getFullYear())
-        .eq('month', currentDate.getMonth() === 0 ? 12 : currentDate.getMonth())
-        .maybeSingle()
-
       setFixedExpenses(fixedData || [])
       setSavingsGoals(goalsData || [])
       setExpenses(expensesData || [])
-      setMonthlyCarryover(carryoverData || null)
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
@@ -382,14 +272,8 @@ export function Dashboard() {
   // 表示上の残高（基本予算から支出を引いたもの、毎月同じに見える）
   const displayedRemaining = baseMonthlyBudget - totalMonthlyExpenses
 
-  // 実装用：繰越を加算した実際の予算
-  const carryoverAmount = isBeforeStartMonth ? 0 : (monthlyCarryover?.carryover_amount || 0)
-  const actualMonthlyBudget = baseMonthlyBudget + carryoverAmount
-  // 次月への繰越となる実際の残高
-  const actualRemaining = actualMonthlyBudget - totalMonthlyExpenses
-
-  // UIに表示する残高は actualRemaining を使う（繰越を含める）
-  const remainingBudget = actualRemaining
+  // UIに表示する残高
+  const remainingBudget = displayedRemaining
 
   // 表示月の今日または月末までの残り日数を計算
   const now = new Date()
@@ -476,20 +360,6 @@ export function Dashboard() {
               <div className="text-2xl md:text-4xl font-bold glass-text-strong">
                 {hideRemaining ? '¥••••••' : `¥${remainingBudget.toLocaleString()}`}
               </div>
-
-              {!isBeforeStartMonth && monthlyCarryover && monthlyCarryover.carryover_amount !== 0 && (
-                <div className={`mt-3 overflow-hidden transition-all duration-500 ease-in-out ${
-                  isDetailsExpanded ? 'mt-3 max-h-96 opacity-100' : 'max-h-0 opacity-0 md:max-h-none md:opacity-100'
-                }`}>
-                  <div className={`text-sm font-medium ${
-                    monthlyCarryover.carryover_amount > 0
-                      ? 'text-green-600'
-                      : 'text-red-600'
-                  }`}>
-                    前月から {monthlyCarryover.carryover_amount > 0 ? '+' : ''}¥{monthlyCarryover.carryover_amount.toLocaleString()}
-                  </div>
-                </div>
-              )}
 
               {savingsGoal && (
                 <div className={`mt-4 overflow-hidden transition-all duration-500 ease-in-out ${
