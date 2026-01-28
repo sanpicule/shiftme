@@ -5,7 +5,7 @@ import { Calendar, AlertTriangle, CheckCircle, Edit2, Trash2, Plus, X, Save, Che
 import { ExpenseCalendar } from './ExpenseCalendar'
 import { LoadingSpinner } from './LoadingSpinner'
 import { useUserSettings } from '../hooks/useUserSettings'
-import { supabase, FixedExpense, SavingsGoal, Expense } from '../lib/supabase'
+import { supabase, FixedExpense, SavingsGoal, Expense, MonthlyCarryover } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useForm } from 'react-hook-form'
 import { Modal, Box } from '@mui/material'
@@ -33,6 +33,7 @@ export function Dashboard() {
   const [fixedExpenses, setFixedExpenses] = useState<FixedExpense[]>([])
   const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([])
   const [expenses, setExpenses] = useState<Expense[]>([])
+  const [monthlyCarryover, setMonthlyCarryover] = useState<MonthlyCarryover | null>(null)
   const [loading, setLoading] = useState(true)
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
@@ -99,7 +100,7 @@ export function Dashboard() {
       // Fetch this month's expenses
       const monthStart = startOfMonth(currentDate)
       const monthEnd = endOfMonth(currentDate)
-      
+
       const { data: expensesData } = await supabase
         .from('expenses')
         .select('*')
@@ -108,9 +109,19 @@ export function Dashboard() {
         .lte('expense_date', format(monthEnd, 'yyyy-MM-dd'))
         .order('expense_date', { ascending: false })
 
+      // Fetch monthly carryover for this month
+      const { data: carryoverData } = await supabase
+        .from('monthly_carryover')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('year', currentDate.getFullYear())
+        .eq('month', currentDate.getMonth() + 1)
+        .maybeSingle()
+
       setFixedExpenses(fixedData || [])
       setSavingsGoals(goalsData || [])
       setExpenses(expensesData || [])
+      setMonthlyCarryover(carryoverData || null)
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
@@ -122,7 +133,72 @@ export function Dashboard() {
     fetchData()
   }
 
-  const handleMonthChange = (newDate: Date) => {
+  const handleMonthChange = async (newDate: Date) => {
+    // 前月の繰越を計算・保存
+    const prevMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
+    const prevMonthStart = startOfMonth(prevMonth)
+    const prevMonthEnd = endOfMonth(prevMonth)
+
+    const prevMonthExpenses = expenses.filter(expense => {
+      const expenseDate = new Date(expense.expense_date)
+      return expenseDate >= prevMonthStart && expenseDate <= prevMonthEnd
+    })
+
+    const prevMonthTotal = prevMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0)
+
+    // 前月の残高を計算
+    const prevMonthIncome = (() => {
+      let income = userSettings?.monthly_income || 0
+      if (userSettings?.bonus_months) {
+        const bonusMonthsArray = userSettings.bonus_months.split(',').map(m => parseInt(m.trim()))
+        const prevMonthNumber = prevMonth.getMonth() + 1
+        if (bonusMonthsArray.includes(prevMonthNumber)) {
+          income += (userSettings?.bonus_amount || 0)
+        }
+      }
+      return income
+    })()
+
+    const prevMonthFixedExpenses = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
+    const savingsGoal = savingsGoals[0]
+    const monthlyNeededForGoal = savingsGoal
+      ? Math.ceil(savingsGoal.target_amount / Math.max(1, Math.ceil((new Date(savingsGoal.target_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30))))
+      : 0
+
+    const prevBudgetAfterFixed = prevMonthIncome - prevMonthFixedExpenses - monthlyNeededForGoal
+    const prevMonthRemaining = prevBudgetAfterFixed - prevMonthTotal
+
+    // 前月の繰越を保存
+    if (user && prevMonthRemaining !== 0) {
+      try {
+        const { data: existingCarryover } = await supabase
+          .from('monthly_carryover')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('year', prevMonth.getFullYear())
+          .eq('month', prevMonth.getMonth() + 1)
+          .maybeSingle()
+
+        if (existingCarryover) {
+          await supabase
+            .from('monthly_carryover')
+            .update({ carryover_amount: prevMonthRemaining })
+            .eq('id', existingCarryover.id)
+        } else {
+          await supabase
+            .from('monthly_carryover')
+            .insert({
+              user_id: user.id,
+              year: prevMonth.getFullYear(),
+              month: prevMonth.getMonth() + 1,
+              carryover_amount: prevMonthRemaining
+            })
+        }
+      } catch (error) {
+        console.error('Error saving carryover:', error)
+      }
+    }
+
     setCurrentDate(newDate)
   }
 
@@ -243,6 +319,11 @@ export function Dashboard() {
     }
   }
 
+  // 前月の繰越を加算
+  if (monthlyCarryover && monthlyCarryover.carryover_amount !== 0) {
+    monthlyIncome += monthlyCarryover.carryover_amount
+  }
+
   const totalFixedExpenses = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
   const totalMonthlyExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0)
 
@@ -340,6 +421,20 @@ export function Dashboard() {
                 {hideRemaining ? '¥••••••' : `¥${remainingBudget.toLocaleString()}`}
               </div>
 
+              {monthlyCarryover && monthlyCarryover.carryover_amount !== 0 && (
+                <div className={`mt-3 overflow-hidden transition-all duration-500 ease-in-out ${
+                  isDetailsExpanded ? 'mt-3 max-h-96 opacity-100' : 'max-h-0 opacity-0 md:max-h-none md:opacity-100'
+                }`}>
+                  <div className={`text-sm font-medium ${
+                    monthlyCarryover.carryover_amount > 0
+                      ? 'text-green-600'
+                      : 'text-red-600'
+                  }`}>
+                    前月から {monthlyCarryover.carryover_amount > 0 ? '+' : ''}¥{monthlyCarryover.carryover_amount.toLocaleString()}
+                  </div>
+                </div>
+              )}
+
               {savingsGoal && (
                 <div className={`mt-4 overflow-hidden transition-all duration-500 ease-in-out ${
                   isDetailsExpanded ? 'mt-4 max-h-96 opacity-100' : 'max-h-0 opacity-0 md:max-h-none md:opacity-100'
@@ -347,7 +442,7 @@ export function Dashboard() {
                   <div className="flex flex-col space-y-1">
                     <div className="glass-text-strong font-semibold">
                       {format(new Date(savingsGoal.target_date), 'yyyy年M月', { locale: ja })}までに
-                    </div>    
+                    </div>
                     <div className="glass-text-strong text-lg font-semibold">
                       ¥{savingsGoal.target_amount.toLocaleString()}
                     </div>

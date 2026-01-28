@@ -59,3 +59,13 @@ export interface Expense {
   created_at: string
   updated_at: string
 }
+
+export interface MonthlyCarryover {
+  id: string
+  user_id: string
+  year: number
+  month: number
+  carryover_amount: number
+  created_at: string
+  updated_at: string
+}
