@@ -34,7 +34,7 @@ export function Dashboard() {
   const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([])
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [loading, setLoading] = useState(true)
-  const [currentDate] = useState(new Date())
+  const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isAddingExpense, setIsAddingExpense] = useState(false)
@@ -52,7 +52,7 @@ export function Dashboard() {
     if (user) {
       fetchData()
     }
-  }, [user])
+  }, [user, currentDate])
 
   // コンポーネントのアンマウント時にスクロールを復活
   useEffect(() => {
@@ -120,6 +120,10 @@ export function Dashboard() {
 
   const handleExpenseUpdate = () => {
     fetchData()
+  }
+
+  const handleMonthChange = (newDate: Date) => {
+    setCurrentDate(newDate)
   }
 
 
@@ -228,21 +232,50 @@ export function Dashboard() {
   }
 
   // Calculations
-  const monthlyIncome = userSettings?.monthly_income || 0
+  let monthlyIncome = userSettings?.monthly_income || 0
+
+  // ボーナス月の場合はボーナス額を加算
+  if (userSettings?.bonus_months) {
+    const bonusMonthsArray = userSettings.bonus_months.split(',').map(m => parseInt(m.trim()))
+    const currentMonth = currentDate.getMonth() + 1
+    if (bonusMonthsArray.includes(currentMonth)) {
+      monthlyIncome += (userSettings?.bonus_amount || 0)
+    }
+  }
+
   const totalFixedExpenses = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
   const totalMonthlyExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0)
-  
+
   const savingsGoal = savingsGoals[0] // Assuming one active goal
   const monthlyNeededForGoal = savingsGoal
     ? Math.ceil(savingsGoal.target_amount / Math.max(1, Math.ceil((new Date(savingsGoal.target_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30))))
     : 0
-  
+
   const budgetAfterFixed = monthlyIncome - totalFixedExpenses - monthlyNeededForGoal
   const remainingBudget = budgetAfterFixed - totalMonthlyExpenses
 
-  const remainingDays = Math.ceil((new Date(endOfMonth(currentDate)).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
-  const dailyBudget = Math.floor(remainingBudget / Math.max(1, remainingDays))
-  const weeklyBudget = Math.floor(remainingBudget / Math.max(1, Math.ceil(remainingDays / 7)))
+  // 表示月の今日または月末までの残り日数を計算
+  const now = new Date()
+  const monthEnd = endOfMonth(currentDate)
+  const isCurrentMonth = currentDate.getMonth() === now.getMonth() && currentDate.getFullYear() === now.getFullYear()
+  const isPastMonth = currentDate < startOfMonth(now)
+  const isFutureMonth = currentDate > endOfMonth(now)
+
+  // 残り日数の計算
+  let remainingDays: number
+  if (isPastMonth) {
+    // 過去月の場合、月の総日数を使用
+    remainingDays = monthEnd.getDate()
+  } else if (isCurrentMonth) {
+    // 今月の場合、今日から月末までの日数
+    remainingDays = Math.ceil((monthEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+  } else {
+    // 未来月の場合、月の総日数を使用
+    remainingDays = monthEnd.getDate()
+  }
+
+  const dailyBudget = Math.floor(budgetAfterFixed / Math.max(1, monthEnd.getDate()))
+  const weeklyBudget = Math.floor(budgetAfterFixed / Math.max(1, Math.ceil(monthEnd.getDate() / 7)))
 
   const totalExpenses = () => {
     if (!selectedDate) return 0
@@ -344,19 +377,30 @@ export function Dashboard() {
 
       {/* Calendar Section */}
       <div>
-        <ExpenseCalendar expenses={expenses} onDateClick={handleDateClick} />
+        <ExpenseCalendar
+          expenses={expenses}
+          onDateClick={handleDateClick}
+          currentDate={currentDate}
+          onMonthChange={handleMonthChange}
+        />
       </div>
 
       {/* Budget Tips */}
       <div>
-        <h3 className="text-base md:text-lg font-bold text-gray-900/90 mb-3 md:mb-4">💡 今月のアドバイス</h3>
+        <h3 className="text-base md:text-lg font-bold text-gray-900/90 mb-3 md:mb-4">
+          💡 {isPastMonth ? 'この月の結果' : isCurrentMonth ? '今月のアドバイス' : 'この月の予測'}
+        </h3>
         <div className="space-y-3">
             {remainingBudget < 0 && (
               <div className="flex items-start space-x-2 md:space-x-3 p-3 bg-red-500/20 backdrop-blur-sm rounded-xl border border-red-400/30">
                 <AlertTriangle className="w-4 h-4 md:w-5 md:h-5 text-red-400 mt-0.5 glass-icon" />
                 <div>
-                  <p className="font-medium text-red-600 text-sm md:text-base text-shadow">予算を超過しています</p>
-                  <p className="text-xs md:text-sm text-red-500 text-shadow">支出を見直すか、来月の計画を調整しましょう</p>
+                  <p className="font-medium text-red-600 text-sm md:text-base text-shadow">
+                    {isPastMonth ? '予算を超過しました' : '予算を超過しています'}
+                  </p>
+                  <p className="text-xs md:text-sm text-red-500 text-shadow">
+                    {isPastMonth ? '次月の計画を見直しましょう' : '支出を見直すか、来月の計画を調整しましょう'}
+                  </p>
                 </div>
               </div>
             )}
@@ -365,8 +409,14 @@ export function Dashboard() {
               <div className="flex items-start space-x-2 md:space-x-3 p-3 bg-yellow-500/20 backdrop-blur-sm rounded-xl border border-yellow-400/30">
                 <AlertTriangle className="w-4 h-4 md:w-5 md:h-5 text-yellow-800 mt-0.5 glass-icon" />
                 <div>
-                  <p className="font-medium text-yellow-900 text-sm md:text-base text-shadow">予算残りわずかです</p>
-                  <p className="text-xs md:text-sm text-yellow-900 text-shadow">残り{Math.ceil((new Date(endOfMonth(currentDate)).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))}日間、計画的に使いましょう</p>
+                  <p className="font-medium text-yellow-900 text-sm md:text-base text-shadow">
+                    {isPastMonth ? '予算ギリギリでした' : '予算残りわずかです'}
+                  </p>
+                  <p className="text-xs md:text-sm text-yellow-900 text-shadow">
+                    {isCurrentMonth && `残り${remainingDays}日間、計画的に使いましょう`}
+                    {isPastMonth && '次月はもう少し余裕を持ちましょう'}
+                    {isFutureMonth && '計画的な支出を心がけましょう'}
+                  </p>
                 </div>
               </div>
             )}
@@ -375,7 +425,9 @@ export function Dashboard() {
               <div className="flex items-start space-x-2 md:space-x-3 p-3 bg-green-500/20 rounded-xl border border-green-400">
                 <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-green-400 mt-0.5 glass-icon" />
                 <div>
-                  <p className="font-medium text-gray-800 text-sm md:text-base text-shadow">順調に管理できています</p>
+                  <p className="font-medium text-gray-800 text-sm md:text-base text-shadow">
+                    {isPastMonth ? '順調に管理できました' : '順調に管理できています'}
+                  </p>
                   <p className="text-xs md:text-sm text-gray-800 text-shadow">この調子で貯金目標を達成しましょう！</p>
                 </div>
               </div>

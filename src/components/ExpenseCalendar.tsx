@@ -7,12 +7,11 @@ import { Expense } from '../lib/supabase'
 interface ExpenseCalendarProps {
   expenses: Expense[]
   onDateClick: (date: Date) => void
+  currentDate: Date
+  onMonthChange: (date: Date) => void
 }
 
-
-
-export function ExpenseCalendar({ expenses, onDateClick }: ExpenseCalendarProps) {
-  const [currentDate, setCurrentDate] = useState(new Date())
+export function ExpenseCalendar({ expenses, onDateClick, currentDate, onMonthChange }: ExpenseCalendarProps) {
 
 
 
@@ -33,15 +32,17 @@ export function ExpenseCalendar({ expenses, onDateClick }: ExpenseCalendarProps)
   }
 
   const nextMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))
+    const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
+    onMonthChange(newDate)
   }
 
   const prevMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))
+    const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
+    onMonthChange(newDate)
   }
 
   const goToToday = () => {
-    setCurrentDate(new Date())
+    onMonthChange(new Date())
   }
 
   const handleDateClick = (date: Date) => {
