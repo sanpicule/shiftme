@@ -42,7 +42,6 @@ export function Dashboard() {
   const [editingExpense, setEditingExpense] = useState<string | null>(null)
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(false)
   const [hideRemaining, setHideRemaining] = useState(false)
-  const [previousDate, setPreviousDate] = useState(new Date())
 
   const { register, handleSubmit, reset, setValue, formState: { isSubmitting } } = useForm<ExpenseForm>({
     defaultValues: {
@@ -57,85 +56,104 @@ export function Dashboard() {
   }, [user, currentDate])
 
   useEffect(() => {
-    const saveCarryoverForPreviousMonth = async () => {
-      if (!user || previousDate.getFullYear() === currentDate.getFullYear() && previousDate.getMonth() === currentDate.getMonth()) {
-        return
-      }
+    const calculateCarryover = async () => {
+      if (!user || loading) return
 
       try {
-        const prevMonthStart = startOfMonth(previousDate)
-        const prevMonthEnd = endOfMonth(previousDate)
+        let firstExpenseDate: Date | null = null
+        if (expenses.length > 0) {
+          const sortedExpenses = [...expenses].sort((a, b) =>
+            new Date(a.expense_date).getTime() - new Date(b.expense_date).getTime()
+          )
+          firstExpenseDate = new Date(sortedExpenses[0].expense_date)
+        }
 
-        const prevMonthExpenses = expenses.filter(expense => {
+        const currentMonthStart = startOfMonth(currentDate)
+        const isBeforeFirstExpense = firstExpenseDate && currentDate < startOfMonth(firstExpenseDate)
+
+        if (isBeforeFirstExpense) {
+          setMonthlyCarryover(null)
+          return
+        }
+
+        const currentMonthEnd = endOfMonth(currentDate)
+
+        const currentMonthExpenses = expenses.filter(expense => {
           const expenseDate = new Date(expense.expense_date)
-          return expenseDate >= prevMonthStart && expenseDate <= prevMonthEnd
+          return expenseDate >= currentMonthStart && expenseDate <= currentMonthEnd
         })
 
-        const prevMonthTotal = prevMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0)
+        const currentMonthTotal = currentMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0)
 
-        let basePrevMonthIncome = userSettings?.monthly_income || 0
+        let baseCurrentMonthIncome = userSettings?.monthly_income || 0
         if (userSettings?.bonus_months) {
           const bonusMonthsArray = userSettings.bonus_months.split(',').map(m => parseInt(m.trim()))
-          const prevMonthNumber = previousDate.getMonth() + 1
-          if (bonusMonthsArray.includes(prevMonthNumber)) {
-            basePrevMonthIncome += (userSettings?.bonus_amount || 0)
+          const currentMonthNumber = currentDate.getMonth() + 1
+          if (bonusMonthsArray.includes(currentMonthNumber)) {
+            baseCurrentMonthIncome += (userSettings?.bonus_amount || 0)
           }
         }
 
-        const prevMonthFixedExpenses = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
+        const currentMonthFixedExpenses = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
         const savingsGoal = savingsGoals[0]
         const monthlyNeededForGoal = savingsGoal
           ? Math.ceil(savingsGoal.target_amount / Math.max(1, Math.ceil((new Date(savingsGoal.target_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30))))
           : 0
 
-        const basePrevMonthBudget = basePrevMonthIncome - prevMonthFixedExpenses - monthlyNeededForGoal
+        const baseBudget = baseCurrentMonthIncome - currentMonthFixedExpenses - monthlyNeededForGoal
 
         const { data: prevMonthCarryover } = await supabase
           .from('monthly_carryover')
           .select('*')
           .eq('user_id', user.id)
-          .eq('year', previousDate.getFullYear())
-          .eq('month', previousDate.getMonth() + 1)
+          .eq('year', currentDate.getFullYear())
+          .eq('month', currentDate.getMonth())
           .maybeSingle()
 
         const prevCarryover = prevMonthCarryover?.carryover_amount || 0
-        const prevActualBudget = basePrevMonthBudget + prevCarryover
-        const carryoverForNextMonth = prevActualBudget - prevMonthTotal
+        const actualBudget = baseBudget + prevCarryover
+        const carryoverForThisMonth = actualBudget - currentMonthTotal
 
         const { data: existingCarryover } = await supabase
           .from('monthly_carryover')
           .select('*')
           .eq('user_id', user.id)
-          .eq('year', previousDate.getFullYear())
-          .eq('month', previousDate.getMonth() + 1)
+          .eq('year', currentDate.getFullYear())
+          .eq('month', currentDate.getMonth() + 1)
           .maybeSingle()
 
         if (existingCarryover) {
           await supabase
             .from('monthly_carryover')
-            .update({ carryover_amount: carryoverForNextMonth })
+            .update({ carryover_amount: carryoverForThisMonth })
             .eq('id', existingCarryover.id)
         } else {
           await supabase
             .from('monthly_carryover')
             .insert({
               user_id: user.id,
-              year: previousDate.getFullYear(),
-              month: previousDate.getMonth() + 1,
-              carryover_amount: carryoverForNextMonth
+              year: currentDate.getFullYear(),
+              month: currentDate.getMonth() + 1,
+              carryover_amount: carryoverForThisMonth
             })
         }
+
+        setMonthlyCarryover({
+          carryover_amount: carryoverForThisMonth,
+          user_id: user.id,
+          year: currentDate.getFullYear(),
+          month: currentDate.getMonth() + 1,
+          id: existingCarryover?.id || '',
+          created_at: existingCarryover?.created_at || new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
       } catch (error) {
-        console.error('Error saving carryover for previous month:', error)
+        console.error('Error calculating carryover:', error)
       }
-
-      setPreviousDate(currentDate)
     }
 
-    if (previousDate && currentDate) {
-      saveCarryoverForPreviousMonth()
-    }
-  }, [currentDate])
+    calculateCarryover()
+  }, [expenses, fixedExpenses, savingsGoals, userSettings, currentDate])
 
   // コンポーネントのアンマウント時にスクロールを復活
   useEffect(() => {
@@ -337,7 +355,7 @@ export function Dashboard() {
     startMonth = new Date(userSettings.created_at)
   }
 
-  const isBeforeStartMonth = startMonth && currentDate < startOfMonth(startMonth)
+  const isBeforeStartMonth = startMonth ? currentDate < startOfMonth(startMonth) : false
 
   // Calculations
   let baseMonthlyIncome = userSettings?.monthly_income || 0
