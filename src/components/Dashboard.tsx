@@ -282,8 +282,8 @@ export function Dashboard() {
   const baseMonthlyBudget = baseMonthlyIncome - totalFixedExpenses - monthlyNeededForGoal
   // 表示上の残高（基本予算から支出を引いたもの、毎月同じに見える）
   const displayedRemaining = baseMonthlyBudget - totalMonthlyExpenses
-  // 実際の貯金額 = 目標までの月額 + 前月からの繰越
-  const actualMonthlySavings = monthlyNeededForGoal + (userSettings?.monthly_carryover || 0)
+  // 実際の貯金額 = 目標までの月額 + 前月からの繰越 + 今月の残高
+  const actualMonthlySavings = monthlyNeededForGoal + (userSettings?.monthly_carryover || 0) + displayedRemaining
 
   // UIに表示する残高
   const remainingBudget = displayedRemaining
