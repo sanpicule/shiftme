@@ -33,6 +33,7 @@ export function Dashboard() {
   const [fixedExpenses, setFixedExpenses] = useState<FixedExpense[]>([])
   const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([])
   const [expenses, setExpenses] = useState<Expense[]>([])
+  const [monthlySavingsAmount, setMonthlySavingsAmount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
@@ -109,9 +110,19 @@ export function Dashboard() {
         .lte('expense_date', format(monthEnd, 'yyyy-MM-dd'))
         .order('expense_date', { ascending: false })
 
+      // Fetch monthly savings amount
+      const { data: carryoverData } = await supabase
+        .from('monthly_carryover')
+        .select('carryover_amount')
+        .eq('user_id', user.id)
+        .eq('year', currentDate.getFullYear())
+        .eq('month', currentDate.getMonth() + 1)
+        .maybeSingle()
+
       setFixedExpenses(fixedData || [])
       setSavingsGoals(goalsData || [])
       setExpenses(expensesData || [])
+      setMonthlySavingsAmount(carryoverData?.carryover_amount || 0)
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
@@ -403,8 +414,7 @@ export function Dashboard() {
           onDateClick={handleDateClick}
           currentDate={currentDate}
           onMonthChange={handleMonthChange}
-          baseMonthlyBudget={baseMonthlyBudget}
-          totalMonthlyExpenses={totalMonthlyExpenses}
+          monthlySavingsAmount={monthlySavingsAmount}
         />
       </div>
 

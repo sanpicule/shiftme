@@ -9,11 +9,10 @@ interface ExpenseCalendarProps {
   onDateClick: (date: Date) => void
   currentDate: Date
   onMonthChange: (date: Date) => void
-  baseMonthlyBudget: number
-  totalMonthlyExpenses: number
+  monthlySavingsAmount: number
 }
 
-export function ExpenseCalendar({ expenses, onDateClick, currentDate, onMonthChange, baseMonthlyBudget, totalMonthlyExpenses }: ExpenseCalendarProps) {
+export function ExpenseCalendar({ expenses, onDateClick, currentDate, onMonthChange, monthlySavingsAmount }: ExpenseCalendarProps) {
 
 
 
@@ -54,7 +53,6 @@ export function ExpenseCalendar({ expenses, onDateClick, currentDate, onMonthCha
 
 
   const isCurrentMonth = (date: Date) => date.getMonth() === currentDate.getMonth()
-  const monthlySavings = baseMonthlyBudget - totalMonthlyExpenses
 
   return (
     <div className="space-y-4">
@@ -64,8 +62,8 @@ export function ExpenseCalendar({ expenses, onDateClick, currentDate, onMonthCha
           <h3 className="text-2xl font-semibold glass-text-strong">
             {format(currentDate, 'yyyy年M月', { locale: ja })}
           </h3>
-          <div className={`text-sm mt-1 ${monthlySavings >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-            今月の貯金: ¥{Math.abs(monthlySavings).toLocaleString()} {monthlySavings < 0 ? '(赤字)' : ''}
+          <div className={`text-sm mt-1 ${monthlySavingsAmount >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+            今月の貯金: ¥{Math.abs(monthlySavingsAmount).toLocaleString()} {monthlySavingsAmount < 0 ? '(赤字)' : ''}
           </div>
         </div>
         <div className="flex items-center space-x-2">
