@@ -260,16 +260,10 @@ export function SettingsPage() {
   ]
 
   const calculateMonthlySavings = (goal: SavingsGoal | SavingsGoalForm) => {
-    const startDate = goal.start_date ? new Date(goal.start_date) : new Date()
-    const endDate = new Date(goal.target_date)
-
-    const monthsDiff = (endDate.getFullYear() - startDate.getFullYear()) * 12 +
-                       (endDate.getMonth() - startDate.getMonth())
-
-    if (monthsDiff <= 0) return 0
-
+    const targetDate = new Date(goal.target_date)
+    const remainingMonths = Math.max(1, Math.ceil((targetDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30)))
     const remainingAmount = goal.target_amount - (goal.current_amount || 0)
-    return Math.ceil(remainingAmount / monthsDiff)
+    return Math.ceil(remainingAmount / remainingMonths)
   }
 
   return (
