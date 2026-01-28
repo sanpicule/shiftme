@@ -398,8 +398,8 @@ export function Dashboard() {
     remainingDays = monthEnd.getDate()
   }
 
-  const dailyBudget = Math.floor(budgetAfterFixed / Math.max(1, monthEnd.getDate()))
-  const weeklyBudget = Math.floor(budgetAfterFixed / Math.max(1, Math.ceil(monthEnd.getDate() / 7)))
+  const dailyBudget = Math.floor(baseMonthlyBudget / Math.max(1, monthEnd.getDate()))
+  const weeklyBudget = Math.floor(baseMonthlyBudget / Math.max(1, Math.ceil(monthEnd.getDate() / 7)))
 
   const totalExpenses = () => {
     if (!selectedDate) return 0
@@ -543,7 +543,7 @@ export function Dashboard() {
               </div>
             )}
 
-            {remainingBudget > 0 && remainingBudget < budgetAfterFixed * 0.2 && (
+            {remainingBudget > 0 && remainingBudget < baseMonthlyBudget * 0.2 && (
               <div className="flex items-start space-x-2 md:space-x-3 p-3 bg-yellow-500/20 backdrop-blur-sm rounded-xl border border-yellow-400/30">
                 <AlertTriangle className="w-4 h-4 md:w-5 md:h-5 text-yellow-800 mt-0.5 glass-icon" />
                 <div>
@@ -559,7 +559,7 @@ export function Dashboard() {
               </div>
             )}
 
-            {remainingBudget >= budgetAfterFixed * 0.2 && (
+            {remainingBudget >= baseMonthlyBudget * 0.2 && (
               <div className="flex items-start space-x-2 md:space-x-3 p-3 bg-green-500/20 rounded-xl border border-green-400">
                 <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-green-400 mt-0.5 glass-icon" />
                 <div>
