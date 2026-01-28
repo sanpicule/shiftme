@@ -134,68 +134,88 @@ export function Dashboard() {
   }
 
   const handleMonthChange = async (newDate: Date) => {
-    // 前月の繰越を計算・保存
-    const prevMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
-    const prevMonthStart = startOfMonth(prevMonth)
-    const prevMonthEnd = endOfMonth(prevMonth)
+    // 現在の月の繰越を計算・保存（次月に反映させるため）
+    const currentMonthStart = startOfMonth(currentDate)
+    const currentMonthEnd = endOfMonth(currentDate)
 
-    const prevMonthExpenses = expenses.filter(expense => {
-      const expenseDate = new Date(expense.expense_date)
-      return expenseDate >= prevMonthStart && expenseDate <= prevMonthEnd
-    })
+    // 最初の支出日を取得してスタート月を判定
+    let startMonth: Date | null = null
+    if (expenses.length > 0) {
+      const sortedExpenses = [...expenses].sort((a, b) =>
+        new Date(a.expense_date).getTime() - new Date(b.expense_date).getTime()
+      )
+      startMonth = new Date(sortedExpenses[0].expense_date)
+    } else if (fixedExpenses.length > 0) {
+      startMonth = new Date(fixedExpenses[0].created_at)
+    } else if (userSettings?.created_at) {
+      startMonth = new Date(userSettings.created_at)
+    }
 
-    const prevMonthTotal = prevMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0)
+    // スタート月より前の場合はスキップ
+    const isBeforeStartMonth = startMonth && currentDate < startOfMonth(startMonth)
 
-    // 前月の残高を計算
-    const prevMonthIncome = (() => {
-      let income = userSettings?.monthly_income || 0
+    if (!isBeforeStartMonth && user) {
+      // 現在表示中の月のデータを使用して繰越を計算
+      const currentMonthExpenses = expenses.filter(expense => {
+        const expenseDate = new Date(expense.expense_date)
+        return expenseDate >= currentMonthStart && expenseDate <= currentMonthEnd
+      })
+
+      const currentMonthTotal = currentMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0)
+
+      // 現在の月の収入を計算
+      let currentMonthIncome = userSettings?.monthly_income || 0
       if (userSettings?.bonus_months) {
         const bonusMonthsArray = userSettings.bonus_months.split(',').map(m => parseInt(m.trim()))
-        const prevMonthNumber = prevMonth.getMonth() + 1
-        if (bonusMonthsArray.includes(prevMonthNumber)) {
-          income += (userSettings?.bonus_amount || 0)
+        const currentMonthNumber = currentDate.getMonth() + 1
+        if (bonusMonthsArray.includes(currentMonthNumber)) {
+          currentMonthIncome += (userSettings?.bonus_amount || 0)
         }
       }
-      return income
-    })()
 
-    const prevMonthFixedExpenses = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
-    const savingsGoal = savingsGoals[0]
-    const monthlyNeededForGoal = savingsGoal
-      ? Math.ceil(savingsGoal.target_amount / Math.max(1, Math.ceil((new Date(savingsGoal.target_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30))))
-      : 0
+      // 前月の繰越を加算
+      if (monthlyCarryover && monthlyCarryover.carryover_amount !== 0) {
+        currentMonthIncome += monthlyCarryover.carryover_amount
+      }
 
-    const prevBudgetAfterFixed = prevMonthIncome - prevMonthFixedExpenses - monthlyNeededForGoal
-    const prevMonthRemaining = prevBudgetAfterFixed - prevMonthTotal
+      const currentMonthFixedExpenses = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
+      const savingsGoal = savingsGoals[0]
+      const monthlyNeededForGoal = savingsGoal
+        ? Math.ceil(savingsGoal.target_amount / Math.max(1, Math.ceil((new Date(savingsGoal.target_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30))))
+        : 0
 
-    // 前月の繰越を保存
-    if (user && prevMonthRemaining !== 0) {
-      try {
-        const { data: existingCarryover } = await supabase
-          .from('monthly_carryover')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('year', prevMonth.getFullYear())
-          .eq('month', prevMonth.getMonth() + 1)
-          .maybeSingle()
+      const currentBudgetAfterFixed = currentMonthIncome - currentMonthFixedExpenses - monthlyNeededForGoal
+      const currentMonthRemaining = currentBudgetAfterFixed - currentMonthTotal
 
-        if (existingCarryover) {
-          await supabase
+      // 現在の月の繰越を保存（0でない場合）
+      if (currentMonthRemaining !== 0) {
+        try {
+          const { data: existingCarryover } = await supabase
             .from('monthly_carryover')
-            .update({ carryover_amount: prevMonthRemaining })
-            .eq('id', existingCarryover.id)
-        } else {
-          await supabase
-            .from('monthly_carryover')
-            .insert({
-              user_id: user.id,
-              year: prevMonth.getFullYear(),
-              month: prevMonth.getMonth() + 1,
-              carryover_amount: prevMonthRemaining
-            })
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('year', currentDate.getFullYear())
+            .eq('month', currentDate.getMonth() + 1)
+            .maybeSingle()
+
+          if (existingCarryover) {
+            await supabase
+              .from('monthly_carryover')
+              .update({ carryover_amount: currentMonthRemaining })
+              .eq('id', existingCarryover.id)
+          } else {
+            await supabase
+              .from('monthly_carryover')
+              .insert({
+                user_id: user.id,
+                year: currentDate.getFullYear(),
+                month: currentDate.getMonth() + 1,
+                carryover_amount: currentMonthRemaining
+              })
+          }
+        } catch (error) {
+          console.error('Error saving carryover:', error)
         }
-      } catch (error) {
-        console.error('Error saving carryover:', error)
       }
     }
 
@@ -307,6 +327,21 @@ export function Dashboard() {
     )
   }
 
+  // スタート月を判定
+  let startMonth: Date | null = null
+  if (expenses.length > 0) {
+    const sortedExpenses = [...expenses].sort((a, b) =>
+      new Date(a.expense_date).getTime() - new Date(b.expense_date).getTime()
+    )
+    startMonth = new Date(sortedExpenses[0].expense_date)
+  } else if (fixedExpenses.length > 0) {
+    startMonth = new Date(fixedExpenses[0].created_at)
+  } else if (userSettings?.created_at) {
+    startMonth = new Date(userSettings.created_at)
+  }
+
+  const isBeforeStartMonth = startMonth && currentDate < startOfMonth(startMonth)
+
   // Calculations
   let monthlyIncome = userSettings?.monthly_income || 0
 
@@ -319,8 +354,8 @@ export function Dashboard() {
     }
   }
 
-  // 前月の繰越を加算
-  if (monthlyCarryover && monthlyCarryover.carryover_amount !== 0) {
+  // スタート月より前でなければ、前月の繰越を加算
+  if (!isBeforeStartMonth && monthlyCarryover && monthlyCarryover.carryover_amount !== 0) {
     monthlyIncome += monthlyCarryover.carryover_amount
   }
 
@@ -421,7 +456,7 @@ export function Dashboard() {
                 {hideRemaining ? '¥••••••' : `¥${remainingBudget.toLocaleString()}`}
               </div>
 
-              {monthlyCarryover && monthlyCarryover.carryover_amount !== 0 && (
+              {!isBeforeStartMonth && monthlyCarryover && monthlyCarryover.carryover_amount !== 0 && (
                 <div className={`mt-3 overflow-hidden transition-all duration-500 ease-in-out ${
                   isDetailsExpanded ? 'mt-3 max-h-96 opacity-100' : 'max-h-0 opacity-0 md:max-h-none md:opacity-100'
                 }`}>
