@@ -403,6 +403,8 @@ export function Dashboard() {
           onDateClick={handleDateClick}
           currentDate={currentDate}
           onMonthChange={handleMonthChange}
+          baseMonthlyBudget={baseMonthlyBudget}
+          totalMonthlyExpenses={totalMonthlyExpenses}
         />
       </div>
 
