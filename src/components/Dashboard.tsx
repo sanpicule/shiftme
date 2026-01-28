@@ -295,8 +295,8 @@ export function Dashboard() {
     remainingDays = monthEnd.getDate()
   }
 
-  const dailyBudget = Math.floor(baseMonthlyBudget / Math.max(1, monthEnd.getDate()))
-  const weeklyBudget = Math.floor(baseMonthlyBudget / Math.max(1, Math.ceil(monthEnd.getDate() / 7)))
+  const dailyBudget = Math.max(0, Math.floor(remainingBudget / Math.max(1, remainingDays)))
+  const weeklyBudget = Math.max(0, Math.floor(remainingBudget / Math.max(1, Math.ceil(remainingDays / 7))))
 
   const totalExpenses = () => {
     if (!selectedDate) return 0
