@@ -106,8 +106,8 @@ export function Dashboard() {
           .from('monthly_carryover')
           .select('*')
           .eq('user_id', user.id)
-          .eq('year', currentDate.getMonth() === 0 ? currentDate.getFullYear() - 1 : currentDate.getFullYear())
-          .eq('month', currentDate.getMonth() === 0 ? 12 : currentDate.getMonth())
+          .eq('year', currentDate.getFullYear())
+          .eq('month', currentDate.getMonth() - 1)
           .maybeSingle()
 
         const prevCarryover = prevMonthCarryover?.carryover_amount || 0
