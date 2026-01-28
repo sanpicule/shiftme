@@ -107,7 +107,7 @@ export function Dashboard() {
           .select('*')
           .eq('user_id', user.id)
           .eq('year', currentDate.getFullYear())
-          .eq('month', currentDate.getMonth())
+          .eq('month', currentDate.getMonth() - 1)
           .maybeSingle()
 
         const prevCarryover = prevMonthCarryover?.carryover_amount || 0
