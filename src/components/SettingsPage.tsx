@@ -22,6 +22,7 @@ interface SavingsGoalForm {
   title: string
   description: string
   target_amount: number
+  current_amount: number
   target_date: string
   start_date?: string
 }
@@ -57,6 +58,7 @@ export function SettingsPage() {
     title: '',
     description: '',
     target_amount: 0,
+    current_amount: 0,
     target_date: '',
     start_date: ''
   })
@@ -221,6 +223,7 @@ export function SettingsPage() {
       title: goal.title,
       description: goal.description,
       target_amount: goal.target_amount,
+      current_amount: goal.current_amount || 0,
       target_date: goal.target_date,
       start_date: goal.start_date || ''
     })
@@ -256,7 +259,7 @@ export function SettingsPage() {
     'その他',
   ]
 
-  const calculateMonthlySavings = (goal: SavingsGoal) => {
+  const calculateMonthlySavings = (goal: SavingsGoal | SavingsGoalForm) => {
     const startDate = goal.start_date ? new Date(goal.start_date) : new Date()
     const endDate = new Date(goal.target_date)
 
@@ -264,7 +267,9 @@ export function SettingsPage() {
                        (endDate.getMonth() - startDate.getMonth())
 
     if (monthsDiff <= 0) return 0
-    return Math.ceil(goal.target_amount / monthsDiff)
+
+    const remainingAmount = goal.target_amount - (goal.current_amount || 0)
+    return Math.ceil(remainingAmount / monthsDiff)
   }
 
   return (
@@ -593,6 +598,15 @@ export function SettingsPage() {
                   />
                 </div>
                 <div>
+                  <label className="block text-sm font-medium text-gray-800 mb-2">現在の貯金額（円）</label>
+                  <input
+                    type="number"
+                    {...registerGoal('current_amount', { min: 0 })}
+                    className="glass-input w-full px-4 py-3 text-gray-800"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-gray-800 mb-2">達成予定日</label>
                   <input
                     type="date"
@@ -673,6 +687,15 @@ export function SettingsPage() {
                       />
                     </div>
                     <div>
+                      <label className="block text-sm font-medium text-gray-800 mb-2">現在の貯金額（円）</label>
+                      <input
+                        type="number"
+                        value={tempGoal.current_amount}
+                        className="glass-input w-full px-3 py-2 text-gray-800"
+                        onChange={(e) => setTempGoal(prev => ({ ...prev, current_amount: Number(e.target.value) }))}
+                      />
+                    </div>
+                    <div>
                       <label className="block text-sm font-medium text-gray-800 mb-2">達成予定日</label>
                       <input
                         type="date"
@@ -693,7 +716,7 @@ export function SettingsPage() {
                     <div className="flex justify-between items-center pt-2">
                       <span className="text-sm font-medium text-gray-800">毎月の貯金額</span>
                       <span className="text-lg font-semibold text-blue-600">
-                        ¥{calculateMonthlySavings(tempGoal as SavingsGoal).toLocaleString()}
+                        ¥{calculateMonthlySavings(tempGoal).toLocaleString()}
                       </span>
                     </div>
                   </div>
@@ -743,6 +766,12 @@ export function SettingsPage() {
                       <span className="text-gray-800 font-medium">目標金額</span>
                       <span className="text-lg font-semibold text-gray-800">
                         ¥{goal.target_amount.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-800 font-medium">現在の貯金額</span>
+                      <span className="text-lg font-semibold text-gray-800">
+                        ¥{(goal.current_amount || 0).toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
