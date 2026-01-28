@@ -275,7 +275,7 @@ export function Dashboard() {
 
   const savingsGoal = savingsGoals[0]
   const monthlyNeededForGoal = savingsGoal
-    ? Math.ceil(savingsGoal.target_amount / Math.max(1, Math.ceil((new Date(savingsGoal.target_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30))))
+    ? Math.ceil((savingsGoal.target_amount - (savingsGoal.current_amount || 0)) / Math.max(1, Math.ceil((new Date(savingsGoal.target_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30))))
     : 0
 
   // 基本予算（毎月固定、表示用）
