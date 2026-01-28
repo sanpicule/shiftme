@@ -256,6 +256,17 @@ export function SettingsPage() {
     'その他',
   ]
 
+  const calculateMonthlySavings = (goal: SavingsGoal) => {
+    const startDate = goal.start_date ? new Date(goal.start_date) : new Date()
+    const endDate = new Date(goal.target_date)
+
+    const monthsDiff = (endDate.getFullYear() - startDate.getFullYear()) * 12 +
+                       (endDate.getMonth() - startDate.getMonth())
+
+    if (monthsDiff <= 0) return 0
+    return Math.ceil(goal.target_amount / monthsDiff)
+  }
+
   return (
     <div className="space-y-8">
       {/* Page Header */}
@@ -562,7 +573,7 @@ export function SettingsPage() {
             </button>
           ) : (
             <form onSubmit={handleGoalSubmit(addSavingsGoal)} className="space-y-4 p-4 glass-card">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-800 mb-2">目標タイトル</label>
                   <input
@@ -651,7 +662,7 @@ export function SettingsPage() {
                       onChange={(e) => setTempGoal(prev => ({ ...prev, description: e.target.value }))}
                     />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-800 mb-2">目標金額（円）</label>
                       <input
@@ -678,6 +689,12 @@ export function SettingsPage() {
                         className="glass-input w-full px-3 py-2 text-gray-800"
                         onChange={(e) => setTempGoal(prev => ({ ...prev, start_date: e.target.value }))}
                       />
+                    </div>
+                    <div className="flex justify-between items-center pt-2">
+                      <span className="text-sm font-medium text-gray-800">毎月の貯金額</span>
+                      <span className="text-lg font-semibold text-blue-600">
+                        ¥{calculateMonthlySavings(tempGoal as SavingsGoal).toLocaleString()}
+                      </span>
                     </div>
                   </div>
                   <div className="flex space-x-3">
@@ -721,7 +738,7 @@ export function SettingsPage() {
                       </button>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div className="flex justify-between items-center">
                       <span className="text-gray-800 font-medium">目標金額</span>
                       <span className="text-lg font-semibold text-gray-800">
@@ -738,6 +755,12 @@ export function SettingsPage() {
                       <span className="text-gray-800 font-medium">開始日</span>
                       <span className="font-semibold text-gray-800">
                         {goal.start_date ? new Date(goal.start_date).toLocaleDateString('ja-JP') : '未設定'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-800 font-medium">毎月の貯金額</span>
+                      <span className="text-lg font-semibold text-blue-600">
+                        ¥{calculateMonthlySavings(goal).toLocaleString()}
                       </span>
                     </div>
                   </div>
