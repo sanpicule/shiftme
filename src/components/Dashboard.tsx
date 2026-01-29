@@ -373,21 +373,6 @@ export function Dashboard() {
               <div className="text-2xl md:text-4xl font-bold glass-text-strong">
                 {hideRemaining ? '¥••••••' : `¥${remainingBudget.toLocaleString()}`}
               </div>
-
-              {savingsGoal && (
-                <div className={`mt-4 overflow-hidden transition-all duration-500 ease-in-out ${
-                  isDetailsExpanded ? 'mt-4 max-h-96 opacity-100' : 'max-h-0 opacity-0 md:max-h-none md:opacity-100'
-                }`}>
-                  <div className="flex flex-col space-y-1">
-                    <div className="glass-text-strong font-semibold">
-                      {format(new Date(savingsGoal.target_date), 'yyyy年M月', { locale: ja })}までに
-                    </div>
-                    <div className="glass-text-strong text-lg font-semibold">
-                      ¥{savingsGoal.target_amount.toLocaleString()}
-                    </div>
-                  </div>
-                </div>
-              )}
               
               {/* Quick Stats - 2 columns - Hidden on mobile when collapsed */}
               <div className={`md:block overflow-hidden transition-all duration-500 ease-in-out ${
