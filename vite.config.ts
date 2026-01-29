@@ -1,13 +1,18 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import prerender from 'vite-plugin-prerender';
+import ssr from 'vite-plugin-ssr/plugin'; // Correct import for the plugin entry point
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), prerender({
-    routes: [ '/' ],
-    // routes: [ '/', '/about', '/contact' ], // 他のルートもプリレンダリングする場合は追加
-  })],
+  plugins: [
+    react(),
+    ssr({
+      // For SSG, you might configure page generation here.
+      // The default configuration might be sufficient for basic prerendering.
+      prerender: true, // Explicitly enable prerendering if needed
+      // Other options like pageFiles, etc.
+    }),
+  ],
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
@@ -22,6 +27,7 @@ export default defineConfig({
         },
       },
     },
+    // commonjsOptions is not needed here as vite-plugin-ssr handles module resolution
   },
   server: {
     host: true,
