@@ -44,9 +44,7 @@ export function AuthForm() {
           <div className="mb-12">
             <div className="flex items-center mb-6">
                 <div className="relative group glass-shine">
-                  <div className="w-20 h-20 bg-gradient-to-br from-gray-500/30 via-gray-600/30 to-gray-700/30 backdrop-blur-sm border border-gray-400/30 rounded-3xl flex items-center justify-center shadow-glass-glow group-hover:shadow-glass-glow transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
-                    <img src="/shiftme-icon.png" alt="Shiftme" className="w-18 h-18 rounded-xl" />
-                  </div>
+                  <img src="/public/shiftme-icon.png" alt="Shiftme" className="w-20 h-20 rounded-xl" />
                 </div>
               <h1 className="ml-6 text-5xl font-black glass-text-strong">
                 Shiftme
@@ -112,9 +110,7 @@ export function AuthForm() {
             <div className="lg:hidden">
               <div className="flex items-center mb-6">
                 <div className="relative group glass-shine">
-                  <div className="w-12 h-12 bg-gradient-to-br from-gray-500/30 via-gray-600/30 to-gray-700/30 backdrop-blur-sm border border-gray-400/30 rounded-xl flex items-center justify-center shadow-glass-glow group-hover:shadow-glass-glow transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
-                    <img src="/shiftme-icon.png" alt="Shiftme" className="w-12 h-12 rounded-lg" />
-                  </div>
+                  <img src="/shiftme-icon.png" alt="Shiftme" className="w-16 h-16 rounded-lg" />
                 </div>
                 <h1 className="ml-4 text-3xl font-black glass-text-strong">
                   <p className="text-xs font-thin">夢を叶える貯金アプリ</p>
