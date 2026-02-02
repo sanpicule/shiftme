@@ -34,6 +34,7 @@ export function Dashboard() {
   const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([])
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [monthlySavingsAmount, setMonthlySavingsAmount] = useState(0)
+  const [previousMonthCarryover, setPreviousMonthCarryover] = useState(0)
   const [loading, setLoading] = useState(true)
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
@@ -50,10 +51,10 @@ export function Dashboard() {
   })
 
   useEffect(() => {
-    if (user) {
+    if (user && userSettings) {
       fetchData()
     }
-  }, [user, currentDate])
+  }, [user, currentDate, userSettings])
 
 
   // コンポーネントのアンマウント時にスクロールを復活
@@ -110,19 +111,65 @@ export function Dashboard() {
         .lte('expense_date', format(monthEnd, 'yyyy-MM-dd'))
         .order('expense_date', { ascending: false })
 
-      // Fetch monthly savings amount
-      const { data: carryoverData } = await supabase
-        .from('monthly_carryover')
-        .select('carryover_amount')
-        .eq('user_id', user.id)
-        .eq('year', currentDate.getFullYear())
-        .eq('month', currentDate.getMonth() + 1)
-        .maybeSingle()
+      const startDate = userSettings?.created_at ? new Date(userSettings.created_at) : null;
+      const prevMonth = new Date(currentDate);
+      prevMonth.setMonth(prevMonth.getMonth() - 1);
 
-      setFixedExpenses(fixedData || [])
-      setSavingsGoals(goalsData || [])
-      setExpenses(expensesData || [])
-      setMonthlySavingsAmount(carryoverData?.carryover_amount || 0)
+      let calculatedCarryover = 0;
+
+      // 前月が利用開始日より後（または同じ月）の場合のみ、繰越額を計算する
+      if (!startDate || prevMonth >= startOfMonth(startDate)) {
+        const prevMonthStart = startOfMonth(prevMonth);
+        const prevMonthEnd = endOfMonth(prevMonth);
+
+        const { data: prevMonthExpensesData } = await supabase
+          .from('expenses')
+          .select('amount')
+          .eq('user_id', user.id)
+          .gte('expense_date', format(prevMonthStart, 'yyyy-MM-dd'))
+          .lte('expense_date', format(prevMonthEnd, 'yyyy-MM-dd'));
+
+        const totalPrevMonthExpenses = (prevMonthExpensesData || []).reduce(
+          (sum, expense) => sum + expense.amount,
+          0
+        );
+
+        const prevMonthIncome = userSettings?.monthly_income || 0;
+
+        const totalFixedExpenses = (fixedData || []).reduce(
+          (sum, expense) => sum + expense.amount,
+          0
+        );
+
+        const savingsGoal = (goalsData || [])[0];
+        let monthlyNeededForGoal = 0;
+        if (savingsGoal) {
+          const targetDate = new Date(savingsGoal.target_date);
+          const creationDate = new Date(savingsGoal.created_at);
+          const monthsAtCreation = Math.max(
+            1,
+            Math.ceil(
+              (targetDate.getTime() - creationDate.getTime()) /
+                (1000 * 60 * 60 * 24 * 30)
+            )
+          );
+          monthlyNeededForGoal = Math.ceil(
+            savingsGoal.target_amount / monthsAtCreation
+          );
+        }
+
+        calculatedCarryover =
+          prevMonthIncome -
+          totalFixedExpenses -
+          monthlyNeededForGoal -
+          totalPrevMonthExpenses;
+      }
+
+      setFixedExpenses(fixedData || []);
+      setSavingsGoals(goalsData || []);
+      setExpenses(expensesData || []);
+      setMonthlySavingsAmount(0);
+      setPreviousMonthCarryover(calculatedCarryover);
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
@@ -261,22 +308,22 @@ export function Dashboard() {
   // Calculations
   let baseMonthlyIncome = userSettings?.monthly_income || 0
 
-  // ボーナス月の場合はボーナス額を加算
-  if (userSettings?.bonus_months) {
-    const bonusMonthsArray = userSettings.bonus_months.split(',').map(m => parseInt(m.trim()))
-    const currentMonth = currentDate.getMonth() + 1
-    if (bonusMonthsArray.includes(currentMonth)) {
-      baseMonthlyIncome += (userSettings?.bonus_amount || 0)
-    }
-  }
-
   const totalFixedExpenses = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
   const totalMonthlyExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0)
 
   const savingsGoal = savingsGoals[0]
-  const monthlyNeededForGoal = savingsGoal
-    ? Math.ceil((savingsGoal.target_amount - (savingsGoal.current_amount || 0)) / Math.max(1, Math.ceil((new Date(savingsGoal.target_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30))))
-    : 0
+  let monthlyNeededForGoal = 0;
+
+  if (savingsGoal) {
+    const targetDate = new Date(savingsGoal.target_date);
+    const creationDate = new Date(savingsGoal.created_at);
+    
+    // 目標設定時の残り月数を計算（少なくとも1ヶ月とする）
+    const monthsAtCreation = Math.max(1, Math.ceil((targetDate.getTime() - creationDate.getTime()) / (1000 * 60 * 60 * 24 * 30)));
+
+    // 月々の必要額を計算 (この値は変動しない)
+    monthlyNeededForGoal = Math.ceil(savingsGoal.target_amount / monthsAtCreation);
+  }
 
   // 基本予算（毎月固定、表示用）
   const baseMonthlyBudget = baseMonthlyIncome - totalFixedExpenses - monthlyNeededForGoal
@@ -285,8 +332,10 @@ export function Dashboard() {
   // 実際の貯金額 = 目標までの月額 + 前月からの繰越 + 今月の残高
   const actualMonthlySavings = monthlyNeededForGoal + (userSettings?.monthly_carryover || 0) + displayedRemaining
 
-  // UIに表示する残高
-  const remainingBudget = displayedRemaining
+  // UIに表示する残高と、そこから派生する値の計算
+  let remainingBudget: number
+  let dailyBudget: number
+  let weeklyBudget: number
 
   // 表示月の今日または月末までの残り日数を計算
   const now = new Date()
@@ -308,8 +357,19 @@ export function Dashboard() {
     remainingDays = monthEnd.getDate()
   }
 
-  const dailyBudget = Math.max(0, Math.floor(remainingBudget / Math.max(1, remainingDays)))
-  const weeklyBudget = Math.max(0, Math.floor(remainingBudget / Math.max(1, Math.ceil(remainingDays / 7))))
+  if (isBeforeStartMonth) {
+    remainingBudget = 0
+    dailyBudget = 0
+    weeklyBudget = 0
+  } else {
+    if (isFutureMonth) {
+      remainingBudget = displayedRemaining // For future months, don't include carryover
+    } else {
+      remainingBudget = displayedRemaining + previousMonthCarryover // For current and past months, include carryover
+    }
+    dailyBudget = Math.max(0, Math.floor(remainingBudget / Math.max(1, remainingDays)))
+    weeklyBudget = Math.max(0, Math.floor(remainingBudget / Math.max(1, Math.ceil(remainingDays / 7))))
+  }
 
   const totalExpenses = () => {
     if (!selectedDate) return 0
@@ -337,7 +397,7 @@ export function Dashboard() {
         </div>
 
         {/* Details Toggle Button - Top Right */}
-        <div className="absolute top-4 right-0 md:hidden z-20">
+        <div className="absolute top-10 right-0 md:hidden z-20">
           <button
             onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}
             className="p-2 backdrop-blur-sm transition-all duration-300 rounded-full glass-text border border-gray-200"
@@ -356,8 +416,18 @@ export function Dashboard() {
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between">
             {/* Left Side - Remaining Budget */}
             <div className="flex-1 lg:mb-0 w-full">
+              <div className="mb-4">
+                <div className="flex items-center justify-between text-sm glass-text mb-1">
+                  <span>前月からの繰り越し</span>
+                  <span className={`font-bold glass-text-strong ${previousMonthCarryover < 0 ? 'text-red-500' : ''}`}>
+                    {hideRemaining ? '¥••••••' : `¥${previousMonthCarryover.toLocaleString()}`}
+                  </span>
+                </div>
+                <hr className="my-2 border-gray-200/50" />
+              </div>
+
               <h3 className="glass-text text-sm mb-2 flex items-center space-x-1">
-                <span>残高</span>
+                <span>今月使えるお金</span>
                 <button
                   onClick={() => setHideRemaining(!hideRemaining)}
                   aria-label={hideRemaining ? '金額を表示' : '金額を非表示'}
