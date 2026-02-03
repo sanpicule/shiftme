@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns'
 import { ja } from 'date-fns/locale'
 import { BarChart3, PieChart, Target } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useUserSettings } from '../hooks/useUserSettings'
-import { supabase, Expense, FixedExpense, SavingsGoal } from '../lib/supabase'
 import { LoadingSpinner } from './LoadingSpinner'
+import { useData } from '../contexts/DataContext'
 
 interface MonthlyData {
   month: string
@@ -23,114 +23,25 @@ interface CategoryData {
 export function AnalyticsPage() {
   const { user } = useAuth()
   const { userSettings } = useUserSettings()
-  const [expenses, setExpenses] = useState<Expense[]>([])
-  const [fixedExpenses, setFixedExpenses] = useState<FixedExpense[]>([])
-  const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([])
+  const { 
+    allExpenses, 
+    fixedExpenses, 
+    savingsGoals, 
+    previousMonthCarryover, 
+    loading 
+  } = useData()
+
   const [timeRange, setTimeRange] = useState<'current' | 'all'>('current')
-  const [loading, setLoading] = useState(true)
-  const [allExpenses, setAllExpenses] = useState<Expense[]>([])
   const [isMobile, setIsMobile] = useState(false)
-  const [previousMonthCarryover, setPreviousMonthCarryover] = useState(0)
 
-  const fetchData = useCallback(async () => {
-    if (!user) return
-
-    setLoading(true)
-    try {
-      const now = new Date()
-      // Fetch expenses (selected range)
-      let expensesData
-      if (timeRange === 'current') {
-        const startDate = startOfMonth(now)
-        ;({ data: expensesData } = await supabase
-          .from('expenses')
-          .select('*')
-          .eq('user_id', user.id)
-          .gte('expense_date', format(startDate, 'yyyy-MM-dd'))
-          .lte('expense_date', format(now, 'yyyy-MM-dd'))
-          .order('expense_date', { ascending: true }))
-      } else {
-        ;({ data: expensesData } = await supabase
-          .from('expenses')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('expense_date', { ascending: true }))
-      }
-
-      // Fetch all expenses (for global stats like 直近6ヶ月折れ線)
-      const { data: allExpensesData } = await supabase
-        .from('expenses')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('expense_date', { ascending: true })
-
-      // Fetch fixed expenses
-      const { data: fixedData } = await supabase
-        .from('fixed_expenses')
-        .select('*')
-        .eq('user_id', user.id)
-
-      // Fetch savings goals
-      const { data: goalsData } = await supabase
-        .from('savings_goals')
-        .select('*')
-        .eq('user_id', user.id)
-
-      setExpenses(expensesData || [])
-      setFixedExpenses(fixedData || [])
-      setSavingsGoals(goalsData || [])
-      setAllExpenses(allExpensesData || [])
-
-      // クライアントサイドでの繰越額計算
-      const startDate = userSettings?.created_at ? new Date(userSettings.created_at) : null;
-      const prevMonth = new Date();
-      prevMonth.setMonth(prevMonth.getMonth() - 1);
-
-      let calculatedCarryover = 0;
-      if (!startDate || prevMonth >= startOfMonth(startDate)) {
-        const prevMonthStart = startOfMonth(prevMonth);
-        const prevMonthEnd = endOfMonth(prevMonth);
-        
-        // allExpensesから前月の支出をフィルタリング（再フェッチを避ける）
-        const prevMonthExpenses = (allExpensesData || []).filter(e => {
-            const d = new Date(e.expense_date);
-            return d >= prevMonthStart && d <= prevMonthEnd;
-        });
-
-        const totalPrevMonthExpenses = prevMonthExpenses.reduce(
-          (sum, expense) => sum + expense.amount,
-          0
-        );
-
-        const prevMonthIncome = userSettings?.monthly_income || 0;
-
-        const totalFixed = (fixedData || []).reduce((sum, f) => sum + f.amount, 0);
-
-        const goal = (goalsData || [])[0];
-        let neededForGoal = 0;
-        if (goal) {
-          const targetDate = new Date(goal.target_date);
-          const creationDate = new Date(goal.created_at);
-          const monthsAtCreation = Math.max(1, Math.ceil((targetDate.getTime() - creationDate.getTime()) / (1000 * 60 * 60 * 24 * 30)));
-          neededForGoal = Math.ceil(goal.target_amount / monthsAtCreation);
-        }
-
-        calculatedCarryover = prevMonthIncome - totalFixed - neededForGoal - totalPrevMonthExpenses;
-      }
-      setPreviousMonthCarryover(calculatedCarryover);
-
-    } catch (error) {
-      console.error('Error fetching analytics data:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [user, timeRange])
-
-  useEffect(() => {
-    if (user) {
-      fetchData()
-    }
-  }, [user, timeRange, fetchData])
+  // 'current' timeRange用のexpensesをフィルタリング
+  const expenses = timeRange === 'current'
+    ? allExpenses.filter(e => {
+        const d = new Date(e.expense_date);
+        const monthStart = startOfMonth(new Date());
+        return d >= monthStart;
+      })
+    : allExpenses;
 
   // SP判定（月間隔を詰めるために使用）
   useEffect(() => {

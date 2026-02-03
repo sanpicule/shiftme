@@ -5,8 +5,9 @@ import { Calendar, AlertTriangle, CheckCircle, Edit2, Trash2, Plus, X, Save, Che
 import { ExpenseCalendar } from './ExpenseCalendar'
 import { LoadingSpinner } from './LoadingSpinner'
 import { useUserSettings } from '../hooks/useUserSettings'
-import { supabase, FixedExpense, SavingsGoal, Expense } from '../lib/supabase'
+import { supabase, Expense } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { useData } from '../contexts/DataContext'
 import { useForm } from 'react-hook-form'
 import { Modal, Box } from '@mui/material'
 
@@ -30,12 +31,15 @@ const categories = [
 export function Dashboard() {
   const { user } = useAuth()
   const { userSettings } = useUserSettings()
-  const [fixedExpenses, setFixedExpenses] = useState<FixedExpense[]>([])
-  const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([])
-  const [expenses, setExpenses] = useState<Expense[]>([])
-  const [monthlySavingsAmount, setMonthlySavingsAmount] = useState(0)
-  const [previousMonthCarryover, setPreviousMonthCarryover] = useState(0)
-  const [loading, setLoading] = useState(true)
+  const { 
+    allExpenses, 
+    fixedExpenses, 
+    savingsGoals, 
+    previousMonthCarryover,
+    loading, 
+    refetchData 
+  } = useData()
+
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -50,12 +54,13 @@ export function Dashboard() {
     },
   })
 
-  useEffect(() => {
-    if (user && userSettings) {
-      fetchData()
-    }
-  }, [user, currentDate, userSettings])
-
+  // Filter expenses for the current month from allExpenses
+  const expenses = allExpenses.filter(e => {
+    const d = new Date(e.expense_date);
+    const monthStart = startOfMonth(currentDate);
+    const monthEnd = endOfMonth(currentDate);
+    return d >= monthStart && d <= monthEnd;
+  });
 
   // コンポーネントのアンマウント時にスクロールを復活
   useEffect(() => {
@@ -82,103 +87,8 @@ export function Dashboard() {
     }
   }, [isModalOpen])
 
-  const fetchData = async () => {
-    if (!user) return
-
-    setLoading(true)
-    try {
-      // Fetch fixed expenses
-      const { data: fixedData } = await supabase
-        .from('fixed_expenses')
-        .select('*')
-        .eq('user_id', user.id)
-
-      // Fetch savings goals
-      const { data: goalsData } = await supabase
-        .from('savings_goals')
-        .select('*')
-        .eq('user_id', user.id)
-
-      // Fetch this month's expenses
-      const monthStart = startOfMonth(currentDate)
-      const monthEnd = endOfMonth(currentDate)
-
-      const { data: expensesData } = await supabase
-        .from('expenses')
-        .select('*')
-        .eq('user_id', user.id)
-        .gte('expense_date', format(monthStart, 'yyyy-MM-dd'))
-        .lte('expense_date', format(monthEnd, 'yyyy-MM-dd'))
-        .order('expense_date', { ascending: false })
-
-      const startDate = userSettings?.created_at ? new Date(userSettings.created_at) : null;
-      const prevMonth = new Date(currentDate);
-      prevMonth.setMonth(prevMonth.getMonth() - 1);
-
-      let calculatedCarryover = 0;
-
-      // 前月が利用開始日より後（または同じ月）の場合のみ、繰越額を計算する
-      if (!startDate || prevMonth >= startOfMonth(startDate)) {
-        const prevMonthStart = startOfMonth(prevMonth);
-        const prevMonthEnd = endOfMonth(prevMonth);
-
-        const { data: prevMonthExpensesData } = await supabase
-          .from('expenses')
-          .select('amount')
-          .eq('user_id', user.id)
-          .gte('expense_date', format(prevMonthStart, 'yyyy-MM-dd'))
-          .lte('expense_date', format(prevMonthEnd, 'yyyy-MM-dd'));
-
-        const totalPrevMonthExpenses = (prevMonthExpensesData || []).reduce(
-          (sum, expense) => sum + expense.amount,
-          0
-        );
-
-        const prevMonthIncome = userSettings?.monthly_income || 0;
-
-        const totalFixedExpenses = (fixedData || []).reduce(
-          (sum, expense) => sum + expense.amount,
-          0
-        );
-
-        const savingsGoal = (goalsData || [])[0];
-        let monthlyNeededForGoal = 0;
-        if (savingsGoal) {
-          const targetDate = new Date(savingsGoal.target_date);
-          const creationDate = new Date(savingsGoal.created_at);
-          const monthsAtCreation = Math.max(
-            1,
-            Math.ceil(
-              (targetDate.getTime() - creationDate.getTime()) /
-                (1000 * 60 * 60 * 24 * 30)
-            )
-          );
-          monthlyNeededForGoal = Math.ceil(
-            savingsGoal.target_amount / monthsAtCreation
-          );
-        }
-
-        calculatedCarryover =
-          prevMonthIncome -
-          totalFixedExpenses -
-          monthlyNeededForGoal -
-          totalPrevMonthExpenses;
-      }
-
-      setFixedExpenses(fixedData || []);
-      setSavingsGoals(goalsData || []);
-      setExpenses(expensesData || []);
-      setMonthlySavingsAmount(0);
-      setPreviousMonthCarryover(calculatedCarryover);
-    } catch (error) {
-      console.error('Error fetching data:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const handleExpenseUpdate = () => {
-    fetchData()
+    refetchData()
   }
 
   const handleMonthChange = (newDate: Date) => {
@@ -330,8 +240,6 @@ export function Dashboard() {
   // 表示上の残高（基本予算から支出を引いたもの、毎月同じに見える）
   const displayedRemaining = baseMonthlyBudget - totalMonthlyExpenses
   // 実際の貯金額 = 目標までの月額 + 前月からの繰越 + 今月の残高
-  const actualMonthlySavings = monthlyNeededForGoal + (userSettings?.monthly_carryover || 0) + displayedRemaining
-
   // UIに表示する残高と、そこから派生する値の計算
   let remainingBudget: number
   let dailyBudget: number
@@ -370,6 +278,9 @@ export function Dashboard() {
     dailyBudget = Math.max(0, Math.floor(remainingBudget / Math.max(1, remainingDays)))
     weeklyBudget = Math.max(0, Math.floor(remainingBudget / Math.max(1, Math.ceil(remainingDays / 7))))
   }
+
+  // 実際の貯金額 = 目標までの月額 + 今月の残高
+  const actualMonthlySavings = monthlyNeededForGoal + remainingBudget
 
   const totalExpenses = () => {
     if (!selectedDate) return 0

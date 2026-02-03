@@ -7,6 +7,8 @@ import { InstallPrompt } from './components/InstallPrompt'
 import { useUserSettings } from './hooks/useUserSettings'
 import { LoadingSpinner } from './components/LoadingSpinner'
 
+import { DataProvider } from './contexts/DataContext';
+
 function AppContent() {
   const { user, loading: authLoading } = useAuth()
   const { userSettings, loading: settingsLoading } = useUserSettings()
@@ -43,10 +45,10 @@ function AppContent() {
   }
 
   return (
-    <>
+    <DataProvider>
       <MainApp />
       <InstallPrompt />
-    </>
+    </DataProvider>
   )
 }
 
