@@ -8,6 +8,7 @@ import { useUserSettings } from '../hooks/useUserSettings'
 import { supabase, Expense } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useData } from '../contexts/DataContext'
+import { useToast } from './ToastContainer'
 import { useForm } from 'react-hook-form'
 import { Modal, Box } from '@mui/material'
 
@@ -30,14 +31,15 @@ const categories = [
 
 export function Dashboard() {
   const { user } = useAuth()
-  const { userSettings } = useUserSettings()
-  const { 
-    allExpenses, 
-    fixedExpenses, 
-    savingsGoals, 
+  const { userSettings, updateUserSettings } = useUserSettings()
+  const { showSuccess, showError } = useToast()
+  const {
+    allExpenses,
+    fixedExpenses,
+    savingsGoals,
     previousMonthCarryover,
-    loading, 
-    refetchData 
+    loading,
+    refetchData
   } = useData()
 
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -47,6 +49,12 @@ export function Dashboard() {
   const [editingExpense, setEditingExpense] = useState<string | null>(null)
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(false)
   const [hideRemaining, setHideRemaining] = useState(false)
+  const [isEditingIncome, setIsEditingIncome] = useState(false)
+  const [incomeInput, setIncomeInput] = useState('')
+  const [isUpdatingIncome, setIsUpdatingIncome] = useState(false)
+  const [isEditingSavings, setIsEditingSavings] = useState(false)
+  const [savingsInput, setSavingsInput] = useState('')
+  const [isUpdatingSavings, setIsUpdatingSavings] = useState(false)
 
   const { register, handleSubmit, reset, setValue, formState: { isSubmitting } } = useForm<ExpenseForm>({
     defaultValues: {
@@ -61,6 +69,20 @@ export function Dashboard() {
     const monthEnd = endOfMonth(currentDate);
     return d >= monthStart && d <= monthEnd;
   });
+
+  // Initialize income input when editing
+  useEffect(() => {
+    if (isEditingIncome && userSettings) {
+      setIncomeInput(userSettings.monthly_income?.toString() || '0')
+    }
+  }, [isEditingIncome, userSettings])
+
+  // Initialize savings input when editing
+  useEffect(() => {
+    if (isEditingSavings && userSettings) {
+      setSavingsInput(userSettings.current_savings?.toString() || '0')
+    }
+  }, [isEditingSavings, userSettings])
 
   // コンポーネントのアンマウント時にスクロールを復活
   useEffect(() => {
@@ -93,6 +115,56 @@ export function Dashboard() {
 
   const handleMonthChange = (newDate: Date) => {
     setCurrentDate(newDate)
+  }
+
+  const handleIncomeUpdate = async () => {
+    if (!incomeInput || !userSettings) return
+
+    const newIncome = Number(incomeInput)
+    if (isNaN(newIncome) || newIncome < 0) {
+      showError('エラー', '正しい金額を入力してください')
+      return
+    }
+
+    setIsUpdatingIncome(true)
+    try {
+      await updateUserSettings({
+        monthly_income: newIncome
+      })
+      showSuccess('月収を更新しました', `¥${newIncome.toLocaleString()}`)
+      setIsEditingIncome(false)
+      refetchData()
+    } catch (error) {
+      console.error('Error updating income:', error)
+      showError('更新に失敗しました', 'もう一度お試しください')
+    } finally {
+      setIsUpdatingIncome(false)
+    }
+  }
+
+  const handleSavingsUpdate = async () => {
+    if (!savingsInput || !userSettings) return
+
+    const newSavings = Number(savingsInput)
+    if (isNaN(newSavings) || newSavings < 0) {
+      showError('エラー', '正しい金額を入力してください')
+      return
+    }
+
+    setIsUpdatingSavings(true)
+    try {
+      await updateUserSettings({
+        current_savings: newSavings
+      })
+      showSuccess('貯金残高を更新しました', `¥${newSavings.toLocaleString()}`)
+      setIsEditingSavings(false)
+      refetchData()
+    } catch (error) {
+      console.error('Error updating savings:', error)
+      showError('更新に失敗しました', 'もう一度お試しください')
+    } finally {
+      setIsUpdatingSavings(false)
+    }
   }
 
 
@@ -327,6 +399,102 @@ export function Dashboard() {
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between">
             {/* Left Side - Remaining Budget */}
             <div className="flex-1 lg:mb-0 w-full">
+              {/* Monthly Income Section */}
+              <div className="mb-4">
+                <div className="flex items-center justify-between text-sm glass-text mb-1">
+                  <span>月収</span>
+                  <span className="font-bold glass-text-strong">
+                    {isEditingIncome ? (
+                      <input
+                        type="number"
+                        value={incomeInput}
+                        onChange={(e) => setIncomeInput(e.target.value)}
+                        className="w-32 px-2 py-1 rounded-lg glass-input text-right text-gray-800"
+                        placeholder="0"
+                        autoFocus
+                      />
+                    ) : (
+                      `¥${userSettings?.monthly_income?.toLocaleString() || '0'}`
+                    )}
+                  </span>
+                </div>
+                {isEditingIncome ? (
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={handleIncomeUpdate}
+                      disabled={isUpdatingIncome}
+                      className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-gray-800 backdrop-blur-sm text-white text-sm rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Save className="w-4 h-4" />
+                      <span>{isUpdatingIncome ? '更新中...' : '保存'}</span>
+                    </button>
+                    <button
+                      onClick={() => setIsEditingIncome(false)}
+                      className="px-3 py-2 bg-white/5 backdrop-blur-sm border border-white/20 text-gray-800 text-sm rounded-lg hover:bg-white/10 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setIsEditingIncome(true)}
+                    className="mt-2 flex items-center justify-center space-x-1 px-3 py-2 bg-white/5 backdrop-blur-sm border border-gray-200 text-gray-800 text-sm rounded-lg hover:bg-white/10 transition-colors"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                    <span>編集</span>
+                  </button>
+                )}
+                <hr className="my-2 border-gray-200/50" />
+              </div>
+
+              {/* Current Savings Section */}
+              <div className="mb-4">
+                <div className="flex items-center justify-between text-sm glass-text mb-1">
+                  <span>現在の貯金</span>
+                  <span className="font-bold glass-text-strong">
+                    {isEditingSavings ? (
+                      <input
+                        type="number"
+                        value={savingsInput}
+                        onChange={(e) => setSavingsInput(e.target.value)}
+                        className="w-32 px-2 py-1 rounded-lg glass-input text-right text-gray-800"
+                        placeholder="0"
+                        autoFocus
+                      />
+                    ) : (
+                      `¥${userSettings?.current_savings?.toLocaleString() || '0'}`
+                    )}
+                  </span>
+                </div>
+                {isEditingSavings ? (
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={handleSavingsUpdate}
+                      disabled={isUpdatingSavings}
+                      className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-gray-800 backdrop-blur-sm text-white text-sm rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Save className="w-4 h-4" />
+                      <span>{isUpdatingSavings ? '更新中...' : '保存'}</span>
+                    </button>
+                    <button
+                      onClick={() => setIsEditingSavings(false)}
+                      className="px-3 py-2 bg-white/5 backdrop-blur-sm border border-white/20 text-gray-800 text-sm rounded-lg hover:bg-white/10 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setIsEditingSavings(true)}
+                    className="mt-2 flex items-center justify-center space-x-1 px-3 py-2 bg-white/5 backdrop-blur-sm border border-gray-200 text-gray-800 text-sm rounded-lg hover:bg-white/10 transition-colors"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                    <span>編集</span>
+                  </button>
+                )}
+                <hr className="my-2 border-gray-200/50" />
+              </div>
+
               <div className="mb-4">
                 <div className="flex items-center justify-between text-sm glass-text mb-1">
                   <span>前月からの繰り越し</span>

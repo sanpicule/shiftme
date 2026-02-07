@@ -24,6 +24,7 @@ export interface UserSettings {
   bonus_amount: number
   bonus_months: string
   setup_completed: boolean
+  current_savings: number
   created_at: string
   updated_at: string
 }
