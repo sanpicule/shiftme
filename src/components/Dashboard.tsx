@@ -31,7 +31,7 @@ const categories = [
 
 export function Dashboard() {
   const { user } = useAuth()
-  const { userSettings, updateUserSettings } = useUserSettings()
+  const { userSettings } = useUserSettings()
   const { showSuccess, showError } = useToast()
   const {
     allExpenses,
@@ -49,12 +49,9 @@ export function Dashboard() {
   const [editingExpense, setEditingExpense] = useState<string | null>(null)
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(false)
   const [hideRemaining, setHideRemaining] = useState(false)
-  const [isEditingIncome, setIsEditingIncome] = useState(false)
-  const [incomeInput, setIncomeInput] = useState('')
-  const [isUpdatingIncome, setIsUpdatingIncome] = useState(false)
-  const [isEditingSavings, setIsEditingSavings] = useState(false)
-  const [savingsInput, setSavingsInput] = useState('')
-  const [isUpdatingSavings, setIsUpdatingSavings] = useState(false)
+  const [isEditingBudget, setIsEditingBudget] = useState(false)
+  const [budgetInput, setBudgetInput] = useState('')
+  const [isUpdatingBudget, setIsUpdatingBudget] = useState(false)
 
   const { register, handleSubmit, reset, setValue, formState: { isSubmitting } } = useForm<ExpenseForm>({
     defaultValues: {
@@ -70,19 +67,12 @@ export function Dashboard() {
     return d >= monthStart && d <= monthEnd;
   });
 
-  // Initialize income input when editing
+  // Initialize budget input when editing
   useEffect(() => {
-    if (isEditingIncome && userSettings) {
-      setIncomeInput(userSettings.monthly_income?.toString() || '0')
+    if (isEditingBudget) {
+      setBudgetInput(Math.max(dailyBudget() * 30 - totalExpenses(), 0).toString())
     }
-  }, [isEditingIncome, userSettings])
-
-  // Initialize savings input when editing
-  useEffect(() => {
-    if (isEditingSavings && userSettings) {
-      setSavingsInput(userSettings.current_savings?.toString() || '0')
-    }
-  }, [isEditingSavings, userSettings])
+  }, [isEditingBudget])
 
   // コンポーネントのアンマウント時にスクロールを復活
   useEffect(() => {
@@ -117,53 +107,58 @@ export function Dashboard() {
     setCurrentDate(newDate)
   }
 
-  const handleIncomeUpdate = async () => {
-    if (!incomeInput || !userSettings) return
+  const handleBudgetUpdate = async () => {
+    if (!budgetInput || !userSettings) return
 
-    const newIncome = Number(incomeInput)
-    if (isNaN(newIncome) || newIncome < 0) {
+    const newBudget = Number(budgetInput)
+    if (isNaN(newBudget) || newBudget < 0) {
       showError('エラー', '正しい金額を入力してください')
       return
     }
 
-    setIsUpdatingIncome(true)
+    setIsUpdatingBudget(true)
     try {
-      await updateUserSettings({
-        monthly_income: newIncome
-      })
-      showSuccess('月収を更新しました', `¥${newIncome.toLocaleString()}`)
-      setIsEditingIncome(false)
+      const year = currentDate.getFullYear()
+      const month = currentDate.getMonth() + 1
+
+      // Check if monthly carryover exists for this month
+      const { data: existing } = await supabase
+        .from('monthly_carryover')
+        .select('id')
+        .eq('user_id', user?.id)
+        .eq('year', year)
+        .eq('month', month)
+        .maybeSingle()
+
+      if (existing) {
+        // Update existing
+        await supabase
+          .from('monthly_carryover')
+          .update({
+            carryover_amount: newBudget,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existing.id)
+      } else {
+        // Create new
+        await supabase
+          .from('monthly_carryover')
+          .insert({
+            user_id: user?.id,
+            year,
+            month,
+            carryover_amount: newBudget
+          })
+      }
+
+      showSuccess('予算を更新しました', `¥${newBudget.toLocaleString()}`)
+      setIsEditingBudget(false)
       refetchData()
     } catch (error) {
-      console.error('Error updating income:', error)
+      console.error('Error updating budget:', error)
       showError('更新に失敗しました', 'もう一度お試しください')
     } finally {
-      setIsUpdatingIncome(false)
-    }
-  }
-
-  const handleSavingsUpdate = async () => {
-    if (!savingsInput || !userSettings) return
-
-    const newSavings = Number(savingsInput)
-    if (isNaN(newSavings) || newSavings < 0) {
-      showError('エラー', '正しい金額を入力してください')
-      return
-    }
-
-    setIsUpdatingSavings(true)
-    try {
-      await updateUserSettings({
-        current_savings: newSavings
-      })
-      showSuccess('貯金残高を更新しました', `¥${newSavings.toLocaleString()}`)
-      setIsEditingSavings(false)
-      refetchData()
-    } catch (error) {
-      console.error('Error updating savings:', error)
-      showError('更新に失敗しました', 'もう一度お試しください')
-    } finally {
-      setIsUpdatingSavings(false)
+      setIsUpdatingBudget(false)
     }
   }
 
@@ -399,104 +394,8 @@ export function Dashboard() {
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between">
             {/* Left Side - Remaining Budget */}
             <div className="flex-1 lg:mb-0 w-full">
-              {/* Monthly Income Section */}
               <div className="mb-4">
-                <div className="flex items-center justify-between text-sm glass-text mb-1">
-                  <span>月収</span>
-                  <span className="font-bold glass-text-strong">
-                    {isEditingIncome ? (
-                      <input
-                        type="number"
-                        value={incomeInput}
-                        onChange={(e) => setIncomeInput(e.target.value)}
-                        className="w-32 px-2 py-1 rounded-lg glass-input text-right text-gray-800"
-                        placeholder="0"
-                        autoFocus
-                      />
-                    ) : (
-                      `¥${userSettings?.monthly_income?.toLocaleString() || '0'}`
-                    )}
-                  </span>
-                </div>
-                {isEditingIncome ? (
-                  <div className="flex gap-2 mt-2">
-                    <button
-                      onClick={handleIncomeUpdate}
-                      disabled={isUpdatingIncome}
-                      className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-gray-800 backdrop-blur-sm text-white text-sm rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Save className="w-4 h-4" />
-                      <span>{isUpdatingIncome ? '更新中...' : '保存'}</span>
-                    </button>
-                    <button
-                      onClick={() => setIsEditingIncome(false)}
-                      className="px-3 py-2 bg-white/5 backdrop-blur-sm border border-white/20 text-gray-800 text-sm rounded-lg hover:bg-white/10 transition-colors"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setIsEditingIncome(true)}
-                    className="mt-2 flex items-center justify-center space-x-1 px-3 py-2 bg-white/5 backdrop-blur-sm border border-gray-200 text-gray-800 text-sm rounded-lg hover:bg-white/10 transition-colors"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                    <span>編集</span>
-                  </button>
-                )}
-                <hr className="my-2 border-gray-200/50" />
-              </div>
-
-              {/* Current Savings Section */}
-              <div className="mb-4">
-                <div className="flex items-center justify-between text-sm glass-text mb-1">
-                  <span>現在の貯金</span>
-                  <span className="font-bold glass-text-strong">
-                    {isEditingSavings ? (
-                      <input
-                        type="number"
-                        value={savingsInput}
-                        onChange={(e) => setSavingsInput(e.target.value)}
-                        className="w-32 px-2 py-1 rounded-lg glass-input text-right text-gray-800"
-                        placeholder="0"
-                        autoFocus
-                      />
-                    ) : (
-                      `¥${userSettings?.current_savings?.toLocaleString() || '0'}`
-                    )}
-                  </span>
-                </div>
-                {isEditingSavings ? (
-                  <div className="flex gap-2 mt-2">
-                    <button
-                      onClick={handleSavingsUpdate}
-                      disabled={isUpdatingSavings}
-                      className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-gray-800 backdrop-blur-sm text-white text-sm rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Save className="w-4 h-4" />
-                      <span>{isUpdatingSavings ? '更新中...' : '保存'}</span>
-                    </button>
-                    <button
-                      onClick={() => setIsEditingSavings(false)}
-                      className="px-3 py-2 bg-white/5 backdrop-blur-sm border border-white/20 text-gray-800 text-sm rounded-lg hover:bg-white/10 transition-colors"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setIsEditingSavings(true)}
-                    className="mt-2 flex items-center justify-center space-x-1 px-3 py-2 bg-white/5 backdrop-blur-sm border border-gray-200 text-gray-800 text-sm rounded-lg hover:bg-white/10 transition-colors"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                    <span>編集</span>
-                  </button>
-                )}
-                <hr className="my-2 border-gray-200/50" />
-              </div>
-
-              <div className="mb-4">
-                <div className="flex items-center justify-between text-sm glass-text mb-1">
+                <div className="flex items-center justify-between text-sm glass-text mb-2">
                   <span>前月からの繰り越し</span>
                   <span className={`font-bold glass-text-strong ${previousMonthCarryover < 0 ? 'text-red-500' : ''}`}>
                     {hideRemaining ? '¥••••••' : `¥${previousMonthCarryover.toLocaleString()}`}
@@ -505,23 +404,63 @@ export function Dashboard() {
                 <hr className="my-2 border-gray-200/50" />
               </div>
 
-              <h3 className="glass-text text-sm mb-2 flex items-center space-x-1">
-                <span>今月使えるお金</span>
-                <button
-                  onClick={() => setHideRemaining(!hideRemaining)}
-                  aria-label={hideRemaining ? '金額を表示' : '金額を非表示'}
-                  className="p-1 rounded-full border border-gray-200 transition-colors"
-                >
-                  {hideRemaining ? (
-                    <Eye className="w-3.5 h-3.5 glass-icon" />
-                  ) : (
-                    <EyeOff className="w-3.5 h-3.5 glass-icon" />
-                  )}
-                </button>
-              </h3>
-              <div className="text-2xl md:text-4xl font-bold glass-text-strong">
-                {hideRemaining ? '¥••••••' : `¥${remainingBudget.toLocaleString()}`}
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="glass-text text-sm flex items-center space-x-1">
+                  <span>今月使えるお金</span>
+                  <button
+                    onClick={() => setHideRemaining(!hideRemaining)}
+                    aria-label={hideRemaining ? '金額を表示' : '金額を非表示'}
+                    className="p-1 rounded-full border border-gray-200 transition-colors"
+                  >
+                    {hideRemaining ? (
+                      <Eye className="w-3.5 h-3.5 glass-icon" />
+                    ) : (
+                      <EyeOff className="w-3.5 h-3.5 glass-icon" />
+                    )}
+                  </button>
+                </h3>
+                {!isEditingBudget && (
+                  <button
+                    onClick={() => setIsEditingBudget(true)}
+                    className="p-1 rounded-full border border-gray-200 transition-colors hover:bg-white/5"
+                    aria-label="編集"
+                  >
+                    <Edit2 className="w-3.5 h-3.5 glass-icon" />
+                  </button>
+                )}
               </div>
+              {isEditingBudget ? (
+                <div className="space-y-2">
+                  <input
+                    type="number"
+                    value={budgetInput}
+                    onChange={(e) => setBudgetInput(e.target.value)}
+                    className="w-full px-4 py-2 rounded-lg bg-white text-gray-800 text-lg font-bold"
+                    placeholder="0"
+                    autoFocus
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleBudgetUpdate}
+                      disabled={isUpdatingBudget}
+                      className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-gray-800 backdrop-blur-sm text-white text-sm rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Save className="w-4 h-4" />
+                      <span>{isUpdatingBudget ? '更新中...' : '保存'}</span>
+                    </button>
+                    <button
+                      onClick={() => setIsEditingBudget(false)}
+                      className="px-3 py-2 bg-white/5 backdrop-blur-sm border border-white/20 text-gray-800 text-sm rounded-lg hover:bg-white/10 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-2xl md:text-4xl font-bold glass-text-strong">
+                  {hideRemaining ? '¥••••••' : `¥${remainingBudget.toLocaleString()}`}
+                </div>
+              )}
               
               {/* Quick Stats - 2 columns - Hidden on mobile when collapsed */}
               <div className={`md:block overflow-hidden transition-all duration-500 ease-in-out ${
