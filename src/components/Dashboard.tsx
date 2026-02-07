@@ -52,6 +52,7 @@ export function Dashboard() {
   const [isEditingBudget, setIsEditingBudget] = useState(false)
   const [budgetInput, setBudgetInput] = useState('')
   const [isUpdatingBudget, setIsUpdatingBudget] = useState(false)
+  const [monthlyCarryover, setMonthlyCarryover] = useState<number | null>(null)
 
   const { register, handleSubmit, reset, setValue, formState: { isSubmitting } } = useForm<ExpenseForm>({
     defaultValues: {
@@ -67,12 +68,32 @@ export function Dashboard() {
     return d >= monthStart && d <= monthEnd;
   });
 
-  // Initialize budget input when editing
   useEffect(() => {
-    if (isEditingBudget) {
-      setBudgetInput(Math.max(dailyBudget() * 30 - totalExpenses(), 0).toString())
+    const fetchMonthlyCarryover = async () => {
+      if (!user) return
+
+      try {
+        const year = currentDate.getFullYear()
+        const month = currentDate.getMonth() + 1
+        const { data, error } = await supabase
+          .from('monthly_carryover')
+          .select('carryover_amount')
+          .eq('user_id', user.id)
+          .eq('year', year)
+          .eq('month', month)
+          .maybeSingle()
+
+        if (error) throw error
+
+        setMonthlyCarryover(data?.carryover_amount ?? null)
+      } catch (error) {
+        console.error('Error fetching monthly carryover:', error)
+        setMonthlyCarryover(null)
+      }
     }
-  }, [isEditingBudget])
+
+    fetchMonthlyCarryover()
+  }, [user, currentDate])
 
   // コンポーネントのアンマウント時にスクロールを復活
   useEffect(() => {
@@ -107,14 +128,29 @@ export function Dashboard() {
     setCurrentDate(newDate)
   }
 
-  const handleBudgetUpdate = async () => {
-    if (!budgetInput || !userSettings) return
+  const startBudgetEdit = () => {
+    setBudgetInput(remainingBudget.toString())
+    setIsEditingBudget(true)
+  }
 
-    const newBudget = Number(budgetInput)
-    if (isNaN(newBudget) || newBudget < 0) {
+  const normalizeBudgetInput = (value: string) => {
+    return value
+      .replace(/[０-９]/g, (char) => String.fromCharCode(char.charCodeAt(0) - 0xFEE0))
+      .replace(/[，,]/g, '')
+      .trim()
+  }
+
+  const handleBudgetUpdate = async () => {
+    if (!budgetInput || !userSettings || !user) return
+
+    const normalizedInput = normalizeBudgetInput(budgetInput)
+    const newBudget = Number(normalizedInput)
+    if (isNaN(newBudget)) {
       showError('エラー', '正しい金額を入力してください')
       return
     }
+
+    const newCarryover = newBudget - displayedRemaining
 
     setIsUpdatingBudget(true)
     try {
@@ -135,7 +171,7 @@ export function Dashboard() {
         await supabase
           .from('monthly_carryover')
           .update({
-            carryover_amount: newBudget,
+            carryover_amount: newCarryover,
             updated_at: new Date().toISOString()
           })
           .eq('id', existing.id)
@@ -147,11 +183,12 @@ export function Dashboard() {
             user_id: user?.id,
             year,
             month,
-            carryover_amount: newBudget
+            carryover_amount: newCarryover
           })
       }
 
       showSuccess('予算を更新しました', `¥${newBudget.toLocaleString()}`)
+      setMonthlyCarryover(newCarryover)
       setIsEditingBudget(false)
       refetchData()
     } catch (error) {
@@ -258,15 +295,6 @@ export function Dashboard() {
     }
   }
 
-  // Show loading state
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <LoadingSpinner size="lg" />
-      </div>
-    )
-  }
-
   // スタート月を判定
   let startMonth: Date | null = null
   if (expenses.length > 0) {
@@ -332,18 +360,35 @@ export function Dashboard() {
     remainingDays = monthEnd.getDate()
   }
 
+  const displayedCarryover = monthlyCarryover ?? (isFutureMonth ? 0 : previousMonthCarryover)
+
   if (isBeforeStartMonth) {
     remainingBudget = 0
     dailyBudget = 0
     weeklyBudget = 0
   } else {
-    if (isFutureMonth) {
-      remainingBudget = displayedRemaining // For future months, don't include carryover
+    if (isFutureMonth && monthlyCarryover === null) {
+      remainingBudget = displayedRemaining
     } else {
-      remainingBudget = displayedRemaining + previousMonthCarryover // For current and past months, include carryover
+      remainingBudget = displayedRemaining + displayedCarryover
     }
     dailyBudget = Math.max(0, Math.floor(remainingBudget / Math.max(1, remainingDays)))
     weeklyBudget = Math.max(0, Math.floor(remainingBudget / Math.max(1, Math.ceil(remainingDays / 7))))
+  }
+
+  useEffect(() => {
+    if (isEditingBudget) {
+      setBudgetInput(remainingBudget.toString())
+    }
+  }, [isEditingBudget, remainingBudget])
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <LoadingSpinner size="lg" />
+      </div>
+    )
   }
 
   // 実際の貯金額 = 目標までの月額 + 今月の残高
@@ -368,7 +413,7 @@ export function Dashboard() {
       {/* Main Budget Display - Hero Section with Glass Effect */}
       <div className="relative overflow-hidden">
         {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-20">
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
           <div className="absolute top-0 left-0 w-32 h-32 bg-white/30 rounded-full -translate-x-16 -translate-y-16 glass-float"></div>
           <div className="absolute bottom-0 right-0 w-48 h-48 bg-white/20 rounded-full translate-x-24 translate-y-24 glass-float" style={{animationDelay: '1s'}}></div>
           <div className="absolute top-1/2 left-1/2 w-24 h-24 bg-white/25 rounded-full -translate-x-12 -translate-y-12 glass-float" style={{animationDelay: '2s'}}></div>
@@ -397,8 +442,8 @@ export function Dashboard() {
               <div className="mb-4">
                 <div className="flex items-center justify-between text-sm glass-text mb-2">
                   <span>前月からの繰り越し</span>
-                  <span className={`font-bold glass-text-strong ${previousMonthCarryover < 0 ? 'text-red-500' : ''}`}>
-                    {hideRemaining ? '¥••••••' : `¥${previousMonthCarryover.toLocaleString()}`}
+                  <span className={`font-bold glass-text-strong ${displayedCarryover < 0 ? 'text-red-500' : ''}`}>
+                    {hideRemaining ? '¥••••••' : `¥${displayedCarryover.toLocaleString()}`}
                   </span>
                 </div>
                 <hr className="my-2 border-gray-200/50" />
@@ -419,48 +464,37 @@ export function Dashboard() {
                     )}
                   </button>
                 </h3>
-                {!isEditingBudget && (
-                  <button
-                    onClick={() => setIsEditingBudget(true)}
-                    className="p-1 rounded-full border border-gray-200 transition-colors hover:bg-white/5"
-                    aria-label="編集"
-                  >
-                    <Edit2 className="w-3.5 h-3.5 glass-icon" />
-                  </button>
-                )}
               </div>
-              {isEditingBudget ? (
-                <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                {isEditingBudget ? (
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     value={budgetInput}
-                    onChange={(e) => setBudgetInput(e.target.value)}
-                    className="w-full px-4 py-2 rounded-lg bg-white text-gray-800 text-lg font-bold"
+                    onChange={(event) => setBudgetInput(event.target.value)}
+                    onFocus={() => setIsEditingBudget(true)}
+                    className="w-fit min-w-[8rem] max-w-full px-4 py-2 rounded-lg bg-white text-gray-800 text-lg font-bold border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 caret-gray-800"
                     placeholder="0"
                     autoFocus
                   />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleBudgetUpdate}
-                      disabled={isUpdatingBudget}
-                      className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-gray-800 backdrop-blur-sm text-white text-sm rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Save className="w-4 h-4" />
-                      <span>{isUpdatingBudget ? '更新中...' : '保存'}</span>
-                    </button>
-                    <button
-                      onClick={() => setIsEditingBudget(false)}
-                      className="px-3 py-2 bg-white/5 backdrop-blur-sm border border-white/20 text-gray-800 text-sm rounded-lg hover:bg-white/10 transition-colors"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+                ) : (
+                  <div className="text-2xl md:text-4xl font-bold glass-text-strong">
+                    {hideRemaining ? '¥••••••' : `¥${remainingBudget.toLocaleString()}`}
                   </div>
-                </div>
-              ) : (
-                <div className="text-2xl md:text-4xl font-bold glass-text-strong">
-                  {hideRemaining ? '¥••••••' : `¥${remainingBudget.toLocaleString()}`}
-                </div>
-              )}
+                )}
+                <button
+                  onClick={isEditingBudget ? handleBudgetUpdate : startBudgetEdit}
+                  disabled={isUpdatingBudget}
+                  className="p-1 rounded-full border border-gray-200 transition-colors hover:bg-white/5 disabled:opacity-50"
+                  aria-label={isEditingBudget ? '保存' : '編集'}
+                >
+                  {isEditingBudget ? (
+                    <Save className="w-3.5 h-3.5 glass-icon" />
+                  ) : (
+                    <Edit2 className="w-3.5 h-3.5 glass-icon" />
+                  )}
+                </button>
+              </div>
               
               {/* Quick Stats - 2 columns - Hidden on mobile when collapsed */}
               <div className={`md:block overflow-hidden transition-all duration-500 ease-in-out ${
