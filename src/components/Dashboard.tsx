@@ -504,6 +504,8 @@ export function Dashboard() {
                       type="button"
                       onClick={handleBudgetUpdate}
                       disabled={isUpdatingBudget}
+                      aria-label="予算を保存"
+                      title="予算を保存"
                       className="flex items-center justify-center space-x-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg font-medium hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap pointer-events-auto"
                     >
                       <Save className="w-4 h-4" />
@@ -515,6 +517,8 @@ export function Dashboard() {
                         setBudgetInput('')
                       }}
                       disabled={isUpdatingBudget}
+                      aria-label="編集をキャンセル"
+                      title="編集をキャンセル"
                       className="px-3 py-2 bg-white/50 backdrop-blur-sm border border-gray-300 text-gray-800 text-sm rounded-lg hover:bg-white/70 transition-colors disabled:opacity-50 disabled:cursor-not-allowed pointer-events-auto"
                     >
                       <X className="w-4 h-4" />
