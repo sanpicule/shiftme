@@ -67,10 +67,27 @@ export function Dashboard() {
     return d >= monthStart && d <= monthEnd;
   });
 
-  // Initialize budget input when editing
+  // Initialize budget input when editing mode starts
   useEffect(() => {
     if (isEditingBudget) {
-      setBudgetInput(Math.max(dailyBudget() * 30 - totalExpenses(), 0).toString())
+      // Calculate values needed for budget only once when editing starts
+      const baseIncome = userSettings?.monthly_income || 0
+      const fixedTotal = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
+      const monthlyExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0)
+      
+      let monthlyNeeded = 0
+      if (savingsGoals[0]) {
+        const targetDate = new Date(savingsGoals[0].target_date)
+        const creationDate = new Date(savingsGoals[0].created_at)
+        const monthsAtCreation = Math.max(1, Math.ceil((targetDate.getTime() - creationDate.getTime()) / (1000 * 60 * 60 * 24 * 30)))
+        monthlyNeeded = Math.ceil(savingsGoals[0].target_amount / monthsAtCreation)
+      }
+      
+      const baseBudget = baseIncome - fixedTotal - monthlyNeeded
+      const displayed = baseBudget - monthlyExpenses
+      const currentRemainingBudget = displayed + previousMonthCarryover
+      
+      setBudgetInput(currentRemainingBudget.toString())
     }
   }, [isEditingBudget])
 
@@ -108,10 +125,23 @@ export function Dashboard() {
   }
 
   const handleBudgetUpdate = async () => {
-    if (!budgetInput || !userSettings) return
+    if (budgetInput === '') {
+      showError('エラー', '予算を入力してください')
+      return
+    }
 
-    const newBudget = Number(budgetInput)
-    if (isNaN(newBudget) || newBudget < 0) {
+    if (!userSettings) {
+      showError('エラー', 'ユーザー設定が読み込まれていません')
+      return
+    }
+
+    if (!user) {
+      showError('エラー', 'ユーザー情報が読み込まれていません')
+      return
+    }
+
+    const newRemainingBudget = Number(budgetInput)
+    if (isNaN(newRemainingBudget)) {
       showError('エラー', '正しい金額を入力してください')
       return
     }
@@ -121,39 +151,78 @@ export function Dashboard() {
       const year = currentDate.getFullYear()
       const month = currentDate.getMonth() + 1
 
+      // 必要な値を計算
+      const baseMonthlyIncome = userSettings.monthly_income
+      const totalFixed = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
+      const totalMonthlyExp = expenses.reduce((sum, expense) => sum + expense.amount, 0)
+
+      // 貯金目標の月額を計算
+      let monthlyNeeded = 0
+      if (savingsGoals[0]) {
+        const targetDate = new Date(savingsGoals[0].target_date)
+        const creationDate = new Date(savingsGoals[0].created_at)
+        const monthsAtCreation = Math.max(1, Math.ceil((targetDate.getTime() - creationDate.getTime()) / (1000 * 60 * 60 * 24 * 30)))
+        monthlyNeeded = Math.ceil(savingsGoals[0].target_amount / monthsAtCreation)
+      }
+
+      // 基本予算と表示上の残高を計算
+      const baseBudget = baseMonthlyIncome - totalFixed - monthlyNeeded
+      const currentDisplayedRemaining = baseBudget - totalMonthlyExp
+
+      // 新しい繰り越し額を計算
+      // 「今月使えるお金」 = displayedRemaining + previousMonthCarryover
+      // なので、新しい繰り越し額 = 新しい「今月使えるお金」 - displayedRemaining
+      const newCarryoverAmount = newRemainingBudget - currentDisplayedRemaining
+
       // Check if monthly carryover exists for this month
-      const { data: existing } = await supabase
+      const { data: existing, error: selectError } = await supabase
         .from('monthly_carryover')
         .select('id')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .eq('year', year)
         .eq('month', month)
         .maybeSingle()
 
+      if (selectError) {
+        console.error('Error checking existing carryover:', selectError)
+        throw selectError
+      }
+
       if (existing) {
         // Update existing
-        await supabase
+        const { error } = await supabase
           .from('monthly_carryover')
           .update({
-            carryover_amount: newBudget,
+            carryover_amount: newCarryoverAmount,
             updated_at: new Date().toISOString()
           })
           .eq('id', existing.id)
+        
+        if (error) {
+          console.error('Error updating carryover:', error)
+          throw error
+        }
       } else {
         // Create new
-        await supabase
+        const { error } = await supabase
           .from('monthly_carryover')
           .insert({
-            user_id: user?.id,
+            user_id: user.id,
             year,
             month,
-            carryover_amount: newBudget
+            carryover_amount: newCarryoverAmount
           })
+        
+        if (error) {
+          console.error('Error creating carryover:', error)
+          throw error
+        }
       }
 
-      showSuccess('予算を更新しました', `¥${newBudget.toLocaleString()}`)
+      showSuccess('予算を更新しました', `¥${newRemainingBudget.toLocaleString()}`)
       setIsEditingBudget(false)
-      refetchData()
+      setBudgetInput('')
+      await refetchData()
     } catch (error) {
       console.error('Error updating budget:', error)
       showError('更新に失敗しました', 'もう一度お試しください')
@@ -283,7 +352,7 @@ export function Dashboard() {
   const isBeforeStartMonth = startMonth ? currentDate < startOfMonth(startMonth) : false
 
   // Calculations
-  let baseMonthlyIncome = userSettings?.monthly_income || 0
+  const baseMonthlyIncome = userSettings?.monthly_income || 0
 
   const totalFixedExpenses = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
   const totalMonthlyExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0)
@@ -368,7 +437,7 @@ export function Dashboard() {
       {/* Main Budget Display - Hero Section with Glass Effect */}
       <div className="relative overflow-hidden">
         {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-20">
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
           <div className="absolute top-0 left-0 w-32 h-32 bg-white/30 rounded-full -translate-x-16 -translate-y-16 glass-float"></div>
           <div className="absolute bottom-0 right-0 w-48 h-48 bg-white/20 rounded-full translate-x-24 translate-y-24 glass-float" style={{animationDelay: '1s'}}></div>
           <div className="absolute top-1/2 left-1/2 w-24 h-24 bg-white/25 rounded-full -translate-x-12 -translate-y-12 glass-float" style={{animationDelay: '2s'}}></div>
@@ -390,7 +459,7 @@ export function Dashboard() {
         </div>
 
         {/* Budget Overview Card */}
-        <div>
+        <div className="relative z-10 pointer-events-auto">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between">
             {/* Left Side - Remaining Budget */}
             <div className="flex-1 lg:mb-0 w-full">
@@ -404,10 +473,11 @@ export function Dashboard() {
                 <hr className="my-2 border-gray-200/50" />
               </div>
 
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="glass-text text-sm flex items-center space-x-1">
+              <div className="mb-2">
+                <h3 className="glass-text text-sm flex items-center space-x-1 mb-3">
                   <span>今月使えるお金</span>
                   <button
+                    type="button"
                     onClick={() => setHideRemaining(!hideRemaining)}
                     aria-label={hideRemaining ? '金額を表示' : '金額を非表示'}
                     className="p-1 rounded-full border border-gray-200 transition-colors"
@@ -419,48 +489,60 @@ export function Dashboard() {
                     )}
                   </button>
                 </h3>
-                {!isEditingBudget && (
-                  <button
-                    onClick={() => setIsEditingBudget(true)}
-                    className="p-1 rounded-full border border-gray-200 transition-colors hover:bg-white/5"
-                    aria-label="編集"
-                  >
-                    <Edit2 className="w-3.5 h-3.5 glass-icon" />
-                  </button>
-                )}
-              </div>
-              {isEditingBudget ? (
-                <div className="space-y-2">
-                  <input
-                    type="number"
-                    value={budgetInput}
-                    onChange={(e) => setBudgetInput(e.target.value)}
-                    className="w-full px-4 py-2 rounded-lg bg-white text-gray-800 text-lg font-bold"
-                    placeholder="0"
-                    autoFocus
-                  />
-                  <div className="flex gap-2">
+                {isEditingBudget ? (
+                  <div className="flex items-center gap-2 flex-nowrap overflow-x-auto">
+                    <input
+                      type="number"
+                      value={budgetInput}
+                      onChange={(e) => setBudgetInput(e.target.value)}
+                      className="px-3 py-2 rounded-lg bg-white/80 backdrop-blur-sm text-gray-800 text-xl md:text-4xl font-bold border border-gray-300 focus:border-gray-500 focus:outline-none transition-colors"
+                      placeholder="0"
+                      autoFocus
+                      style={{ width: 'fit-content', minWidth: '180px' }}
+                    />
                     <button
+                      type="button"
                       onClick={handleBudgetUpdate}
                       disabled={isUpdatingBudget}
-                      className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-gray-800 backdrop-blur-sm text-white text-sm rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="予算を保存"
+                      title="予算を保存"
+                      className="flex items-center justify-center space-x-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg font-medium hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap pointer-events-auto"
                     >
                       <Save className="w-4 h-4" />
-                      <span>{isUpdatingBudget ? '更新中...' : '保存'}</span>
                     </button>
                     <button
-                      onClick={() => setIsEditingBudget(false)}
-                      className="px-3 py-2 bg-white/5 backdrop-blur-sm border border-white/20 text-gray-800 text-sm rounded-lg hover:bg-white/10 transition-colors"
+                      type="button"
+                      onClick={() => {
+                        setIsEditingBudget(false)
+                        setBudgetInput('')
+                      }}
+                      disabled={isUpdatingBudget}
+                      aria-label="編集をキャンセル"
+                      title="編集をキャンセル"
+                      className="px-3 py-2 bg-white/50 backdrop-blur-sm border border-gray-300 text-gray-800 text-sm rounded-lg hover:bg-white/70 transition-colors disabled:opacity-50 disabled:cursor-not-allowed pointer-events-auto"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   </div>
-                </div>
-              ) : (
-                <div className="text-2xl md:text-4xl font-bold glass-text-strong">
-                  {hideRemaining ? '¥••••••' : `¥${remainingBudget.toLocaleString()}`}
-                </div>
-              )}
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <div className="text-2xl md:text-4xl font-bold glass-text-strong">
+                      {hideRemaining ? '¥••••••' : `¥${remainingBudget.toLocaleString()}`}
+                    </div>
+                    {!isFutureMonth && (
+                      <button
+                        type="button"
+                        onClick={() => setIsEditingBudget(true)}
+                        className="p-1.5 md:p-2 rounded-lg border border-gray-200 hover:bg-white/30 transition-colors flex-shrink-0 pointer-events-auto"
+                        aria-label="予算を編集"
+                        title="予算を編集"
+                      >
+                        <Edit2 className="w-4 h-4 md:w-5 md:h-5 glass-icon" />
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
               
               {/* Quick Stats - 2 columns - Hidden on mobile when collapsed */}
               <div className={`md:block overflow-hidden transition-all duration-500 ease-in-out ${

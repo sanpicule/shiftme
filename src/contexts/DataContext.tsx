@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { supabase, Expense, FixedExpense, SavingsGoal } from '../lib/supabase';
 import { useAuth } from './AuthContext';
-import { startOfMonth, endOfMonth, format } from 'date-fns';
+import { startOfMonth, endOfMonth } from 'date-fns';
 import { useUserSettings } from '../hooks/useUserSettings';
 
 interface DataContextProps {
@@ -65,9 +65,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
       // 繰越額の計算 (DashboardとAnalyticsPageで共通)
       const startDate = userSettings.created_at ? new Date(userSettings.created_at) : null;
-      const currentDate = new Date(); // 現在の日付を基準
+      const now = new Date();
       const prevMonth = new Date();
       prevMonth.setMonth(prevMonth.getMonth() - 1);
+
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth() + 1;
+      const { data: carryoverData, error: carryoverError } = await supabase
+        .from('monthly_carryover')
+        .select('carryover_amount')
+        .eq('user_id', user.id)
+        .eq('year', currentYear)
+        .eq('month', currentMonth)
+        .maybeSingle();
 
       let calculatedCarryover = 0;
       if (!startDate || prevMonth >= startOfMonth(startDate)) {
@@ -93,7 +103,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
         }
         calculatedCarryover = prevMonthIncome - totalFixed - neededForGoal - totalPrevMonthExpenses;
       }
-      setPreviousMonthCarryover(calculatedCarryover);
+      if (carryoverError) {
+        console.error('Error fetching monthly carryover:', carryoverError);
+      }
+
+      const resolvedCarryover = carryoverData?.carryover_amount ?? calculatedCarryover;
+      setPreviousMonthCarryover(resolvedCarryover);
 
     } catch (error) {
       console.error('Error fetching shared data:', error);
