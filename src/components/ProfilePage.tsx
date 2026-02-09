@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { User, Award, Target, PiggyBank, TrendingUp } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { useUserSettings } from '../hooks/useUserSettings'
+import { useUserSettings } from '../hooks/useUserSettings.tsx'
 import { format } from 'date-fns'
 import { ja } from 'date-fns/locale'
 import { supabase, FixedExpense } from '../lib/supabase'

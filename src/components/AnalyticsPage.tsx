@@ -2,9 +2,8 @@ import { useState, useEffect } from 'react'
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns'
 import { ja } from 'date-fns/locale'
 import { BarChart3, PieChart, Target } from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
-import { useUserSettings } from '../hooks/useUserSettings'
-import { LoadingSpinner } from './LoadingSpinner'
+import { useUserSettings } from '../hooks/useUserSettings.tsx'
+import { SkeletonCard, SkeletonText } from './SkeletonCard'
 import { useData } from '../contexts/DataContext'
 
 interface MonthlyData {
@@ -21,7 +20,6 @@ interface CategoryData {
 }
 
 export function AnalyticsPage() {
-  const { user } = useAuth()
   const { userSettings } = useUserSettings()
   const { 
     allExpenses, 
@@ -69,7 +67,7 @@ export function AnalyticsPage() {
     const months: MonthlyData[] = []
     const now = new Date()
 
-    const calculateMonthlyBudget = (monthDate: Date) => {
+    const calculateMonthlyBudget = () => {
       const monthlyIncome = userSettings?.monthly_income || 0
       const totalFixed = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
       const savingsGoal = savingsGoals[0]
@@ -81,7 +79,7 @@ export function AnalyticsPage() {
           monthlyNeededForGoal = Math.ceil(savingsGoal.target_amount / monthsAtCreation);
       }
 
-      let income = monthlyIncome
+      const income = monthlyIncome
 
       const budget = income - totalFixed - monthlyNeededForGoal
       return budget
@@ -98,7 +96,7 @@ export function AnalyticsPage() {
       })
 
       const totalExpenses = monthExpenses.reduce((sum, expense) => sum + expense.amount, 0)
-      const budget = calculateMonthlyBudget(now)
+      const budget = calculateMonthlyBudget()
 
       months.push({
         month: format(now, 'MM月', { locale: ja }),
@@ -127,7 +125,7 @@ export function AnalyticsPage() {
         })
 
         const totalExpenses = monthExpenses.reduce((sum, expense) => sum + expense.amount, 0)
-        const budget = calculateMonthlyBudget(monthDate)
+        const budget = calculateMonthlyBudget()
 
         months.push({
           month: format(monthDate, 'MM月', { locale: ja }),
@@ -304,10 +302,50 @@ export function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="p-8">
-          <LoadingSpinner size="lg" />
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="space-y-3">
+            <SkeletonText className="h-8" width="w-40" />
+            <SkeletonText className="h-4" width="w-56" />
+          </div>
+          <div className="h-10 w-40 rounded-lg bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"></div>
         </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <SkeletonCard>
+            <div className="p-6 space-y-4">
+              <SkeletonText className="h-6" width="w-32" />
+              <div className="h-48 rounded-xl bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"></div>
+              <div className="space-y-2">
+                <SkeletonText width="w-3/4" />
+                <SkeletonText width="w-2/3" />
+                <SkeletonText width="w-1/2" />
+              </div>
+            </div>
+          </SkeletonCard>
+          <SkeletonCard>
+            <div className="p-6 space-y-4">
+              <SkeletonText className="h-6" width="w-28" />
+              <div className="h-48 rounded-xl bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"></div>
+              <div className="space-y-2">
+                <SkeletonText width="w-2/3" />
+                <SkeletonText width="w-1/2" />
+              </div>
+            </div>
+          </SkeletonCard>
+        </div>
+        <SkeletonCard>
+          <div className="p-6 space-y-4">
+            <SkeletonText className="h-6" width="w-36" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div
+                  key={`skeleton-summary-${index}`}
+                  className="h-16 rounded-xl bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"
+                ></div>
+              ))}
+            </div>
+          </div>
+        </SkeletonCard>
       </div>
     )
   }
@@ -328,7 +366,7 @@ export function AnalyticsPage() {
 
     const totalExpensesThisMonth = monthExpenses.reduce((sum, expense) => sum + expense.amount, 0)
     const totalFixed = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
-    let monthlyIncome = userSettings?.monthly_income || 0
+    const monthlyIncome = userSettings?.monthly_income || 0
 
     const savingsGoal = savingsGoals[0]
     let monthlyNeededForGoal = 0;
@@ -622,8 +660,8 @@ export function AnalyticsPage() {
                   {/* 0 Axis Line */}
                   <div className="absolute top-1/2 left-0 w-full h-px bg-white/20 z-0"></div>
                   <div className="absolute top-1/2 left-[-2.5rem] text-xs glass-text">¥0</div>
-                  <div className="absolute top-0 left-[-2.5rem] text-xs glass-text">¥{Math.ceil(maxValue/1000)*1000 .toLocaleString()}</div>
-                  <div className="absolute bottom-0 left-[-2.5rem] text-xs glass-text">-¥{Math.ceil(maxValue/1000)*1000 .toLocaleString()}</div>
+                  <div className="absolute top-0 left-[-2.5rem] text-xs glass-text">¥{(Math.ceil(maxValue/1000)*1000).toLocaleString()}</div>
+                  <div className="absolute bottom-0 left-[-2.5rem] text-xs glass-text">-¥{(Math.ceil(maxValue/1000)*1000).toLocaleString()}</div>
 
 
                   {series.values.map((v, i) => {

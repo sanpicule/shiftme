@@ -2,7 +2,7 @@ import React, { useContext, useState, useEffect, useCallback, ReactNode } from '
 import { supabase, Expense, FixedExpense, SavingsGoal } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 import { startOfMonth, endOfMonth } from 'date-fns';
-import { useUserSettings } from '../hooks/useUserSettings';
+import { useUserSettings } from '../hooks/useUserSettings.tsx';
 
 interface DataContextProps {
   expenses: Expense[];
@@ -27,7 +27,7 @@ export function useData() {
 export function DataProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const { userSettings } = useUserSettings();
-  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [expenses] = useState<Expense[]>([]);
   const [fixedExpenses, setFixedExpenses] = useState<FixedExpense[]>([]);
   const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([]);
   const [allExpenses, setAllExpenses] = useState<Expense[]>([]);
@@ -52,12 +52,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const { data: fixedData } = await supabase
         .from('fixed_expenses')
         .select('*')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
       const { data: goalsData } = await supabase
         .from('savings_goals')
         .select('*')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
       setAllExpenses(allExpensesData || []);
       setFixedExpenses(fixedData || []);

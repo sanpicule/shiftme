@@ -1,10 +1,12 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { Plus, Trash2, Edit2, Save, X } from 'lucide-react'
-import { useUserSettings } from '../hooks/useUserSettings'
+import { useUserSettings } from '../hooks/useUserSettings.tsx'
 import { useToast } from './ToastContainer'
 import { supabase, FixedExpense, SavingsGoal } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { SkeletonCard, SkeletonText } from './SkeletonCard'
+import { useData } from '../contexts/DataContext'
 
 interface IncomeForm {
   monthly_income: number
@@ -31,8 +33,7 @@ export function SettingsPage() {
   const { user } = useAuth()
   const { userSettings, updateUserSettings } = useUserSettings()
   const { showSuccess, showError } = useToast()
-  const [fixedExpenses, setFixedExpenses] = useState<FixedExpense[]>([])
-  const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([])
+  const { fixedExpenses, savingsGoals, loading: dataLoading, refetchData } = useData()
   const [editingExpense, setEditingExpense] = useState<string | null>(null)
   const [editingGoal, setEditingGoal] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -63,39 +64,60 @@ export function SettingsPage() {
     start_date: ''
   })
 
-  const fetchData = useCallback(async () => {
-    if (!user) return
-
-    try {
-      const { data: fixedData } = await supabase
-        .from('fixed_expenses')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-
-      const { data: goalsData } = await supabase
-        .from('savings_goals')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-
-      setFixedExpenses(fixedData || [])
-      setSavingsGoals(goalsData || [])
-    } catch (error) {
-      console.error('Error fetching data:', error)
-    }
-  }, [user])
-
   useEffect(() => {
-    if (user) {
-      fetchData()
-    }
     if (userSettings) {
       setIncomeValue('monthly_income', userSettings.monthly_income)
       setIncomeValue('bonus_amount', userSettings.bonus_amount || 0)
       setIncomeValue('bonus_months', userSettings.bonus_months || '')
     }
-  }, [user, userSettings, setIncomeValue, fetchData])
+  }, [userSettings, setIncomeValue])
+
+  if (dataLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="space-y-3">
+          <SkeletonText className="h-8" width="w-40" />
+          <SkeletonText className="h-4" width="w-56" />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <SkeletonCard>
+            <div className="p-6 space-y-4">
+              <SkeletonText className="h-6" width="w-32" />
+              <div className="space-y-2">
+                <SkeletonText width="w-3/4" />
+                <SkeletonText width="w-2/3" />
+                <SkeletonText width="w-1/2" />
+              </div>
+              <div className="h-12 rounded-xl bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"></div>
+            </div>
+          </SkeletonCard>
+          <SkeletonCard>
+            <div className="p-6 space-y-4">
+              <SkeletonText className="h-6" width="w-32" />
+              <div className="space-y-2">
+                <div className="h-10 rounded-xl bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"></div>
+                <div className="h-10 rounded-xl bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"></div>
+                <div className="h-10 rounded-xl bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"></div>
+              </div>
+            </div>
+          </SkeletonCard>
+        </div>
+        <SkeletonCard>
+          <div className="p-6 space-y-4">
+            <SkeletonText className="h-6" width="w-36" />
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  key={`skeleton-setting-row-${index}`}
+                  className="h-12 rounded-xl bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"
+                ></div>
+              ))}
+            </div>
+          </div>
+        </SkeletonCard>
+      </div>
+    )
+  }
 
   const handleIncomeUpdate = async (data: IncomeForm) => {
     setLoading(true)
@@ -126,7 +148,7 @@ export function SettingsPage() {
       if (error) throw error
 
       resetExpense()
-      fetchData()
+      refetchData()
       showSuccess('固定支出を追加しました', `${data.name}: ¥${data.amount.toLocaleString()}`)
       setShowExpenseForm(false)
     } catch (error) {
@@ -143,7 +165,7 @@ export function SettingsPage() {
         .eq('id', id)
 
       if (error) throw error
-      fetchData()
+      refetchData()
       showSuccess('固定支出を削除しました')
     } catch (error) {
       console.error('Error deleting fixed expense:', error)
@@ -162,7 +184,7 @@ export function SettingsPage() {
       if (error) throw error
 
       resetGoal()
-      fetchData()
+      refetchData()
       showSuccess('貯金目標を追加しました', `${data.title}: ¥${data.target_amount.toLocaleString()}`)
       setShowGoalForm(false)
     } catch (error) {
@@ -179,7 +201,7 @@ export function SettingsPage() {
         .eq('id', id)
 
       if (error) throw error
-      fetchData()
+      refetchData()
       showSuccess('貯金目標を削除しました')
     } catch (error) {
       console.error('Error deleting savings goal:', error)
@@ -209,7 +231,7 @@ export function SettingsPage() {
       if (error) throw error
 
       setEditingExpense(null)
-      fetchData()
+      refetchData()
       showSuccess('固定支出を更新しました', `${tempExpense.name}: ¥${tempExpense.amount.toLocaleString()}`)
     } catch (error) {
       console.error('Error updating fixed expense:', error)
@@ -242,7 +264,7 @@ export function SettingsPage() {
       if (error) throw error
 
       setEditingGoal(null)
-      fetchData()
+      refetchData()
       showSuccess('貯金目標を更新しました', `${tempGoal.title}: ¥${tempGoal.target_amount.toLocaleString()}`)
     } catch (error) {
       console.error('Error updating savings goal:', error)
