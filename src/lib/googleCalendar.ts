@@ -31,7 +31,17 @@ export interface CalendarEvent {
 
 /**
  * Fetch Google Calendar events for a specific date range
- * This function will call the Supabase Edge Function to fetch Google Calendar events
+ * This function attempts to fetch events from Google Calendar API via Supabase Edge Function.
+ * If OAuth is not configured or the Edge Function is not available, it returns mock data for development.
+ * 
+ * @param startDate - Start date of the range to fetch events
+ * @param endDate - End date of the range to fetch events
+ * @returns Array of CalendarEvent objects
+ * 
+ * Expected Supabase Edge Function response format:
+ * {
+ *   events: Array<GoogleCalendarEvent> // Array of Google Calendar API event objects
+ * }
  */
 export async function fetchGoogleCalendarEvents(
   startDate: Date,
@@ -107,8 +117,11 @@ export function getEventsForDate(events: CalendarEvent[], date: Date): CalendarE
 }
 
 /**
- * Mock function to generate sample Google Calendar events for development/testing
- * This should be removed once real Google Calendar integration is complete
+ * Generate sample Google Calendar events for development and testing
+ * This function provides fallback data when OAuth is not configured,
+ * allowing developers to test the calendar integration UI without setting up Google OAuth.
+ * 
+ * @returns Array of mock CalendarEvent objects for the current and next few days
  */
 export function getMockGoogleCalendarEvents(): CalendarEvent[] {
   const today = new Date()

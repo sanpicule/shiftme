@@ -35,14 +35,9 @@ export function useGoogleCalendar(currentDate: Date) {
     loadCalendarEvents()
   }, [loadCalendarEvents])
 
-  const refreshEvents = () => {
-    loadCalendarEvents()
-  }
-
   return {
     calendarEvents,
     loading,
-    error,
-    refreshEvents
+    error
   }
 }

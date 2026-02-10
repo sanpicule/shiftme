@@ -81,9 +81,9 @@ export function Dashboard() {
   });
 
   // Memoize day events for the selected date
-  const dayEvents = useMemo(() => {
-    return selectedDate ? getEventsForDate(calendarEvents, selectedDate) : []
-  }, [calendarEvents, selectedDate])
+  const dayEvents = useMemo(() => 
+    selectedDate ? getEventsForDate(calendarEvents, selectedDate) : []
+  , [calendarEvents, selectedDate])
 
   // コンポーネントのアンマウント時にスクロールを復活
   useEffect(() => {

@@ -115,6 +115,7 @@ export function ExpenseCalendar({ expenses, onDateClick, currentDate, onMonthCha
             <button
               key={day.toISOString()}
               onClick={() => inCurrentMonth && handleDateClick(day)}
+              aria-label={`${format(day, 'M月d日', { locale: ja })}${dayEvents.length > 0 ? `、カレンダーイベント${dayEvents.length}件` : ''}${dayExpenses.length > 0 ? `、支出${dayExpenses.length}件` : ''}`}
               className={`
                 px-1 md:p-2 min-h-[80px] border-r border-b border-gray-200 last:border-r-0 relative transition-all duration-200 md:hover:shadow-glass-glow flex flex-col items-start glass-shine
                 ${inCurrentMonth 
@@ -138,7 +139,7 @@ export function ExpenseCalendar({ expenses, onDateClick, currentDate, onMonthCha
               
               {/* Calendar Events Indicator */}
               {dayEvents.length > 0 && inCurrentMonth && (
-                <div className="w-full" aria-label={`カレンダーイベント${dayEvents.length}件`}>
+                <div className="w-full">
                   <div className="mx-auto text-[8px] md:text-xs font-medium text-blue-700 bg-blue-100 backdrop-blur-sm px-1 py-0.5 rounded truncate border border-blue-300/50">
                     📅 {dayEvents.length}件
                   </div>
