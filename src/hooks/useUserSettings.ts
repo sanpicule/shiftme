@@ -1,21 +1,27 @@
-import { createContext, useContext, useEffect, useState } from 'react'
-import type { ReactNode } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase, UserSettings } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 
-interface UserSettingsContextValue {
-  userSettings: UserSettings | null
-  loading: boolean
-  updateUserSettings: (settings: Partial<UserSettings>) => Promise<{ data?: UserSettings | null; error?: unknown | null }>
-  refetch: () => Promise<void>
-}
-
-const UserSettingsContext = createContext<UserSettingsContextValue | undefined>(undefined)
-
-export function UserSettingsProvider({ children }: { children: ReactNode }) {
+export function useUserSettings() {
   const { user } = useAuth()
   const [userSettings, setUserSettings] = useState<UserSettings | null>(null)
   const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (user) {
+      fetchUserSettings()
+    } else {
+      setUserSettings(null)
+      setLoading(false)
+    }
+  }, [user])
+
+  // Reset loading state when user changes
+  useEffect(() => {
+    if (!user) {
+      setLoading(false)
+    }
+  }, [user])
 
   const fetchUserSettings = async () => {
     if (!user) return
@@ -60,16 +66,6 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  useEffect(() => {
-    if (user) {
-      setLoading(true)
-      fetchUserSettings()
-      return
-    }
-    setUserSettings(null)
-    setLoading(false)
-  }, [user])
-
   const updateUserSettings = async (settings: Partial<UserSettings>) => {
     if (!user) return { error: 'User not authenticated' }
 
@@ -98,20 +94,10 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const value = {
+  return {
     userSettings,
     loading,
     updateUserSettings,
     refetch: fetchUserSettings,
   }
-
-  return <UserSettingsContext.Provider value={value}>{children}</UserSettingsContext.Provider>
-}
-
-export function useUserSettings() {
-  const context = useContext(UserSettingsContext)
-  if (!context) {
-    throw new Error('useUserSettings must be used within a UserSettingsProvider')
-  }
-  return context
 }

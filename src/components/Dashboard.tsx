@@ -3,12 +3,12 @@ import { format, startOfMonth, endOfMonth } from 'date-fns'
 import { ja } from 'date-fns/locale'
 import { Calendar, AlertTriangle, CheckCircle, Edit2, Trash2, Plus, X, Save, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react'
 import { ExpenseCalendar } from './ExpenseCalendar'
+import { LoadingSpinner } from './LoadingSpinner'
 import { SkeletonCard, SkeletonText } from './SkeletonCard'
-import { useUserSettings } from '../hooks/useUserSettings.tsx'
+import { useUserSettings } from '../hooks/useUserSettings'
 import { supabase, Expense } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useData } from '../contexts/DataContext'
-import { useToast } from './ToastContainer'
 import { useForm } from 'react-hook-form'
 import { Modal, Box } from '@mui/material'
 
@@ -32,12 +32,10 @@ const categories = [
 export function Dashboard() {
   const { user } = useAuth()
   const { userSettings } = useUserSettings()
-  const { showSuccess, showError } = useToast()
   const {
     allExpenses,
     fixedExpenses,
     savingsGoals,
-    previousMonthCarryover,
     loading,
     refetchData
   } = useData()
@@ -49,9 +47,8 @@ export function Dashboard() {
   const [editingExpense, setEditingExpense] = useState<string | null>(null)
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(false)
   const [hideRemaining, setHideRemaining] = useState(false)
-  const [isEditingBudget, setIsEditingBudget] = useState(false)
-  const [budgetInput, setBudgetInput] = useState('')
-  const [isUpdatingBudget, setIsUpdatingBudget] = useState(false)
+  const [isMonthTransitioning, setIsMonthTransitioning] = useState(false)
+  const [monthlyCarryover, setMonthlyCarryover] = useState(0)
 
   const { register, handleSubmit, reset, setValue, formState: { isSubmitting } } = useForm<ExpenseForm>({
     defaultValues: {
@@ -67,30 +64,6 @@ export function Dashboard() {
     return d >= monthStart && d <= monthEnd;
   });
 
-  // Initialize budget input when editing mode starts
-  useEffect(() => {
-    if (isEditingBudget) {
-      // Calculate values needed for budget only once when editing starts
-      const baseIncome = userSettings?.monthly_income || 0
-      const fixedTotal = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
-      const monthlyExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0)
-      
-      let monthlyNeeded = 0
-      if (savingsGoals[0]) {
-        const targetDate = new Date(savingsGoals[0].target_date)
-        const creationDate = new Date(savingsGoals[0].created_at)
-        const monthsAtCreation = Math.max(1, Math.ceil((targetDate.getTime() - creationDate.getTime()) / (1000 * 60 * 60 * 24 * 30)))
-        monthlyNeeded = Math.ceil(savingsGoals[0].target_amount / monthsAtCreation)
-      }
-      
-      const baseBudget = baseIncome - fixedTotal - monthlyNeeded
-      const displayed = baseBudget - monthlyExpenses
-      const currentRemainingBudget = displayed + previousMonthCarryover
-      
-      setBudgetInput(currentRemainingBudget.toString())
-    }
-  }, [isEditingBudget])
-
   // コンポーネントのアンマウント時にスクロールを復活
   useEffect(() => {
     return () => {
@@ -100,6 +73,36 @@ export function Dashboard() {
       document.body.style.width = 'auto'
     }
   }, [])
+
+  useEffect(() => {
+    if (!user) {
+      setMonthlyCarryover(0)
+      return
+    }
+
+    const year = currentDate.getFullYear()
+    const month = currentDate.getMonth() + 1
+
+    supabase
+      .from('monthly_carryover')
+      .select('carryover_amount')
+      .eq('user_id', user.id)
+      .eq('year', year)
+      .eq('month', month)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('Error fetching monthly carryover:', error)
+          setMonthlyCarryover(0)
+          return
+        }
+        setMonthlyCarryover(data?.carryover_amount ?? 0)
+      })
+      .catch((error) => {
+        console.error('Error fetching monthly carryover:', error)
+        setMonthlyCarryover(0)
+      })
+  }, [user, currentDate])
 
   // モーダルの状態変更を監視してスクロールを制御
   useEffect(() => {
@@ -116,121 +119,24 @@ export function Dashboard() {
     }
   }, [isModalOpen])
 
+  useEffect(() => {
+    if (!isMonthTransitioning) return
+
+    const timer = setTimeout(() => {
+      setIsMonthTransitioning(false)
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [isMonthTransitioning])
+
   const handleExpenseUpdate = () => {
     refetchData()
   }
 
   const handleMonthChange = (newDate: Date) => {
+    setIsMonthTransitioning(true)
     setCurrentDate(newDate)
   }
-
-  const handleBudgetUpdate = async () => {
-    if (budgetInput === '') {
-      showError('エラー', '予算を入力してください')
-      return
-    }
-
-    if (!userSettings) {
-      showError('エラー', 'ユーザー設定が読み込まれていません')
-      return
-    }
-
-    if (!user) {
-      showError('エラー', 'ユーザー情報が読み込まれていません')
-      return
-    }
-
-    const newRemainingBudget = Number(budgetInput)
-    if (isNaN(newRemainingBudget)) {
-      showError('エラー', '正しい金額を入力してください')
-      return
-    }
-
-    setIsUpdatingBudget(true)
-    try {
-      const year = currentDate.getFullYear()
-      const month = currentDate.getMonth() + 1
-
-      // 必要な値を計算
-      const baseMonthlyIncome = userSettings.monthly_income
-      const totalFixed = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
-      const totalMonthlyExp = expenses.reduce((sum, expense) => sum + expense.amount, 0)
-
-      // 貯金目標の月額を計算
-      let monthlyNeeded = 0
-      if (savingsGoals[0]) {
-        const targetDate = new Date(savingsGoals[0].target_date)
-        const creationDate = new Date(savingsGoals[0].created_at)
-        const monthsAtCreation = Math.max(1, Math.ceil((targetDate.getTime() - creationDate.getTime()) / (1000 * 60 * 60 * 24 * 30)))
-        monthlyNeeded = Math.ceil(savingsGoals[0].target_amount / monthsAtCreation)
-      }
-
-      // 基本予算と表示上の残高を計算
-      const baseBudget = baseMonthlyIncome - totalFixed - monthlyNeeded
-      const currentDisplayedRemaining = baseBudget - totalMonthlyExp
-
-      // 新しい繰り越し額を計算
-      // 「今月使えるお金」 = displayedRemaining + previousMonthCarryover
-      // なので、新しい繰り越し額 = 新しい「今月使えるお金」 - displayedRemaining
-      const newCarryoverAmount = newRemainingBudget - currentDisplayedRemaining
-
-      // Check if monthly carryover exists for this month
-      const { data: existing, error: selectError } = await supabase
-        .from('monthly_carryover')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('year', year)
-        .eq('month', month)
-        .maybeSingle()
-
-      if (selectError) {
-        console.error('Error checking existing carryover:', selectError)
-        throw selectError
-      }
-
-      if (existing) {
-        // Update existing
-        const { error } = await supabase
-          .from('monthly_carryover')
-          .update({
-            carryover_amount: newCarryoverAmount,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existing.id)
-        
-        if (error) {
-          console.error('Error updating carryover:', error)
-          throw error
-        }
-      } else {
-        // Create new
-        const { error } = await supabase
-          .from('monthly_carryover')
-          .insert({
-            user_id: user.id,
-            year,
-            month,
-            carryover_amount: newCarryoverAmount
-          })
-        
-        if (error) {
-          console.error('Error creating carryover:', error)
-          throw error
-        }
-      }
-
-      showSuccess('予算を更新しました', `¥${newRemainingBudget.toLocaleString()}`)
-      setIsEditingBudget(false)
-      setBudgetInput('')
-      await refetchData()
-    } catch (error) {
-      console.error('Error updating budget:', error)
-      showError('更新に失敗しました', 'もう一度お試しください')
-    } finally {
-      setIsUpdatingBudget(false)
-    }
-  }
-
 
 
   const closeModal = () => {
@@ -330,6 +236,14 @@ export function Dashboard() {
   // Show loading state
   if (loading) {
     return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <LoadingSpinner size="lg" />
+      </div>
+    )
+  }
+
+  if (isMonthTransitioning) {
+    return (
       <div className="space-y-6">
         <div className="space-y-3">
           <SkeletonText className="h-8" width="w-40" />
@@ -353,7 +267,7 @@ export function Dashboard() {
             <div className="grid grid-cols-7 gap-2">
               {Array.from({ length: 28 }).map((_, index) => (
                 <div
-                  key={`skeleton-day-${index}`}
+                  key={`month-skeleton-day-${index}`}
                   className="h-10 rounded-lg bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"
                 ></div>
               ))}
@@ -403,6 +317,7 @@ export function Dashboard() {
   const baseMonthlyBudget = baseMonthlyIncome - totalFixedExpenses - monthlyNeededForGoal
   // 表示上の残高（基本予算から支出を引いたもの、毎月同じに見える）
   const displayedRemaining = baseMonthlyBudget - totalMonthlyExpenses
+  
   // 実際の貯金額 = 目標までの月額 + 前月からの繰越 + 今月の残高
   // UIに表示する残高と、そこから派生する値の計算
   let remainingBudget: number
@@ -437,7 +352,7 @@ export function Dashboard() {
     if (isFutureMonth) {
       remainingBudget = displayedRemaining // For future months, don't include carryover
     } else {
-      remainingBudget = displayedRemaining + previousMonthCarryover // For current and past months, include carryover
+      remainingBudget = displayedRemaining + monthlyCarryover // For current and past months, include carryover
     }
     dailyBudget = Math.max(0, Math.floor(remainingBudget / Math.max(1, remainingDays)))
     weeklyBudget = Math.max(0, Math.floor(remainingBudget / Math.max(1, Math.ceil(remainingDays / 7))))
@@ -494,8 +409,8 @@ export function Dashboard() {
               <div className="mb-4">
                 <div className="flex items-center justify-between text-sm glass-text mb-2">
                   <span>前月からの繰り越し</span>
-                  <span className={`font-bold glass-text-strong ${previousMonthCarryover < 0 ? 'text-red-500' : ''}`}>
-                    {hideRemaining ? '¥••••••' : `¥${previousMonthCarryover.toLocaleString()}`}
+                  <span className={`font-bold glass-text-strong ${monthlyCarryover < 0 ? 'text-red-500' : ''}`}>
+                    {hideRemaining ? '¥••••••' : `¥${monthlyCarryover.toLocaleString()}`}
                   </span>
                 </div>
                 <hr className="my-2 border-gray-200/50" />
@@ -517,59 +432,11 @@ export function Dashboard() {
                     )}
                   </button>
                 </h3>
-                {isEditingBudget ? (
-                  <div className="flex items-center gap-2 flex-nowrap overflow-x-auto">
-                    <input
-                      type="number"
-                      value={budgetInput}
-                      onChange={(e) => setBudgetInput(e.target.value)}
-                      className="px-3 py-2 rounded-lg bg-white/80 backdrop-blur-sm text-gray-800 text-xl md:text-4xl font-bold border border-gray-300 focus:border-gray-500 focus:outline-none transition-colors"
-                      placeholder="0"
-                      autoFocus
-                      style={{ width: 'fit-content', minWidth: '180px' }}
-                    />
-                    <button
-                      type="button"
-                      onClick={handleBudgetUpdate}
-                      disabled={isUpdatingBudget}
-                      aria-label="予算を保存"
-                      title="予算を保存"
-                      className="flex items-center justify-center space-x-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg font-medium hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap pointer-events-auto"
-                    >
-                      <Save className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsEditingBudget(false)
-                        setBudgetInput('')
-                      }}
-                      disabled={isUpdatingBudget}
-                      aria-label="編集をキャンセル"
-                      title="編集をキャンセル"
-                      className="px-3 py-2 bg-white/50 backdrop-blur-sm border border-gray-300 text-gray-800 text-sm rounded-lg hover:bg-white/70 transition-colors disabled:opacity-50 disabled:cursor-not-allowed pointer-events-auto"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+                <div className="flex items-center gap-2">
+                  <div className="text-2xl md:text-4xl font-bold glass-text-strong">
+                    {hideRemaining ? '¥••••••' : `¥${remainingBudget.toLocaleString()}`}
                   </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <div className="text-2xl md:text-4xl font-bold glass-text-strong">
-                      {hideRemaining ? '¥••••••' : `¥${remainingBudget.toLocaleString()}`}
-                    </div>
-                    {!isFutureMonth && (
-                      <button
-                        type="button"
-                        onClick={() => setIsEditingBudget(true)}
-                        className="p-1.5 md:p-2 rounded-lg border border-gray-200 hover:bg-white/30 transition-colors flex-shrink-0 pointer-events-auto"
-                        aria-label="予算を編集"
-                        title="予算を編集"
-                      >
-                        <Edit2 className="w-4 h-4 md:w-5 md:h-5 glass-icon" />
-                      </button>
-                    )}
-                  </div>
-                )}
+                </div>
               </div>
               
               {/* Quick Stats - 2 columns - Hidden on mobile when collapsed */}
