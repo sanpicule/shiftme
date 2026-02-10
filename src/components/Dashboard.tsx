@@ -42,7 +42,6 @@ export function Dashboard() {
     loading,
     refetchData
   } = useData()
-  const { calendarEvents } = useGoogleCalendar(currentDate)
 
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
@@ -53,6 +52,8 @@ export function Dashboard() {
   const [hideRemaining, setHideRemaining] = useState(false)
   const [isMonthTransitioning, setIsMonthTransitioning] = useState(false)
   const [monthlyCarryover, setMonthlyCarryover] = useState(0)
+  
+  const { calendarEvents } = useGoogleCalendar(currentDate)
 
   const { register, handleSubmit, reset, setValue, watch, formState: { isSubmitting } } = useForm<ExpenseForm>({
     defaultValues: {

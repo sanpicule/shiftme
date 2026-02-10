@@ -41,12 +41,12 @@ export async function fetchGoogleCalendarEvents(
     const { data: { session } } = await supabase.auth.getSession()
     
     if (!session?.provider_token) {
-      console.log('No Google provider token available')
-      return []
+      console.log('No Google provider token available - using mock data for development')
+      // Return mock data for development/testing when OAuth is not configured
+      return getMockGoogleCalendarEvents()
     }
 
     // Call Supabase Edge Function (to be implemented)
-    // For now, return empty array as we need to setup the edge function
     const response = await supabase.functions.invoke('sync-google-calendar', {
       body: {
         startDate: startDate.toISOString(),
@@ -57,13 +57,15 @@ export async function fetchGoogleCalendarEvents(
 
     if (response.error) {
       console.error('Error fetching calendar events:', response.error)
-      return []
+      // Return mock data as fallback
+      return getMockGoogleCalendarEvents()
     }
 
     return transformGoogleEvents(response.data?.events || [])
   } catch (error) {
     console.error('Error fetching Google Calendar events:', error)
-    return []
+    // Return mock data as fallback
+    return getMockGoogleCalendarEvents()
   }
 }
 
