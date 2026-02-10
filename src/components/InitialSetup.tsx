@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Plus, Trash2, Target, CheckCircle, Sparkles } from 'lucide-react'
-import { useUserSettings } from '../hooks/useUserSettings.tsx'
+import { useUserSettings } from '../hooks/useUserSettings'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 

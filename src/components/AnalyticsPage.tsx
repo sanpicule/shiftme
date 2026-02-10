@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns'
 import { ja } from 'date-fns/locale'
 import { BarChart3, PieChart, Target } from 'lucide-react'
-import { useUserSettings } from '../hooks/useUserSettings.tsx'
+import { useUserSettings } from '../hooks/useUserSettings'
 import { SkeletonCard, SkeletonText } from './SkeletonCard'
 import { useData } from '../contexts/DataContext'
 
@@ -142,6 +142,7 @@ export function AnalyticsPage() {
   const getCategoryData = (): CategoryData[] => {
     const categoryTotals: { [key: string]: number } = {}
     const totalExpenses = expenses.reduce((sum, expense) => {
+      if (expense.amount <= 0) return sum
       categoryTotals[expense.category] = (categoryTotals[expense.category] || 0) + expense.amount
       return sum + expense.amount
     }, 0)
@@ -224,6 +225,7 @@ export function AnalyticsPage() {
   const monthlyData = getMonthlyData()
   const categoryData = getCategoryData()
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0)
+  const totalCategoryExpenses = categoryData.reduce((sum, category) => sum + category.amount, 0)
   
   // 貯蓄目標進捗（全期間固定・余剰ベース: 収入 − 固定費 − 変動支出）
   const getSavingsProgressData = () => {
@@ -519,35 +521,48 @@ export function AnalyticsPage() {
                 <div className="hidden lg:flex items-center justify-center mt-8">
                   <div className="relative w-64 h-64">
                     <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                      {categoryData.map((category, index) => {
-                        const startAngle = categoryData
-                          .slice(0, index)
-                          .reduce((sum, cat) => sum + (cat.percentage / 100) * 360, 0)
-                        const endAngle = startAngle + (category.percentage / 100) * 360
-                        const largeArcFlag = category.percentage > 50 ? 1 : 0
-                        
-                        const x1 = 50 + 40 * Math.cos((startAngle * Math.PI) / 180)
-                        const y1 = 50 + 40 * Math.sin((startAngle * Math.PI) / 180)
-                        const x2 = 50 + 40 * Math.cos((endAngle * Math.PI) / 180)
-                        const y2 = 50 + 40 * Math.sin((endAngle * Math.PI) / 180)
+                      {categoryData.length === 1 ? (
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="40"
+                          fill={categoryData[0].color}
+                          fillOpacity={0.5}
+                          stroke={categoryData[0].color}
+                          strokeWidth={1.5}
+                          className="hover:opacity-80 transition-opacity"
+                        />
+                      ) : (
+                        categoryData.map((category, index) => {
+                          const startAngle = categoryData
+                            .slice(0, index)
+                            .reduce((sum, cat) => sum + (cat.percentage / 100) * 360, 0)
+                          const endAngle = startAngle + (category.percentage / 100) * 360
+                          const largeArcFlag = category.percentage > 50 ? 1 : 0
+                          
+                          const x1 = 50 + 40 * Math.cos((startAngle * Math.PI) / 180)
+                          const y1 = 50 + 40 * Math.sin((startAngle * Math.PI) / 180)
+                          const x2 = 50 + 40 * Math.cos((endAngle * Math.PI) / 180)
+                          const y2 = 50 + 40 * Math.sin((endAngle * Math.PI) / 180)
 
-                        return (
-                          <path
-                            key={index}
-                            d={`M 50 50 L ${x1} ${y1} A 40 40 0 ${largeArcFlag} 1 ${x2} ${y2} Z`}
-                            fill={category.color}
-                            fillOpacity={0.5}
-                            stroke={category.color}
-                            strokeWidth={1.5}
-                            className="hover:opacity-80 transition-opacity"
-                          />
-                        )
-                      })}
+                          return (
+                            <path
+                              key={index}
+                              d={`M 50 50 L ${x1} ${y1} A 40 40 0 ${largeArcFlag} 1 ${x2} ${y2} Z`}
+                              fill={category.color}
+                              fillOpacity={0.5}
+                              stroke={category.color}
+                              strokeWidth={1.5}
+                              className="hover:opacity-80 transition-opacity"
+                            />
+                          )
+                        })
+                      )}
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="text-center">
                         <div className="text-2xl font-bold glass-text-strong">
-                          ¥{totalExpenses.toLocaleString()}
+                          ¥{totalCategoryExpenses.toLocaleString()}
                         </div>
                         <div className="text-sm glass-text">合計</div>
                       </div>

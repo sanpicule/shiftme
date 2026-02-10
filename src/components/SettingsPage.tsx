@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { Plus, Trash2, Edit2, Save, X } from 'lucide-react'
-import { useUserSettings } from '../hooks/useUserSettings.tsx'
+import { useUserSettings } from '../hooks/useUserSettings'
 import { useToast } from './ToastContainer'
 import { supabase, FixedExpense, SavingsGoal } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'

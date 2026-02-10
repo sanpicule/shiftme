@@ -16,6 +16,7 @@ interface ExpenseForm {
   amount: number
   category: string
   description: string
+  type: 'expense' | 'income'
 }
 
 const categories = [
@@ -50,11 +51,22 @@ export function Dashboard() {
   const [isMonthTransitioning, setIsMonthTransitioning] = useState(false)
   const [monthlyCarryover, setMonthlyCarryover] = useState(0)
 
-  const { register, handleSubmit, reset, setValue, formState: { isSubmitting } } = useForm<ExpenseForm>({
+  const { register, handleSubmit, reset, setValue, watch, formState: { isSubmitting } } = useForm<ExpenseForm>({
     defaultValues: {
       category: '食費',
+      type: 'expense',
     },
   })
+
+  const entryType = watch('type')
+
+  useEffect(() => {
+    if (entryType === 'income') {
+      setValue('category', '収入')
+    } else if (entryType === 'expense' && watch('category') === '収入') {
+      setValue('category', '食費')
+    }
+  }, [entryType, setValue, watch])
 
   // Filter expenses for the current month from allExpenses
   const expenses = allExpenses.filter(e => {
@@ -83,25 +95,30 @@ export function Dashboard() {
     const year = currentDate.getFullYear()
     const month = currentDate.getMonth() + 1
 
-    supabase
-      .from('monthly_carryover')
-      .select('carryover_amount')
-      .eq('user_id', user.id)
-      .eq('year', year)
-      .eq('month', month)
-      .maybeSingle()
-      .then(({ data, error }) => {
+    const fetchCarryover = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('monthly_carryover')
+          .select('carryover_amount')
+          .eq('user_id', user.id)
+          .eq('year', year)
+          .eq('month', month)
+          .maybeSingle()
+
         if (error) {
           console.error('Error fetching monthly carryover:', error)
           setMonthlyCarryover(0)
           return
         }
+
         setMonthlyCarryover(data?.carryover_amount ?? 0)
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error('Error fetching monthly carryover:', error)
         setMonthlyCarryover(0)
-      })
+      }
+    }
+
+    fetchCarryover()
   }, [user, currentDate])
 
   // モーダルの状態変更を監視してスクロールを制御
@@ -167,10 +184,14 @@ export function Dashboard() {
     if (!user || !selectedDate) return
 
     try {
+      const normalizedAmount = data.type === 'income' ? -Math.abs(data.amount) : Math.abs(data.amount)
+      const normalizedCategory = data.type === 'income' ? '収入' : data.category
       const { error } = await supabase
         .from('expenses')
         .insert({
-          ...data,
+          amount: normalizedAmount,
+          category: normalizedCategory,
+          description: data.description,
           user_id: user.id,
           expense_date: format(selectedDate, 'yyyy-MM-dd'),
         })
@@ -205,10 +226,12 @@ export function Dashboard() {
   }
 
   const startEditExpense = (expense: Expense) => {
+    const isIncome = expense.amount < 0
     setEditingExpense(expense.id)
     setIsAddingExpense(false)
-    setValue('amount', expense.amount)
-    setValue('category', expense.category)
+    setValue('amount', Math.abs(expense.amount))
+    setValue('type', isIncome ? 'income' : 'expense')
+    setValue('category', isIncome ? '収入' : expense.category)
     setValue('description', expense.description)
   }
 
@@ -216,9 +239,15 @@ export function Dashboard() {
     if (!editingExpense) return
 
     try {
+      const normalizedAmount = data.type === 'income' ? -Math.abs(data.amount) : Math.abs(data.amount)
+      const normalizedCategory = data.type === 'income' ? '収入' : data.category
       const { error } = await supabase
         .from('expenses')
-        .update(data)
+        .update({
+          amount: normalizedAmount,
+          category: normalizedCategory,
+          description: data.description,
+        })
         .eq('id', editingExpense)
         .eq('user_id', user?.id)
 
@@ -361,11 +390,20 @@ export function Dashboard() {
   // 実際の貯金額 = 目標までの月額 + 今月の残高
   const actualMonthlySavings = monthlyNeededForGoal + remainingBudget
 
-  const totalExpenses = () => {
-    if (!selectedDate) return 0
-    return expenses.filter(expense => 
+  const getSelectedDayEntries = () => {
+    if (!selectedDate) return []
+    return expenses.filter(expense =>
       format(new Date(expense.expense_date), 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
-    ).reduce((sum, expense) => sum + expense.amount, 0)
+    )
+  }
+
+  const totalExpenses = () => {
+    return getSelectedDayEntries().reduce((sum, expense) => sum + expense.amount, 0)
+  }
+
+  const totalDayNet = () => {
+    // Income is stored as negative, so flip sign to show net (income - expense).
+    return -totalExpenses()
   }
 
   const dailyRemaining = () => {
@@ -624,6 +662,25 @@ export function Dashboard() {
                   
                   <form onSubmit={handleSubmit(editingExpense ? updateExpense : addExpense)} className="space-y-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                      <div className="sm:col-span-2">
+                        <label className="block text-sm font-semibold glass-text mb-3">種別</label>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setValue('type', 'expense')}
+                            className={`px-4 py-2 rounded-xl border transition-colors ${entryType === 'expense' ? 'bg-gray-800 text-white border-gray-800' : 'bg-white/5 border-white/20 text-gray-800'}`}
+                          >
+                            支出
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setValue('type', 'income')}
+                            className={`px-4 py-2 rounded-xl border transition-colors ${entryType === 'income' ? 'bg-gray-800 text-white border-gray-800' : 'bg-white/5 border-white/20 text-gray-800'}`}
+                          >
+                            収入
+                          </button>
+                        </div>
+                      </div>
                       <div>
                         <label className="block text-sm font-semibold glass-text mb-3">金額（円）</label>
                         <input
@@ -635,14 +692,23 @@ export function Dashboard() {
                       </div>
                       <div>
                         <label className="block text-sm font-semibold glass-text mb-3">カテゴリ</label>
-                        <select
-                          {...register('category', { required: true })}
-                          className="w-full px-4 py-3 rounded-xl transition-all duration-200 glass-input"
-                        >
-                          {categories.map((category) => (
-                            <option key={category} value={category}>{category}</option>
-                          ))}
-                        </select>
+                        {entryType === 'income' ? (
+                          <input
+                            type="text"
+                            value="収入"
+                            readOnly
+                            className="w-full px-4 py-3 rounded-xl transition-all duration-200 glass-input"
+                          />
+                        ) : (
+                          <select
+                            {...register('category', { required: true })}
+                            className="w-full px-4 py-3 rounded-xl transition-all duration-200 glass-input"
+                          >
+                            {categories.map((category) => (
+                              <option key={category} value={category}>{category}</option>
+                            ))}
+                          </select>
+                        )}
                       </div>
                     </div>
                     
@@ -712,8 +778,10 @@ export function Dashboard() {
                             <span className="bg-glass-white-weak text-gray-800 text-sm font-medium rounded-full w-fit">
                               カテゴリ：{expense.category}
                             </span>
-                            <span className="text-xl font-bold glass-text-strong">
-                              ¥{expense.amount.toLocaleString()}
+                            <span className={`text-xl font-bold ${expense.amount < 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                              {expense.amount < 0
+                                ? `+¥${Math.abs(expense.amount).toLocaleString()}`
+                                : `-¥${expense.amount.toLocaleString()}`}
                             </span>
                           </div>
                           {expense.description && (
@@ -745,7 +813,9 @@ export function Dashboard() {
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-semibold glass-text">この日の合計</span>
                       <span className="text-3xl font-bold glass-text-strong">
-                        ¥{totalExpenses().toLocaleString()}
+                        {totalDayNet() < 0
+                          ? `-¥${Math.abs(totalDayNet()).toLocaleString()}`
+                          : `+¥${totalDayNet().toLocaleString()}`}
                       </span>
                     </div>
                   </div>

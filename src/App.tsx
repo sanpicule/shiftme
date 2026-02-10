@@ -1,11 +1,10 @@
 import { AuthProvider, useAuth } from './contexts/AuthContext'
-import { useEffect, useState } from 'react'
 import { ToastProvider } from './components/ToastContainer'
 import { AuthForm } from './components/AuthForm'
 import { InitialSetup } from './components/InitialSetup'
 import { MainApp } from './components/MainApp'
 import { InstallPrompt } from './components/InstallPrompt'
-import { UserSettingsProvider, useUserSettings } from './hooks/useUserSettings.tsx'
+import { useUserSettings } from './hooks/useUserSettings'
 import { LoadingSpinner } from './components/LoadingSpinner'
 
 import { DataProvider } from './contexts/DataContext';
@@ -13,24 +12,9 @@ import { DataProvider } from './contexts/DataContext';
 function AppContent() {
   const { user, loading: authLoading } = useAuth()
   const { userSettings, loading: settingsLoading } = useUserSettings()
-  const [minLoadingPassed, setMinLoadingPassed] = useState(false)
-
-  useEffect(() => {
-    if (!authLoading && user && settingsLoading) {
-      setMinLoadingPassed(false)
-      return
-    }
-
-    if (!authLoading && user && !settingsLoading) {
-      const timer = setTimeout(() => setMinLoadingPassed(true), 800)
-      return () => clearTimeout(timer)
-    }
-
-    setMinLoadingPassed(false)
-  }, [authLoading, user, settingsLoading])
 
   // Show loading only during auth check
-  if (authLoading || settingsLoading || !minLoadingPassed) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div>
@@ -46,6 +30,16 @@ function AppContent() {
         <AuthForm />
         <InstallPrompt />
       </>
+    )
+  }
+
+  if (settingsLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div>
+          <LoadingSpinner size="lg" />
+        </div>
+      </div>
     )
   }
 
@@ -72,9 +66,7 @@ function App() {
   return (
     <ToastProvider>
       <AuthProvider>
-        <UserSettingsProvider>
-          <AppContent />
-        </UserSettingsProvider>
+        <AppContent />
       </AuthProvider>
     </ToastProvider>
   )

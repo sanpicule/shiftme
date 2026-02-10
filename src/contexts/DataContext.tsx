@@ -1,8 +1,9 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { supabase, Expense, FixedExpense, SavingsGoal } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 import { startOfMonth, endOfMonth } from 'date-fns';
-import { useUserSettings } from '../hooks/useUserSettings.tsx';
+import { useUserSettings } from '../hooks/useUserSettings';
 
 interface DataContextProps {
   expenses: Expense[];

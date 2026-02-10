@@ -103,6 +103,9 @@ export function ExpenseCalendar({ expenses, onDateClick, currentDate, onMonthCha
         {days.map((day) => {
           const dayExpenses = getExpensesForDate(day)
           const dayTotal = getDayTotal(day)
+          const dayTotalLabel = dayTotal < 0
+            ? `+¥${Math.abs(dayTotal).toLocaleString()}`
+            : `¥${dayTotal.toLocaleString()}`
           const dayOfWeek = day.getDay()
           const inCurrentMonth = isCurrentMonth(day)
           
@@ -135,8 +138,12 @@ export function ExpenseCalendar({ expenses, onDateClick, currentDate, onMonthCha
                 <div className="space-y-1">
                   {/* Desktop: Show expense details, Mobile: Show only marker */}
                   <div>
-                    <div className="mx-auto text-[8px] md:text-xs font-semibold text-white bg-gray-500 backdrop-blur-sm px-1 py-0.5 rounded truncate border border-gray-400/30">
-                      ¥{dayTotal.toLocaleString()}
+                    <div className={`mx-auto text-[8px] md:text-xs font-semibold text-white backdrop-blur-sm px-1 py-0.5 rounded truncate border ${
+                      dayTotal < 0
+                        ? 'bg-emerald-500/80 border-emerald-400/50'
+                        : 'bg-red-500/80 border-red-400/50'
+                    }`}>
+                      {dayTotalLabel}
                     </div>
                     {dayExpenses.length > 1 && (
                       <div className="text-[12px] mt-1 md:text-xs md:px-1.5 py-0.5 text-start">
