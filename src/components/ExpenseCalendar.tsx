@@ -1,8 +1,8 @@
-import { useState } from 'react'
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, startOfWeek, endOfWeek } from 'date-fns'
 import { ja } from 'date-fns/locale'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Expense } from '../lib/supabase'
+import { CalendarEvent, getEventsForDate } from '../lib/googleCalendar'
 
 interface ExpenseCalendarProps {
   expenses: Expense[]
@@ -10,9 +10,10 @@ interface ExpenseCalendarProps {
   currentDate: Date
   onMonthChange: (date: Date) => void
   actualMonthlySavings: number
+  calendarEvents?: CalendarEvent[]
 }
 
-export function ExpenseCalendar({ expenses, onDateClick, currentDate, onMonthChange, actualMonthlySavings }: ExpenseCalendarProps) {
+export function ExpenseCalendar({ expenses, onDateClick, currentDate, onMonthChange, actualMonthlySavings, calendarEvents = [] }: ExpenseCalendarProps) {
 
 
 
@@ -108,6 +109,7 @@ export function ExpenseCalendar({ expenses, onDateClick, currentDate, onMonthCha
             : `¥${dayTotal.toLocaleString()}`
           const dayOfWeek = day.getDay()
           const inCurrentMonth = isCurrentMonth(day)
+          const dayEvents = getEventsForDate(calendarEvents, day)
           
           return (
             <button
@@ -134,8 +136,17 @@ export function ExpenseCalendar({ expenses, onDateClick, currentDate, onMonthCha
                 {format(day, 'd')}
               </div>
               
+              {/* Calendar Events Indicator */}
+              {dayEvents.length > 0 && inCurrentMonth && (
+                <div className="w-full">
+                  <div className="mx-auto text-[8px] md:text-xs font-medium text-blue-700 bg-blue-100 backdrop-blur-sm px-1 py-0.5 rounded truncate border border-blue-300/50">
+                    📅 {dayEvents.length}件
+                  </div>
+                </div>
+              )}
+              
               {dayExpenses.length > 0 && inCurrentMonth && (
-                <div className="space-y-1">
+                <div className="space-y-1 w-full">
                   {/* Desktop: Show expense details, Mobile: Show only marker */}
                   <div>
                     <div className={`mx-auto text-[8px] md:text-xs font-semibold text-white backdrop-blur-sm px-1 py-0.5 rounded truncate border ${

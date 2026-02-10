@@ -6,11 +6,13 @@ import { ExpenseCalendar } from './ExpenseCalendar'
 import { LoadingSpinner } from './LoadingSpinner'
 import { SkeletonCard, SkeletonText } from './SkeletonCard'
 import { useUserSettings } from '../hooks/useUserSettings'
+import { useGoogleCalendar } from '../hooks/useGoogleCalendar'
 import { supabase, Expense } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useData } from '../contexts/DataContext'
 import { useForm } from 'react-hook-form'
 import { Modal, Box } from '@mui/material'
+import { getEventsForDate } from '../lib/googleCalendar'
 
 interface ExpenseForm {
   amount: number
@@ -40,6 +42,7 @@ export function Dashboard() {
     loading,
     refetchData
   } = useData()
+  const { calendarEvents } = useGoogleCalendar(currentDate)
 
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
@@ -505,6 +508,7 @@ export function Dashboard() {
           currentDate={currentDate}
           onMonthChange={handleMonthChange}
           actualMonthlySavings={actualMonthlySavings}
+          calendarEvents={calendarEvents}
         />
       </div>
 
@@ -751,6 +755,63 @@ export function Dashboard() {
                     </div>
                   </form>
                 </div>
+              )}
+
+              {/* Google Calendar Events Section */}
+              {selectedDate && !isAddingExpense && !editingExpense && (
+                (() => {
+                  const dayEvents = getEventsForDate(calendarEvents, selectedDate)
+                  return dayEvents.length > 0 ? (
+                    <div className="mb-6 space-y-3">
+                      <h3 className="text-lg font-semibold glass-text-strong flex items-center space-x-2">
+                        <Calendar className="w-5 h-5 glass-icon" />
+                        <span>この日の予定</span>
+                        <span className="text-sm font-normal glass-text">({dayEvents.length}件)</span>
+                      </h3>
+                      <div className="space-y-2">
+                        {dayEvents.map((event) => (
+                          <div
+                            key={event.id}
+                            className="p-4 glass-card border-l-4 border-blue-400 transition-all duration-200"
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-2 mb-1">
+                                  <h4 className="font-semibold glass-text-strong text-lg">
+                                    {event.title}
+                                  </h4>
+                                  {event.isAllDay && (
+                                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                                      終日
+                                    </span>
+                                  )}
+                                </div>
+                                {!event.isAllDay && event.startTime && (
+                                  <p className="text-sm glass-text mb-1">
+                                    <span className="font-medium">時間：</span>
+                                    {event.startTime}
+                                    {event.endTime && ` - ${event.endTime}`}
+                                  </p>
+                                )}
+                                {event.location && (
+                                  <p className="text-sm glass-text mb-1">
+                                    <span className="font-medium">場所：</span>
+                                    {event.location}
+                                  </p>
+                                )}
+                                {event.description && (
+                                  <p className="text-sm glass-text mt-2 text-gray-600">
+                                    {event.description}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null
+                })()
               )}
 
               {/* Expenses List */}
