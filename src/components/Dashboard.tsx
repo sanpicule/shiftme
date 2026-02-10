@@ -1,12 +1,13 @@
 import { useState, useEffect, useMemo } from 'react'
 import { format, startOfMonth, endOfMonth } from 'date-fns'
 import { ja } from 'date-fns/locale'
-import { Calendar, AlertTriangle, CheckCircle, Edit2, Trash2, Plus, X, Save, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react'
+import { Calendar, AlertTriangle, CheckCircle, Edit2, Trash2, Plus, X, Save, ChevronDown, ChevronUp, Eye, EyeOff, Link2 } from 'lucide-react'
 import { ExpenseCalendar } from './ExpenseCalendar'
 import { LoadingSpinner } from './LoadingSpinner'
 import { SkeletonCard, SkeletonText } from './SkeletonCard'
 import { useUserSettings } from '../hooks/useUserSettings'
 import { useGoogleCalendar } from '../hooks/useGoogleCalendar'
+import { useGoogleCalendarStatus } from '../hooks/useGoogleCalendarStatus'
 import { supabase, Expense } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useData } from '../contexts/DataContext'
@@ -32,7 +33,13 @@ const categories = [
   'その他',
 ]
 
-export function Dashboard() {
+type Page = 'dashboard' | 'analytics' | 'settings' | 'profile'
+
+interface DashboardProps {
+  onNavigate?: (page: Page) => void
+}
+
+export function Dashboard({ onNavigate }: DashboardProps) {
   const { user } = useAuth()
   const { userSettings } = useUserSettings()
   const {
@@ -53,7 +60,8 @@ export function Dashboard() {
   const [isMonthTransitioning, setIsMonthTransitioning] = useState(false)
   const [monthlyCarryover, setMonthlyCarryover] = useState(0)
   
-  const { calendarEvents } = useGoogleCalendar(currentDate)
+  const { isConnected: isGoogleCalendarConnected } = useGoogleCalendarStatus()
+  const { calendarEvents } = useGoogleCalendar(currentDate, isGoogleCalendarConnected)
 
   const { register, handleSubmit, reset, setValue, watch, formState: { isSubmitting } } = useForm<ExpenseForm>({
     defaultValues: {
@@ -506,6 +514,31 @@ export function Dashboard() {
         </div>
       </div>
 
+      {/* Google Calendar Connect Callout */}
+      {!isGoogleCalendarConnected && (
+        <div className="border border-blue-300/70 rounded-2xl p-5 md:p-6 glass-shine bg-gradient-to-r from-blue-50/70 via-white/60 to-blue-100/50">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-blue-600" />
+                <h3 className="text-lg md:text-xl font-semibold text-gray-800">Googleカレンダー連携</h3>
+              </div>
+              <p className="text-sm text-gray-700 mt-1">
+                予定を支出と同じ画面で見える化できます。金の流れを崩さず管理。
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => onNavigate?.('profile')}
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-blue-600/90 text-white rounded-xl font-semibold shadow-sm hover:bg-blue-600 transition-colors"
+            >
+              <Link2 className="w-5 h-5" />
+              <span>アカウントで連携する</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Calendar Section */}
       <div>
         <ExpenseCalendar
@@ -763,58 +796,6 @@ export function Dashboard() {
                 </div>
               )}
 
-              {/* Google Calendar Events Section */}
-              {selectedDate && !isAddingExpense && !editingExpense && dayEvents.length > 0 && (
-                <div className="mb-6 space-y-3">
-                  <h3 className="text-lg font-semibold glass-text-strong flex items-center space-x-2">
-                    <Calendar className="w-5 h-5 glass-icon" />
-                    <span>この日の予定</span>
-                    <span className="text-sm font-normal glass-text">({dayEvents.length}件)</span>
-                  </h3>
-                  <div className="space-y-2">
-                    {dayEvents.map((event) => (
-                      <div
-                        key={event.id}
-                        className="p-4 glass-card border-l-4 border-blue-400 transition-all duration-200"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-2 mb-1">
-                              <h4 className="font-semibold glass-text-strong text-lg">
-                                {event.title}
-                              </h4>
-                              {event.isAllDay && (
-                                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                                  終日
-                                </span>
-                              )}
-                            </div>
-                            {!event.isAllDay && event.startTime && (
-                              <p className="text-sm glass-text mb-1">
-                                <span className="font-medium">時間：</span>
-                                {event.startTime}
-                                {event.endTime && ` - ${event.endTime}`}
-                              </p>
-                            )}
-                            {event.location && (
-                              <p className="text-sm glass-text mb-1">
-                                <span className="font-medium">場所：</span>
-                                {event.location}
-                              </p>
-                            )}
-                            {event.description && (
-                              <p className="text-sm glass-text mt-2 text-gray-600">
-                                {event.description}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* Expenses List */}
               {selectedDate && expenses.filter(expense => 
                 format(new Date(expense.expense_date), 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
@@ -899,6 +880,39 @@ export function Dashboard() {
                     </button>
                   </div>
                 )
+              )}
+
+              {/* Google Calendar Events Section */}
+              {selectedDate && !isAddingExpense && !editingExpense && dayEvents.length > 0 && (
+                <div className="mtｰ12 mb-6 space-y-3">
+                  <h3 className="mt-12 text-lg font-semibold glass-text-strong flex items-center space-x-2">
+                    <Calendar className="w-5 h-5 glass-icon" />
+                    <span>この日の予定</span>
+                    <span className="text-sm font-normal glass-text">({dayEvents.length}件)</span>
+                  </h3>
+                  <div className="space-y-2">
+                    {dayEvents.map((event) => (
+                      <div
+                        key={event.id}
+                        className="p-4 glass-card border-l-4 border-blue-400 transition-all duration-200"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-semibold glass-text-strong text-lg mb-1">
+                              {event.title}
+                            </h4>
+                            <p className="text-sm glass-text">
+                              <span className="font-medium">時間：</span>
+                              {event.isAllDay
+                                ? '終日'
+                                : `${event.startTime ?? ''}${event.endTime ? ` - ${event.endTime}` : ''}`}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
           </Box>

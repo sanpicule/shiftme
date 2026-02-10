@@ -117,7 +117,7 @@ export function ExpenseCalendar({ expenses, onDateClick, currentDate, onMonthCha
               onClick={() => inCurrentMonth && handleDateClick(day)}
               aria-label={`${format(day, 'M月d日', { locale: ja })}${dayEvents.length > 0 ? `、カレンダーイベント${dayEvents.length}件` : ''}${dayExpenses.length > 0 ? `、支出${dayExpenses.length}件` : ''}`}
               className={`
-                px-1 md:p-2 min-h-[80px] border-r border-b border-gray-200 last:border-r-0 relative transition-all duration-200 md:hover:shadow-glass-glow flex flex-col items-start glass-shine
+                px-1 md:p-2 min-h-[80px] border-r border-b border-gray-200 last:border-r-0 relative transition-all duration-200 md:hover:shadow-glass-glow flex flex-col items-start glass-shine gap-1
                 ${inCurrentMonth 
                   ? 'hover:bg-glass-white-weak cursor-pointer' 
                   : 'cursor-default'
