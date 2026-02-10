@@ -138,7 +138,7 @@ export function ExpenseCalendar({ expenses, onDateClick, currentDate, onMonthCha
               
               {/* Calendar Events Indicator */}
               {dayEvents.length > 0 && inCurrentMonth && (
-                <div className="w-full">
+                <div className="w-full" aria-label={`カレンダーイベント${dayEvents.length}件`}>
                   <div className="mx-auto text-[8px] md:text-xs font-medium text-blue-700 bg-blue-100 backdrop-blur-sm px-1 py-0.5 rounded truncate border border-blue-300/50">
                     📅 {dayEvents.length}件
                   </div>
