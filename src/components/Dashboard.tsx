@@ -6,7 +6,7 @@ import { ExpenseCalendar } from './ExpenseCalendar'
 import { SkeletonCard, SkeletonText } from './SkeletonCard'
 import { useUserSettings } from '../hooks/useUserSettings'
 import { useGoogleCalendar } from '../hooks/useGoogleCalendar'
-import { useGoogleCalendarStatus } from '../hooks/useGoogleCalendarStatus'
+import { useGoogleCalendarContext } from '../contexts/GoogleCalendarContext'
 import { supabase, Expense } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useData } from '../contexts/DataContext'
@@ -61,7 +61,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   const [isMonthTransitioning, setIsMonthTransitioning] = useState(false)
   const [monthlyCarryover, setMonthlyCarryover] = useState(0)
   
-  const { isConnected: isGoogleCalendarConnected } = useGoogleCalendarStatus()
+  const { isConnected: isGoogleCalendarConnected } = useGoogleCalendarContext()
   const { calendarEvents } = useGoogleCalendar(currentDate, isGoogleCalendarConnected)
 
   const { register, handleSubmit, reset, setValue, watch, formState: { isSubmitting } } = useForm<ExpenseForm>({

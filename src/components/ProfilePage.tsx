@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { User, Award, Target, PiggyBank, TrendingUp, Calendar, Link2, CheckCircle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useUserSettings } from '../hooks/useUserSettings'
-import { useGoogleCalendarStatus } from '../hooks/useGoogleCalendarStatus'
+import { useGoogleCalendarContext } from '../contexts/GoogleCalendarContext'
 import { format } from 'date-fns'
 import { ja } from 'date-fns/locale'
 import { supabase, FixedExpense } from '../lib/supabase'
@@ -32,7 +32,7 @@ export function ProfilePage() {
     isConnected: isGoogleCalendarConnected,
     loading: googleCalendarStatusLoading,
     refresh: googleCalendarRefresh
-  } = useGoogleCalendarStatus()
+  } = useGoogleCalendarContext()
 
   const memberSince = user?.created_at ? new Date(user.created_at) : new Date()
   const daysSinceMember = Math.floor((new Date().getTime() - memberSince.getTime()) / (1000 * 60 * 60 * 24))

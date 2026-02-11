@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { GoogleCalendarProvider, useGoogleCalendarContext } from './contexts/GoogleCalendarContext'
 import { ToastProvider } from './components/ToastContainer'
 import { AuthForm } from './components/AuthForm'
 import { InitialSetup } from './components/InitialSetup'
@@ -16,6 +17,7 @@ const MIN_LOADING_TIME = 800
 function AppContent() {
   const { user, loading: authLoading } = useAuth()
   const { userSettings, loading: settingsLoading } = useUserSettings()
+  const { loading: googleCalendarLoading } = useGoogleCalendarContext()
   const [minLoadingComplete, setMinLoadingComplete] = useState(false)
   const [startTime] = useState(Date.now())
 
@@ -34,8 +36,8 @@ function AppContent() {
     }
   }, [startTime])
 
-  // Combine all loading states including minimum loading time
-  const isInitializing = authLoading || (user && settingsLoading) || !minLoadingComplete
+  // Combine all loading states including Google Calendar status and minimum loading time
+  const isInitializing = authLoading || (user && settingsLoading) || (user && googleCalendarLoading) || !minLoadingComplete
 
   // Show single loading screen while initializing
   if (isInitializing) {
@@ -77,7 +79,9 @@ function App() {
   return (
     <ToastProvider>
       <AuthProvider>
-        <AppContent />
+        <GoogleCalendarProvider>
+          <AppContent />
+        </GoogleCalendarProvider>
       </AuthProvider>
     </ToastProvider>
   )
