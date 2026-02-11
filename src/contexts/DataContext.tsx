@@ -38,7 +38,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const fetchData = useCallback(async (isRefetch = false) => {
     if (!user || !userSettings) return;
 
-    if (!isRefetch) {
+    // Loading state starts as true, so initial load already shows loading
+    // Only reset loading to true on refetch to show loading indicator
+    if (isRefetch) {
       setLoading(true);
     }
     
@@ -136,5 +138,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     refetchData: () => fetchData(true),
   };
 
+  // Don't block rendering on initial load - let components handle loading states
+  // This prevents showing a loading screen after auth is complete
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 }

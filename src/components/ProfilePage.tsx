@@ -1,17 +1,20 @@
 import { useState, useEffect, useCallback } from 'react'
-import { User, Award, Target, PiggyBank, TrendingUp } from 'lucide-react'
+import { User, Award, Target, PiggyBank, TrendingUp, Calendar, Link2, CheckCircle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useUserSettings } from '../hooks/useUserSettings'
+import { useGoogleCalendarContext } from '../contexts/GoogleCalendarContext'
 import { format } from 'date-fns'
 import { ja } from 'date-fns/locale'
 import { supabase, FixedExpense } from '../lib/supabase'
 import { LogoutConfirmModal } from './LogoutConfirmModal'
+import { useToast } from './ToastContainer'
 
 export function ProfilePage() {
-  const { signOut } = useAuth()
+  const { signOut, user, session } = useAuth()
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const openLogoutModal = () => setShowLogoutModal(true)
   const closeLogoutModal = () => setShowLogoutModal(false)
+  const { showSuccess, showError } = useToast()
 
   const handleSignOut = async () => {
     try {
@@ -21,10 +24,15 @@ export function ProfilePage() {
       window.location.reload()
     }
   }
-  const { user } = useAuth()
   const { userSettings } = useUserSettings()
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements'>('overview')
   const [fixedExpenses, setFixedExpenses] = useState<FixedExpense[]>([])
+  const [isConnectingGoogle, setIsConnectingGoogle] = useState(false)
+  const {
+    isConnected: isGoogleCalendarConnected,
+    loading: googleCalendarStatusLoading,
+    refresh: googleCalendarRefresh
+  } = useGoogleCalendarContext()
 
   const memberSince = user?.created_at ? new Date(user.created_at) : new Date()
   const daysSinceMember = Math.floor((new Date().getTime() - memberSince.getTime()) / (1000 * 60 * 60 * 24))
@@ -51,6 +59,60 @@ export function ProfilePage() {
       fetchFixedExpenses()
     }
   }, [user, fetchFixedExpenses])
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('google_calendar_connected') === 'true') {
+      const url = new URL(window.location.href)
+      url.searchParams.delete('google_calendar_connected')
+      window.history.replaceState({}, '', url.pathname)
+      googleCalendarRefresh()
+      showSuccess('Googleカレンダーを連携しました')
+    }
+    const gcError = params.get('google_calendar_error')
+    if (gcError) {
+      const url = new URL(window.location.href)
+      url.searchParams.delete('google_calendar_error')
+      window.history.replaceState({}, '', url.pathname)
+      showError('Google連携エラー', gcError)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const handleGoogleCalendarConnect = async () => {
+    if (!user || isGoogleCalendarConnected) return
+
+    setIsConnectingGoogle(true)
+    try {
+      if (!session?.access_token) {
+        showError('認証情報が見つかりません', 'ログインし直してください')
+        return
+      }
+
+      const { data, error } = await supabase.functions.invoke('google-calendar-start', {
+        body: { returnTo: window.location.origin },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      })
+
+      if (error) {
+        throw error
+      }
+
+      if (!data?.url) {
+        showError('連携URLの生成に失敗しました', 'もう一度お試しください')
+        return
+      }
+
+      window.location.assign(data.url)
+    } catch (error) {
+      console.error('Error connecting Google Calendar:', error)
+      showError('連携に失敗しました', 'もう一度お試しください')
+    } finally {
+      setIsConnectingGoogle(false)
+    }
+  }
 
   const totalFixedExpenses = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
   const monthlyAvailableAmount = (userSettings?.monthly_income || 0) - totalFixedExpenses
@@ -131,6 +193,38 @@ export function ProfilePage() {
 
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Google Calendar Section */}
+        <div className="border border-blue-300/70 rounded-2xl p-5 md:p-6 glass-shine bg-gradient-to-r from-blue-50/70 via-white/60 to-blue-100/50">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-blue-600" />
+                  <h2 className="text-xl font-semibold text-gray-800">Googleカレンダー連携</h2>
+                </div>
+                {isGoogleCalendarConnected && (
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full w-fit">
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    連携済み
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-gray-700 mt-2">Googleカレンダーに登録された予定を表示します</p>
+            </div>
+            {!isGoogleCalendarConnected && (
+              <button
+                type="button"
+                onClick={handleGoogleCalendarConnect}
+                disabled={isConnectingGoogle || isGoogleCalendarConnected || googleCalendarStatusLoading}
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-blue-600/90 text-white rounded-xl font-semibold shadow-sm hover:bg-blue-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Link2 className="w-5 h-5" />
+                <span>{isConnectingGoogle ? '連携中...' : googleCalendarStatusLoading ? '確認中...' : 'Googleカレンダーと連携'}</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -228,6 +322,7 @@ export function ProfilePage() {
                     </div>
                   </div>
                 </div>
+
                 <button
                   onClick={openLogoutModal}
                   className="w-fit flex items-center text-sm glass-text text-red-400 font-bold group glass-shine"
