@@ -1,5 +1,4 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+#!/usr/bin/env bash
 
 # Run commitlint first
 npx --no -- commitlint --edit "$1"
@@ -12,8 +11,8 @@ commit_msg=$(cat "$commit_msg_file")
 add_emoji() {
     local message="$1"
     
-    # 絵文字がすでに含まれている場合はスキップ
-    if echo "$message" | grep -qE '^[[:space:]]*[\x{1F300}-\x{1F9FF}]'; then
+    # 絵文字がすでに含まれている場合はスキップ（簡易チェック）
+    if echo "$message" | grep -q "^[[:space:]]*[🐛✨📚💄♻️⚡🧪🔧👷🏗️⏪🚨🔒🚧🔀]"; then
         echo "$message"
         return
     fi
