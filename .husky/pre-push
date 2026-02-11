@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running linter and build before push..."
+
+npm run lint && npm run build
+
+echo "✅ Pre-push checks passed!"

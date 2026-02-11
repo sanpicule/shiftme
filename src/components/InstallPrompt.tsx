@@ -1,99 +1,104 @@
-import React, { useState, useEffect } from 'react'
-import { Download, X, Smartphone, Star, Zap } from 'lucide-react'
+import React, { useState, useEffect } from 'react';
+import { Download, X, Smartphone, Star, Zap } from 'lucide-react';
 
 interface BeforeInstallPromptEvent extends Event {
-  prompt(): Promise<void>
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
 export function InstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
-  const [showPrompt, setShowPrompt] = useState(false)
-  const [isInstalled, setIsInstalled] = useState(false)
-  const [isIOS, setIsIOS] = useState(false)
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [showPrompt, setShowPrompt] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
     // iOS検出
-    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream
-    setIsIOS(isIOSDevice)
+    const isIOSDevice =
+      /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+      !(window as Window & { MSStream?: unknown }).MSStream;
+    setIsIOS(isIOSDevice);
 
     // PWAがすでにインストールされているかチェック
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-    const isInWebAppiOS = (window.navigator as any).standalone === true
-    
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    const isInWebAppiOS =
+      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+
     if (isStandalone || isInWebAppiOS) {
-      setIsInstalled(true)
-      return
+      setIsInstalled(true);
+      return;
     }
 
     // インストールプロンプトイベントをリッスン
     const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault()
-      setDeferredPrompt(e as BeforeInstallPromptEvent)
-      
+      e.preventDefault();
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
+
       // 24時間以内に却下されていたら表示しない
-      const dismissedTime = localStorage.getItem('installPromptDismissed')
+      const dismissedTime = localStorage.getItem('installPromptDismissed');
       if (dismissedTime) {
-        const timeDiff = Date.now() - parseInt(dismissedTime)
-        const twentyFourHours = 24 * 60 * 60 * 1000
+        const timeDiff = Date.now() - parseInt(dismissedTime);
+        const twentyFourHours = 24 * 60 * 60 * 1000;
         if (timeDiff < twentyFourHours) {
-          return
+          return;
         }
       }
-      
+
       // 少し遅延してプロンプトを表示
-      setTimeout(() => setShowPrompt(true), 3000)
-    }
+      setTimeout(() => setShowPrompt(true), 3000);
+    };
 
     // アプリがインストールされた時のイベント
     const handleAppInstalled = () => {
-      setIsInstalled(true)
-      setShowPrompt(false)
-      setDeferredPrompt(null)
-      localStorage.removeItem('installPromptDismissed')
-    }
+      setIsInstalled(true);
+      setShowPrompt(false);
+      setDeferredPrompt(null);
+      localStorage.removeItem('installPromptDismissed');
+    };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
-    window.addEventListener('appinstalled', handleAppInstalled)
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
-      window.removeEventListener('appinstalled', handleAppInstalled)
-    }
-  }, [])
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) return
+    if (!deferredPrompt) return;
 
     try {
-      deferredPrompt.prompt()
-      const { outcome } = await deferredPrompt.userChoice
-      
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+
       if (outcome === 'accepted') {
-        setShowPrompt(false)
-        localStorage.removeItem('installPromptDismissed')
+        setShowPrompt(false);
+        localStorage.removeItem('installPromptDismissed');
       }
-      
-      setDeferredPrompt(null)
+
+      setDeferredPrompt(null);
     } catch (error) {
-      console.error('Install prompt error:', error)
+      console.error('Install prompt error:', error);
     }
-  }
+  };
 
   const handleDismiss = () => {
-    setShowPrompt(false)
+    setShowPrompt(false);
     // 24時間後に再表示するためのローカルストレージ設定
-    localStorage.setItem('installPromptDismissed', Date.now().toString())
-  }
+    localStorage.setItem('installPromptDismissed', Date.now().toString());
+  };
 
   const handleIOSInstall = () => {
-    setShowPrompt(false)
+    setShowPrompt(false);
     // iOSの場合は手動インストール手順を表示
-    alert('このアプリをホーム画面に追加するには:\n1. Safariの共有ボタン（□↑）をタップ\n2. 「ホーム画面に追加」を選択\n3. 「追加」をタップ')
-  }
+    alert(
+      'このアプリをホーム画面に追加するには:\n1. Safariの共有ボタン（□↑）をタップ\n2. 「ホーム画面に追加」を選択\n3. 「追加」をタップ',
+    );
+  };
 
   if (isInstalled || !showPrompt) {
-    return null
+    return null;
   }
 
   return (
@@ -102,7 +107,7 @@ export function InstallPrompt() {
         {/* Background decoration */}
         <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-400/20 to-purple-600/20 rounded-full blur-xl"></div>
         <div className="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-br from-purple-400/20 to-pink-600/20 rounded-full blur-xl"></div>
-        
+
         <div className="relative z-10">
           <div className="flex items-start space-x-4">
             <div className="relative">
@@ -113,18 +118,17 @@ export function InstallPrompt() {
                 <Star className="w-2.5 h-2.5 text-white" />
               </div>
             </div>
-            
+
             <div className="flex-1">
               <h3 className="font-bold text-gray-900 mb-2 text-lg">
                 {isIOS ? 'ホーム画面に追加' : 'アプリをインストール'}
               </h3>
               <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-                {isIOS 
+                {isIOS
                   ? 'Safariの共有ボタンから「ホーム画面に追加」でアプリのように使えます'
-                  : 'ホーム画面に追加して、いつでも簡単にアクセスできます'
-                }
+                  : 'ホーム画面に追加して、いつでも簡単にアクセスできます'}
               </p>
-              
+
               <div className="flex items-center space-x-2 mb-4">
                 <div className="flex items-center space-x-1 text-xs text-gray-500">
                   <Zap className="w-3 h-3" />
@@ -135,7 +139,7 @@ export function InstallPrompt() {
                   <span>オフライン対応</span>
                 </div>
               </div>
-              
+
               <div className="flex space-x-3">
                 <button
                   onClick={isIOS ? handleIOSInstall : handleInstallClick}
@@ -157,5 +161,5 @@ export function InstallPrompt() {
         </div>
       </div>
     </div>
-  )
+  );
 }

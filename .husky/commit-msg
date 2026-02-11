@@ -1,0 +1,87 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run commitlint first
+npx --no -- commitlint --edit "$1"
+
+# Then add emoji (keeping existing functionality)
+commit_msg_file=$1
+commit_msg=$(cat "$commit_msg_file")
+
+# 絵文字マッピング
+add_emoji() {
+    local message="$1"
+    
+    # 絵文字がすでに含まれている場合はスキップ
+    if echo "$message" | grep -qE '^[[:space:]]*[\x{1F300}-\x{1F9FF}]'; then
+        echo "$message"
+        return
+    fi
+    
+    # 各プレフィックスに対応する絵文字を追加
+    case "$message" in
+        "fix:"*)
+            echo "🐛 $message"
+            ;;
+        "bug:"*)
+            echo "🐛 $message"
+            ;;
+        "feat:"*)
+            echo "✨ $message"
+            ;;
+        "feature:"*)
+            echo "✨ $message"
+            ;;
+        "docs:"*)
+            echo "📚 $message"
+            ;;
+        "style:"*)
+            echo "💄 $message"
+            ;;
+        "refactor:"*)
+            echo "♻️ $message"
+            ;;
+        "perf:"*)
+            echo "⚡ $message"
+            ;;
+        "test:"*)
+            echo "🧪 $message"
+            ;;
+        "chore:"*)
+            echo "🔧 $message"
+            ;;
+        "ci:"*)
+            echo "👷 $message"
+            ;;
+        "build:"*)
+            echo "🏗️ $message"
+            ;;
+        "revert:"*)
+            echo "⏪ $message"
+            ;;
+        "hotfix:"*)
+            echo "🚨 $message"
+            ;;
+        "security:"*)
+            echo "🔒 $message"
+            ;;
+        "wip:"*)
+            echo "🚧 $message"
+            ;;
+        "merge:"*)
+            echo "🔀 $message"
+            ;;
+        *)
+            # プレフィックスがマッチしない場合はそのまま返す
+            echo "$message"
+            ;;
+    esac
+}
+
+# 絵文字を追加したメッセージを生成
+new_commit_msg=$(add_emoji "$commit_msg")
+
+# 新しいメッセージをコミットメッセージファイルに書き戻す
+echo "$new_commit_msg" > "$commit_msg_file"
+
+exit 0

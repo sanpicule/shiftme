@@ -3,11 +3,13 @@
 ## Completed Fixes
 
 ### 1. RLS Policy Performance Optimization ✓
+
 **Status: COMPLETED**
 
 All RLS policies across all tables have been optimized for performance by replacing direct `auth.uid()` calls with `(select auth.uid())`. This prevents re-evaluation of the auth function for each row, improving query performance at scale.
 
 **Tables Fixed:**
+
 - `expenses` - 4 policies (SELECT, INSERT, UPDATE, DELETE)
 - `fixed_expenses` - 4 policies (SELECT, INSERT, UPDATE, DELETE)
 - `savings_goals` - 4 policies (SELECT, INSERT, UPDATE, DELETE)
@@ -20,11 +22,13 @@ All RLS policies across all tables have been optimized for performance by replac
 ## Remaining Fixes (Requires Supabase Dashboard)
 
 ### 2. Auth OTP Expiry ⚠️
+
 **Status: REQUIRES ACTION**
 
 The email provider OTP (One-Time Password) expiry is currently set to more than 1 hour. It's recommended to set it to less than 1 hour for better security.
 
 **Steps to Fix:**
+
 1. Go to [Supabase Dashboard](https://app.supabase.com)
 2. Navigate to your project → **Authentication** → **Providers**
 3. Click on **Email** provider
@@ -37,11 +41,13 @@ The email provider OTP (One-Time Password) expiry is currently set to more than 
 ---
 
 ### 3. Leaked Password Protection 🔒
+
 **Status: REQUIRES ACTION**
 
 Enable password breach detection to prevent users from using compromised passwords.
 
 **Steps to Fix:**
+
 1. Go to [Supabase Dashboard](https://app.supabase.com)
 2. Navigate to your project → **Authentication** → **Providers**
 3. Click on **Email** provider
@@ -49,6 +55,7 @@ Enable password breach detection to prevent users from using compromised passwor
 5. Save changes
 
 **Benefits:**
+
 - Protects users from using passwords that have been exposed in data breaches
 - Uses HaveIBeenPwned.org API to check compromised passwords
 - No actual passwords are sent to external services (uses hash prefix matching)
@@ -56,11 +63,13 @@ Enable password breach detection to prevent users from using compromised passwor
 ---
 
 ### 4. PostgreSQL Version Upgrade 🗄️
+
 **Status: REQUIRES ACTION**
 
 Your current PostgreSQL version (17.4.1.074) has security patches available.
 
 **Steps to Fix:**
+
 1. Go to [Supabase Dashboard](https://app.supabase.com)
 2. Navigate to your project → **Settings** → **Database**
 3. Look for version information and upgrade options
@@ -68,6 +77,7 @@ Your current PostgreSQL version (17.4.1.074) has security patches available.
 5. Choose a maintenance window (usually off-peak hours)
 
 **Important Notes:**
+
 - The database will be briefly unavailable during the upgrade
 - Backups are created automatically before upgrades
 - Most upgrades take only a few minutes
@@ -76,12 +86,12 @@ Your current PostgreSQL version (17.4.1.074) has security patches available.
 
 ## Summary
 
-| Issue | Type | Status | Impact |
-|-------|------|--------|--------|
-| RLS Policy Performance | Database | ✓ Fixed | Query performance at scale |
-| OTP Expiry | Auth Config | ⚠️ Pending | Security best practice |
-| Password Breach Protection | Auth Config | ⚠️ Pending | User account security |
-| PostgreSQL Version | Database | ⚠️ Pending | Security patches |
+| Issue                      | Type        | Status     | Impact                     |
+| -------------------------- | ----------- | ---------- | -------------------------- |
+| RLS Policy Performance     | Database    | ✓ Fixed    | Query performance at scale |
+| OTP Expiry                 | Auth Config | ⚠️ Pending | Security best practice     |
+| Password Breach Protection | Auth Config | ⚠️ Pending | User account security      |
+| PostgreSQL Version         | Database    | ⚠️ Pending | Security patches           |
 
 ## Security Priority
 

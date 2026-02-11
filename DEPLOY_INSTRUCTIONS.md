@@ -1,6 +1,7 @@
 # デプロイ手順
 
 ## ビルド状況
+
 ビルドが正常に完了しました。
 
 ## Netlifyへのデプロイ方法
@@ -8,11 +9,13 @@
 ### 方法1: Netlify CLIで直接デプロイ
 
 1. Netlifyにログイン:
+
 ```bash
 netlify login
 ```
 
 2. デプロイを実行:
+
 ```bash
 netlify deploy --prod
 ```
@@ -26,6 +29,7 @@ netlify deploy --prod
 ### 方法2: GitHubと連携して自動デプロイ
 
 1. GitHubにコードをプッシュ:
+
 ```bash
 git add .
 git commit -m "Add Netlify configuration"
@@ -79,6 +83,7 @@ netlify deploy --prod
 ## ビルド成果物
 
 以下のファイルがdistフォルダに生成されています:
+
 - index.html
 - assets/ (CSS, JavaScript)
 - manifest.json

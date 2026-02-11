@@ -1,77 +1,88 @@
-import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
-import { Plus, Trash2, Edit2, Save, X } from 'lucide-react'
-import { useUserSettings } from '../hooks/useUserSettings'
-import { useToast } from './ToastContainer'
-import { supabase, FixedExpense, SavingsGoal } from '../lib/supabase'
-import { useAuth } from '../contexts/AuthContext'
-import { SkeletonCard, SkeletonText } from './SkeletonCard'
-import { useData } from '../contexts/DataContext'
+import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { Plus, Trash2, Edit2, Save, X } from 'lucide-react';
+import { useUserSettings } from '../hooks/useUserSettings';
+import { useToast } from './ToastContainer';
+import { supabase, FixedExpense, SavingsGoal } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
+import { SkeletonCard, SkeletonText } from './SkeletonCard';
+import { useData } from '../contexts/DataContext';
 
 interface IncomeForm {
-  monthly_income: number
-  bonus_amount: number
-  bonus_months: string
+  monthly_income: number;
+  bonus_amount: number;
+  bonus_months: string;
 }
 
 interface FixedExpenseForm {
-  name: string
-  amount: number
-  category: string
+  name: string;
+  amount: number;
+  category: string;
 }
 
 interface SavingsGoalForm {
-  title: string
-  description: string
-  target_amount: number
-  current_amount: number
-  target_date: string
-  start_date?: string
+  title: string;
+  description: string;
+  target_amount: number;
+  current_amount: number;
+  target_date: string;
+  start_date?: string;
 }
 
 export function SettingsPage() {
-  const { user } = useAuth()
-  const { userSettings, updateUserSettings } = useUserSettings()
-  const { showSuccess, showError } = useToast()
-  const { fixedExpenses, savingsGoals, loading: dataLoading, refetchData } = useData()
-  const [editingExpense, setEditingExpense] = useState<string | null>(null)
-  const [editingGoal, setEditingGoal] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [showExpenseForm, setShowExpenseForm] = useState(false)
-  const [showGoalForm, setShowGoalForm] = useState(false)
-  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false)
-  const [expenseToDelete, setExpenseToDelete] = useState<string | null>(null)
-  const [showDeleteGoalConfirmModal, setShowDeleteGoalConfirmModal] = useState(false)
-  const [goalToDelete, setGoalToDelete] = useState<string | null>(null)
-  const [editingIncome, setEditingIncome] = useState(false)
+  const { user } = useAuth();
+  const { userSettings, updateUserSettings } = useUserSettings();
+  const { showSuccess, showError } = useToast();
+  const { fixedExpenses, savingsGoals, loading: dataLoading, refetchData } = useData();
+  const [editingExpense, setEditingExpense] = useState<string | null>(null);
+  const [editingGoal, setEditingGoal] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [showExpenseForm, setShowExpenseForm] = useState(false);
+  const [showGoalForm, setShowGoalForm] = useState(false);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [expenseToDelete, setExpenseToDelete] = useState<string | null>(null);
+  const [showDeleteGoalConfirmModal, setShowDeleteGoalConfirmModal] = useState(false);
+  const [goalToDelete, setGoalToDelete] = useState<string | null>(null);
+  const [editingIncome, setEditingIncome] = useState(false);
 
-  const { register: registerIncome, handleSubmit: handleIncomeSubmit, setValue: setIncomeValue } = useForm<IncomeForm>()
-  const { register: registerExpense, handleSubmit: handleExpenseSubmit, reset: resetExpense } = useForm<FixedExpenseForm>()
-  const { register: registerGoal, handleSubmit: handleGoalSubmit, reset: resetGoal } = useForm<SavingsGoalForm>()
-
+  const {
+    register: registerIncome,
+    handleSubmit: handleIncomeSubmit,
+    setValue: setIncomeValue,
+  } = useForm<IncomeForm>();
+  const {
+    register: registerExpense,
+    handleSubmit: handleExpenseSubmit,
+    reset: resetExpense,
+  } = useForm<FixedExpenseForm>();
+  const {
+    register: registerGoal,
+    handleSubmit: handleGoalSubmit,
+    reset: resetGoal,
+  } = useForm<SavingsGoalForm>();
 
   // 編集用のフォーム状態（一時的な値を保持）
   const [tempExpense, setTempExpense] = useState<FixedExpenseForm>({
     name: '',
     amount: 0,
-    category: '住居費'
-  })
+    category: '住居費',
+  });
   const [tempGoal, setTempGoal] = useState<SavingsGoalForm>({
     title: '',
     description: '',
     target_amount: 0,
     current_amount: 0,
     target_date: '',
-    start_date: ''
-  })
+    start_date: '',
+  });
 
   useEffect(() => {
     if (userSettings) {
-      setIncomeValue('monthly_income', userSettings.monthly_income)
-      setIncomeValue('bonus_amount', userSettings.bonus_amount || 0)
-      setIncomeValue('bonus_months', userSettings.bonus_months || '')
+      setIncomeValue('monthly_income', userSettings.monthly_income);
+      setIncomeValue('bonus_amount', userSettings.bonus_amount || 0);
+      setIncomeValue('bonus_months', userSettings.bonus_months || '');
     }
-  }, [userSettings, setIncomeValue])
+  }, [userSettings, setIncomeValue]);
 
   if (dataLoading) {
     return (
@@ -117,186 +128,178 @@ export function SettingsPage() {
           </div>
         </SkeletonCard>
       </div>
-    )
+    );
   }
 
   const handleIncomeUpdate = async (data: IncomeForm) => {
-    setLoading(true)
+    setLoading(true);
     try {
       await updateUserSettings({
         monthly_income: data.monthly_income,
         bonus_amount: data.bonus_amount,
-        bonus_months: data.bonus_months
-      })
-      showSuccess('収入設定を更新しました', `月収: ¥${data.monthly_income.toLocaleString()}`)
-      setEditingIncome(false)
+        bonus_months: data.bonus_months,
+      });
+      showSuccess('収入設定を更新しました', `月収: ¥${data.monthly_income.toLocaleString()}`);
+      setEditingIncome(false);
     } catch (error) {
-      console.error('Error updating income:', error)
-      showError('更新に失敗しました', 'もう一度お試しください')
+      console.error('Error updating income:', error);
+      showError('更新に失敗しました', 'もう一度お試しください');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const addFixedExpense = async (data: FixedExpenseForm) => {
-    if (!user) return
+    if (!user) return;
 
     try {
-      const { error } = await supabase
-        .from('fixed_expenses')
-        .insert({ ...data, user_id: user.id })
+      const { error } = await supabase.from('fixed_expenses').insert({ ...data, user_id: user.id });
 
-      if (error) throw error
+      if (error) throw error;
 
-      resetExpense()
-      refetchData()
-      showSuccess('固定支出を追加しました', `${data.name}: ¥${data.amount.toLocaleString()}`)
-      setShowExpenseForm(false)
+      resetExpense();
+      refetchData();
+      showSuccess('固定支出を追加しました', `${data.name}: ¥${data.amount.toLocaleString()}`);
+      setShowExpenseForm(false);
     } catch (error) {
-      console.error('Error adding fixed expense:', error)
-      showError('追加に失敗しました', 'もう一度お試しください')
+      console.error('Error adding fixed expense:', error);
+      showError('追加に失敗しました', 'もう一度お試しください');
     }
-  }
+  };
 
   const deleteFixedExpense = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('fixed_expenses')
-        .delete()
-        .eq('id', id)
+      const { error } = await supabase.from('fixed_expenses').delete().eq('id', id);
 
-      if (error) throw error
-      refetchData()
-      showSuccess('固定支出を削除しました')
+      if (error) throw error;
+      refetchData();
+      showSuccess('固定支出を削除しました');
     } catch (error) {
-      console.error('Error deleting fixed expense:', error)
-      showError('削除に失敗しました', 'もう一度お試しください')
+      console.error('Error deleting fixed expense:', error);
+      showError('削除に失敗しました', 'もう一度お試しください');
     }
-  }
+  };
 
   const addSavingsGoal = async (data: SavingsGoalForm) => {
-    if (!user) return
+    if (!user) return;
 
     try {
-      const { error } = await supabase
-        .from('savings_goals')
-        .insert({ ...data, user_id: user.id })
+      const { error } = await supabase.from('savings_goals').insert({ ...data, user_id: user.id });
 
-      if (error) throw error
+      if (error) throw error;
 
-      resetGoal()
-      refetchData()
-      showSuccess('貯金目標を追加しました', `${data.title}: ¥${data.target_amount.toLocaleString()}`)
-      setShowGoalForm(false)
+      resetGoal();
+      refetchData();
+      showSuccess(
+        '貯金目標を追加しました',
+        `${data.title}: ¥${data.target_amount.toLocaleString()}`,
+      );
+      setShowGoalForm(false);
     } catch (error) {
-      console.error('Error adding savings goal:', error)
-      showError('追加に失敗しました', 'もう一度お試しください')
+      console.error('Error adding savings goal:', error);
+      showError('追加に失敗しました', 'もう一度お試しください');
     }
-  }
+  };
 
   const deleteSavingsGoal = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('savings_goals')
-        .delete()
-        .eq('id', id)
+      const { error } = await supabase.from('savings_goals').delete().eq('id', id);
 
-      if (error) throw error
-      refetchData()
-      showSuccess('貯金目標を削除しました')
+      if (error) throw error;
+      refetchData();
+      showSuccess('貯金目標を削除しました');
     } catch (error) {
-      console.error('Error deleting savings goal:', error)
-      showError('削除に失敗しました', 'もう一度お試しください')
+      console.error('Error deleting savings goal:', error);
+      showError('削除に失敗しました', 'もう一度お試しください');
     }
-  }
+  };
 
   const startEditExpense = (expense: FixedExpense) => {
-    setEditingExpense(expense.id)
+    setEditingExpense(expense.id);
     setTempExpense({
       name: expense.name,
       amount: expense.amount,
-      category: expense.category
-    })
-  }
+      category: expense.category,
+    });
+  };
 
   const updateFixedExpense = async () => {
-    if (!editingExpense || !user) return
+    if (!editingExpense || !user) return;
 
     try {
       const { error } = await supabase
         .from('fixed_expenses')
         .update(tempExpense)
         .eq('id', editingExpense)
-        .eq('user_id', user.id)
+        .eq('user_id', user.id);
 
-      if (error) throw error
+      if (error) throw error;
 
-      setEditingExpense(null)
-      refetchData()
-      showSuccess('固定支出を更新しました', `${tempExpense.name}: ¥${tempExpense.amount.toLocaleString()}`)
+      setEditingExpense(null);
+      refetchData();
+      showSuccess(
+        '固定支出を更新しました',
+        `${tempExpense.name}: ¥${tempExpense.amount.toLocaleString()}`,
+      );
     } catch (error) {
-      console.error('Error updating fixed expense:', error)
-      showError('更新に失敗しました', 'もう一度お試しください')
+      console.error('Error updating fixed expense:', error);
+      showError('更新に失敗しました', 'もう一度お試しください');
     }
-  }
+  };
 
   const startEditGoal = (goal: SavingsGoal) => {
-    setEditingGoal(goal.id)
+    setEditingGoal(goal.id);
     setTempGoal({
       title: goal.title,
       description: goal.description,
       target_amount: goal.target_amount,
       current_amount: goal.current_amount || 0,
       target_date: goal.target_date,
-      start_date: goal.start_date || ''
-    })
-  }
+      start_date: goal.start_date || '',
+    });
+  };
 
   const updateSavingsGoal = async () => {
-    if (!editingGoal || !user) return
+    if (!editingGoal || !user) return;
 
     try {
       const { error } = await supabase
         .from('savings_goals')
         .update(tempGoal)
         .eq('id', editingGoal)
-        .eq('user_id', user.id)
+        .eq('user_id', user.id);
 
-      if (error) throw error
+      if (error) throw error;
 
-      setEditingGoal(null)
-      refetchData()
-      showSuccess('貯金目標を更新しました', `${tempGoal.title}: ¥${tempGoal.target_amount.toLocaleString()}`)
+      setEditingGoal(null);
+      refetchData();
+      showSuccess(
+        '貯金目標を更新しました',
+        `${tempGoal.title}: ¥${tempGoal.target_amount.toLocaleString()}`,
+      );
     } catch (error) {
-      console.error('Error updating savings goal:', error)
-      showError('更新に失敗しました', 'もう一度お試しください')
+      console.error('Error updating savings goal:', error);
+      showError('更新に失敗しました', 'もう一度お試しください');
     }
-  }
+  };
 
-  const categories = [
-    '住居費',
-    '光熱費',
-    '通信費',
-    '保険',
-    '交通費',
-    'その他',
-  ]
+  const categories = ['住居費', '光熱費', '通信費', '保険', '交通費', 'その他'];
 
   const calculateMonthlySavings = (goal: SavingsGoal | SavingsGoalForm) => {
-    const targetDate = new Date(goal.target_date)
-    const remainingMonths = Math.max(1, Math.ceil((targetDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30)))
-    const remainingAmount = goal.target_amount - (goal.current_amount || 0)
-    return Math.ceil(remainingAmount / remainingMonths)
-  }
-
+    const targetDate = new Date(goal.target_date);
+    const remainingMonths = Math.max(
+      1,
+      Math.ceil((targetDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30)),
+    );
+    const remainingAmount = goal.target_amount - (goal.current_amount || 0);
+    return Math.ceil(remainingAmount / remainingMonths);
+  };
 
   return (
     <div className="space-y-8">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold mb-3 text-gray-800">
-          設定
-        </h1>
+        <h1 className="text-2xl font-bold mb-3 text-gray-800">設定</h1>
         <p className="text-sm text-gray-800">収入、固定支出、貯金目標を設定しましょう</p>
       </div>
 
@@ -321,9 +324,7 @@ export function SettingsPage() {
           <form onSubmit={handleIncomeSubmit(handleIncomeUpdate)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-3">
-                  月収（円）
-                </label>
+                <label className="block text-sm font-semibold text-gray-800 mb-3">月収（円）</label>
                 <input
                   type="number"
                   {...registerIncome('monthly_income', { required: true, min: 0 })}
@@ -353,7 +354,9 @@ export function SettingsPage() {
                 className="glass-input w-full px-6 py-4 text-lg font-medium text-gray-800"
                 placeholder="3,9"
               />
-              <p className="text-xs text-gray-600 mt-2">3月と9月にボーナスを支給する場合は「3,9」と入力</p>
+              <p className="text-xs text-gray-600 mt-2">
+                3月と9月にボーナスを支給する場合は「3,9」と入力
+              </p>
             </div>
             <div className="flex gap-2 justify-end">
               <button
@@ -421,7 +424,10 @@ export function SettingsPage() {
               <span>固定支出を追加</span>
             </button>
           ) : (
-            <form onSubmit={handleExpenseSubmit(addFixedExpense)} className="space-y-4 p-4 glass-card">
+            <form
+              onSubmit={handleExpenseSubmit(addFixedExpense)}
+              className="space-y-4 p-4 glass-card"
+            >
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-800 mb-2">項目名</label>
@@ -447,8 +453,10 @@ export function SettingsPage() {
                     {...registerExpense('category')}
                     className="glass-input w-full px-4 py-3 text-gray-800"
                   >
-                    {categories.map((category) => (
-                      <option key={category} value={category}>{category}</option>
+                    {categories.map(category => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -475,7 +483,7 @@ export function SettingsPage() {
 
         {/* Fixed Expenses List */}
         <div className="space-y-4">
-          {fixedExpenses.map((expense) => (
+          {fixedExpenses.map(expense => (
             <div key={expense.id} className="p-6 glass-card glass-shine">
               {editingExpense === expense.id ? (
                 <div className="space-y-4">
@@ -485,7 +493,7 @@ export function SettingsPage() {
                       type="text"
                       value={tempExpense.name}
                       className="glass-input w-full px-3 py-2 text-gray-800"
-                      onChange={(e) => setTempExpense(prev => ({ ...prev, name: e.target.value }))}
+                      onChange={e => setTempExpense(prev => ({ ...prev, name: e.target.value }))}
                     />
                   </div>
                   <div>
@@ -493,20 +501,28 @@ export function SettingsPage() {
                     <select
                       value={tempExpense.category}
                       className="glass-input w-full px-3 py-2 text-gray-800"
-                      onChange={(e) => setTempExpense(prev => ({ ...prev, category: e.target.value }))}
+                      onChange={e =>
+                        setTempExpense(prev => ({ ...prev, category: e.target.value }))
+                      }
                     >
-                      {categories.map((category) => (
-                        <option key={category} value={category}>{category}</option>
+                      {categories.map(category => (
+                        <option key={category} value={category}>
+                          {category}
+                        </option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-800 mb-2">金額（円）</label>
+                    <label className="block text-sm font-medium text-gray-800 mb-2">
+                      金額（円）
+                    </label>
                     <input
                       type="number"
                       value={tempExpense.amount}
                       className="glass-input w-full px-3 py-2 text-gray-800"
-                      onChange={(e) => setTempExpense(prev => ({ ...prev, amount: Number(e.target.value) }))}
+                      onChange={e =>
+                        setTempExpense(prev => ({ ...prev, amount: Number(e.target.value) }))
+                      }
                     />
                   </div>
                   <div className="flex space-x-3">
@@ -530,7 +546,9 @@ export function SettingsPage() {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between">
                     <div className="flex items-center space-x-4 mb-4 sm:mb-0">
                       <div>
-                        <p className="text-sm text-gray-800 font-medium">カテゴリ：{expense.category}</p>
+                        <p className="text-sm text-gray-800 font-medium">
+                          カテゴリ：{expense.category}
+                        </p>
                         <h4 className="font-medium text-gray-800 text-base">{expense.name}</h4>
                       </div>
                     </div>
@@ -549,8 +567,8 @@ export function SettingsPage() {
                     </button>
                     <button
                       onClick={() => {
-                        setExpenseToDelete(expense.id)
-                        setShowDeleteConfirmModal(true)
+                        setExpenseToDelete(expense.id);
+                        setShowDeleteConfirmModal(true);
                       }}
                       className="text-red-400 rounded-xl transition-all duration-300 glass-shine"
                     >
@@ -598,7 +616,9 @@ export function SettingsPage() {
             <form onSubmit={handleGoalSubmit(addSavingsGoal)} className="space-y-4 p-4 glass-card">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-800 mb-2">目標タイトル</label>
+                  <label className="block text-sm font-medium text-gray-800 mb-2">
+                    目標タイトル
+                  </label>
                   <input
                     type="text"
                     {...registerGoal('title', { required: true })}
@@ -607,7 +627,9 @@ export function SettingsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-800 mb-2">目標金額（円）</label>
+                  <label className="block text-sm font-medium text-gray-800 mb-2">
+                    目標金額（円）
+                  </label>
                   <input
                     type="number"
                     {...registerGoal('target_amount', { required: true, min: 0 })}
@@ -616,7 +638,9 @@ export function SettingsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-800 mb-2">現在の貯金額（円）</label>
+                  <label className="block text-sm font-medium text-gray-800 mb-2">
+                    現在の貯金額（円）
+                  </label>
                   <input
                     type="number"
                     {...registerGoal('current_amount', { min: 0 })}
@@ -672,54 +696,72 @@ export function SettingsPage() {
 
         {/* Savings Goals List */}
         <div className="space-y-6">
-          {savingsGoals.map((goal) => (
+          {savingsGoals.map(goal => (
             <div key={goal.id} className="p-4 glass-card transition-all duration-300 glass-shine">
               {editingGoal === goal.id ? (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-800 mb-2">目標タイトル</label>
+                    <label className="block text-sm font-medium text-gray-800 mb-2">
+                      目標タイトル
+                    </label>
                     <input
                       type="text"
                       value={tempGoal.title}
                       className="glass-input w-full px-4 py-2 text-gray-800"
-                      onChange={(e) => setTempGoal(prev => ({ ...prev, title: e.target.value }))}
+                      onChange={e => setTempGoal(prev => ({ ...prev, title: e.target.value }))}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-800 mb-2">詳細・説明</label>
+                    <label className="block text-sm font-medium text-gray-800 mb-2">
+                      詳細・説明
+                    </label>
                     <textarea
                       value={tempGoal.description}
                       rows={2}
                       className="glass-input w-full px-4 py-2 text-gray-800"
-                      onChange={(e) => setTempGoal(prev => ({ ...prev, description: e.target.value }))}
+                      onChange={e =>
+                        setTempGoal(prev => ({ ...prev, description: e.target.value }))
+                      }
                     />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-800 mb-2">目標金額（円）</label>
+                      <label className="block text-sm font-medium text-gray-800 mb-2">
+                        目標金額（円）
+                      </label>
                       <input
                         type="number"
                         value={tempGoal.target_amount}
                         className="glass-input w-full px-3 py-2 text-gray-800"
-                        onChange={(e) => setTempGoal(prev => ({ ...prev, target_amount: Number(e.target.value) }))}
+                        onChange={e =>
+                          setTempGoal(prev => ({ ...prev, target_amount: Number(e.target.value) }))
+                        }
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-800 mb-2">現在の貯金額（円）</label>
+                      <label className="block text-sm font-medium text-gray-800 mb-2">
+                        現在の貯金額（円）
+                      </label>
                       <input
                         type="number"
                         value={tempGoal.current_amount}
                         className="glass-input w-full px-3 py-2 text-gray-800"
-                        onChange={(e) => setTempGoal(prev => ({ ...prev, current_amount: Number(e.target.value) }))}
+                        onChange={e =>
+                          setTempGoal(prev => ({ ...prev, current_amount: Number(e.target.value) }))
+                        }
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-800 mb-2">達成予定日</label>
+                      <label className="block text-sm font-medium text-gray-800 mb-2">
+                        達成予定日
+                      </label>
                       <input
                         type="date"
                         value={tempGoal.target_date}
                         className="glass-input w-full px-3 py-2 text-gray-800"
-                        onChange={(e) => setTempGoal(prev => ({ ...prev, target_date: e.target.value }))}
+                        onChange={e =>
+                          setTempGoal(prev => ({ ...prev, target_date: e.target.value }))
+                        }
                       />
                     </div>
                     <div>
@@ -728,7 +770,9 @@ export function SettingsPage() {
                         type="date"
                         value={tempGoal.start_date}
                         className="glass-input w-full px-3 py-2 text-gray-800"
-                        onChange={(e) => setTempGoal(prev => ({ ...prev, start_date: e.target.value }))}
+                        onChange={e =>
+                          setTempGoal(prev => ({ ...prev, start_date: e.target.value }))
+                        }
                       />
                     </div>
                     <div className="flex justify-between items-center pt-2">
@@ -770,8 +814,8 @@ export function SettingsPage() {
                       </button>
                       <button
                         onClick={() => {
-                          setGoalToDelete(goal.id)
-                          setShowDeleteGoalConfirmModal(true)
+                          setGoalToDelete(goal.id);
+                          setShowDeleteGoalConfirmModal(true);
                         }}
                         className="text-red-400 hover:bg-red-500/20 rounded-xl transition-all duration-300 glass-shine"
                       >
@@ -801,7 +845,9 @@ export function SettingsPage() {
                     <div className="flex justify-between items-center">
                       <span className="text-gray-800 font-medium">開始日</span>
                       <span className="font-semibold text-gray-800">
-                        {goal.start_date ? new Date(goal.start_date).toLocaleDateString('ja-JP') : '未設定'}
+                        {goal.start_date
+                          ? new Date(goal.start_date).toLocaleDateString('ja-JP')
+                          : '未設定'}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
@@ -831,8 +877,8 @@ export function SettingsPage() {
               <div className="flex space-x-3">
                 <button
                   onClick={() => {
-                    setShowDeleteConfirmModal(false)
-                    setExpenseToDelete(null)
+                    setShowDeleteConfirmModal(false);
+                    setExpenseToDelete(null);
                   }}
                   className="glass-button-strong flex-1 px-4 py-3 font-semibold text-gray-800"
                 >
@@ -841,9 +887,9 @@ export function SettingsPage() {
                 <button
                   onClick={async () => {
                     if (expenseToDelete) {
-                      await deleteFixedExpense(expenseToDelete)
-                      setShowDeleteConfirmModal(false)
-                      setExpenseToDelete(null)
+                      await deleteFixedExpense(expenseToDelete);
+                      setShowDeleteConfirmModal(false);
+                      setExpenseToDelete(null);
                     }
                   }}
                   className="flex-1 px-4 py-3 bg-red-500/20 backdrop-blur-sm border border-red-400/30 text-red-400 rounded-xl hover:bg-red-500/30 hover:border-red-400/50 transition-all duration-300 font-semibold glass-shine"
@@ -869,8 +915,8 @@ export function SettingsPage() {
               <div className="flex space-x-3">
                 <button
                   onClick={() => {
-                    setShowDeleteGoalConfirmModal(false)
-                    setGoalToDelete(null)
+                    setShowDeleteGoalConfirmModal(false);
+                    setGoalToDelete(null);
                   }}
                   className="glass-button-strong flex-1 px-4 py-3 font-semibold text-gray-800"
                 >
@@ -879,9 +925,9 @@ export function SettingsPage() {
                 <button
                   onClick={async () => {
                     if (goalToDelete) {
-                      await deleteSavingsGoal(goalToDelete)
-                      setShowDeleteGoalConfirmModal(false)
-                      setGoalToDelete(null)
+                      await deleteSavingsGoal(goalToDelete);
+                      setShowDeleteGoalConfirmModal(false);
+                      setGoalToDelete(null);
                     }
                   }}
                   className="flex-1 px-4 py-3 bg-red-500/20 backdrop-blur-sm border border-red-400/30 text-red-400 rounded-xl hover:bg-red-500/30 hover:border-red-400/50 transition-all duration-300 font-semibold glass-shine"
@@ -894,5 +940,5 @@ export function SettingsPage() {
         </div>
       )}
     </div>
-  )
+  );
 }

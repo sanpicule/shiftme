@@ -1,38 +1,38 @@
-import { useEffect, useRef, useState } from 'react'
-import { Dashboard } from './Dashboard'
-import { SettingsPage } from './SettingsPage'
-import { ProfilePage } from './ProfilePage'
-import { AnalyticsPage } from './AnalyticsPage'
-import { Layout } from './Layout'
-import { SkeletonCard, SkeletonText } from './SkeletonCard'
+import { useEffect, useRef, useState } from 'react';
+import { Dashboard } from './Dashboard';
+import { SettingsPage } from './SettingsPage';
+import { ProfilePage } from './ProfilePage';
+import { AnalyticsPage } from './AnalyticsPage';
+import { Layout } from './Layout';
+import { SkeletonCard, SkeletonText } from './SkeletonCard';
 
-type Page = 'dashboard' | 'analytics' | 'settings' | 'profile'
+type Page = 'dashboard' | 'analytics' | 'settings' | 'profile';
 
 export function MainApp() {
-  const [currentPage, setCurrentPage] = useState<Page>('dashboard')
-  const [isTransitioning, setIsTransitioning] = useState(false)
-  const transitionTimerRef = useRef<number | null>(null)
+  const [currentPage, setCurrentPage] = useState<Page>('dashboard');
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const transitionTimerRef = useRef<number | null>(null);
 
   const handlePageChange = (page: Page) => {
-    window.scrollTo(0, 0)
-    if (page === currentPage) return
-    setIsTransitioning(true)
-    setCurrentPage(page)
+    window.scrollTo(0, 0);
+    if (page === currentPage) return;
+    setIsTransitioning(true);
+    setCurrentPage(page);
     if (transitionTimerRef.current) {
-      window.clearTimeout(transitionTimerRef.current)
+      window.clearTimeout(transitionTimerRef.current);
     }
     transitionTimerRef.current = window.setTimeout(() => {
-      setIsTransitioning(false)
-    }, 350)
-  }
+      setIsTransitioning(false);
+    }, 350);
+  };
 
   useEffect(() => {
     return () => {
       if (transitionTimerRef.current) {
-        window.clearTimeout(transitionTimerRef.current)
+        window.clearTimeout(transitionTimerRef.current);
       }
-    }
-  }, [])
+    };
+  }, []);
 
   const renderSkeleton = () => (
     <div className="space-y-6">
@@ -47,28 +47,26 @@ export function MainApp() {
       </div>
       <SkeletonCard className="h-64" />
     </div>
-  )
+  );
 
   const renderPage = () => {
     switch (currentPage) {
       case 'dashboard':
-        return <Dashboard onNavigate={handlePageChange} />
+        return <Dashboard onNavigate={handlePageChange} />;
       case 'analytics':
-        return <AnalyticsPage />
+        return <AnalyticsPage />;
       case 'settings':
-        return <SettingsPage />
+        return <SettingsPage />;
       case 'profile':
-        return <ProfilePage />
+        return <ProfilePage />;
       default:
-        return <Dashboard />
+        return <Dashboard />;
     }
-  }
+  };
 
   return (
     <Layout currentPage={currentPage} onPageChange={handlePageChange}>
-      <div className="animate-fadeIn">
-        {isTransitioning ? renderSkeleton() : renderPage()}
-      </div>
+      <div className="animate-fadeIn">{isTransitioning ? renderSkeleton() : renderPage()}</div>
     </Layout>
-  )
+  );
 }

@@ -1,47 +1,47 @@
-import { useCallback, useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { useCallback, useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
 
 interface GoogleCalendarStatus {
-  isConnected: boolean
-  loading: boolean
-  refresh: () => Promise<void>
+  isConnected: boolean;
+  loading: boolean;
+  refresh: () => Promise<void>;
 }
 
 export function useGoogleCalendarStatus(): GoogleCalendarStatus {
-  const [isConnected, setIsConnected] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [isConnected, setIsConnected] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession()
-      const accessToken = sessionData.session?.access_token
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
 
       if (!accessToken) {
-        setIsConnected(false)
-        return
+        setIsConnected(false);
+        return;
       }
 
       const { data, error } = await supabase.functions.invoke('google-calendar-status', {
         headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      })
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
       if (error) {
-        throw error
+        throw error;
       }
-      setIsConnected(Boolean(data?.connected))
+      setIsConnected(Boolean(data?.connected));
     } catch (error) {
-      console.error('Error checking Google Calendar status:', error)
-      setIsConnected(false)
+      console.error('Error checking Google Calendar status:', error);
+      setIsConnected(false);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    refresh()
-  }, [refresh])
+    refresh();
+  }, [refresh]);
 
-  return { isConnected, loading, refresh }
+  return { isConnected, loading, refresh };
 }
