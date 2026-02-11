@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ToastProvider } from './components/ToastContainer'
 import { AuthForm } from './components/AuthForm'
@@ -9,12 +10,32 @@ import { LoadingSpinner } from './components/LoadingSpinner'
 
 import { DataProvider } from './contexts/DataContext';
 
+// Minimum loading time to prevent flickering (in milliseconds)
+const MIN_LOADING_TIME = 800
+
 function AppContent() {
   const { user, loading: authLoading } = useAuth()
   const { userSettings, loading: settingsLoading } = useUserSettings()
+  const [minLoadingComplete, setMinLoadingComplete] = useState(false)
+  const [startTime] = useState(Date.now())
 
-  // Combine all loading states into one - show loading until everything is ready
-  const isInitializing = authLoading || (user && settingsLoading)
+  // Ensure minimum loading time to prevent flickering
+  useEffect(() => {
+    const elapsed = Date.now() - startTime
+    const remaining = MIN_LOADING_TIME - elapsed
+
+    if (remaining > 0) {
+      const timer = setTimeout(() => {
+        setMinLoadingComplete(true)
+      }, remaining)
+      return () => clearTimeout(timer)
+    } else {
+      setMinLoadingComplete(true)
+    }
+  }, [startTime])
+
+  // Combine all loading states including minimum loading time
+  const isInitializing = authLoading || (user && settingsLoading) || !minLoadingComplete
 
   // Show single loading screen while initializing
   if (isInitializing) {
