@@ -32,6 +32,8 @@ const categories = [
   'その他',
 ]
 
+const SKELETON_CALENDAR_DAYS = 28
+
 type Page = 'dashboard' | 'analytics' | 'settings' | 'profile'
 
 interface DashboardProps {
@@ -302,7 +304,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               </div>
             </div>
             <div className="grid grid-cols-7 gap-2">
-              {Array.from({ length: 28 }).map((_, index) => (
+              {Array.from({ length: SKELETON_CALENDAR_DAYS }).map((_, index) => (
                 <div
                   key={`skeleton-day-${index}`}
                   className="h-10 rounded-lg bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"
@@ -338,7 +340,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               </div>
             </div>
             <div className="grid grid-cols-7 gap-2">
-              {Array.from({ length: 28 }).map((_, index) => (
+              {Array.from({ length: SKELETON_CALENDAR_DAYS }).map((_, index) => (
                 <div
                   key={`month-skeleton-day-${index}`}
                   className="h-10 rounded-lg bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"

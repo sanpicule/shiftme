@@ -38,7 +38,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const fetchData = useCallback(async (isRefetch = false) => {
     if (!user || !userSettings) return;
 
-    // Only show loading on refetch, not on initial load (to prevent flicker)
+    // Loading state starts as true, so initial load already shows loading
+    // Only reset loading to true on refetch to show loading indicator
     if (isRefetch) {
       setLoading(true);
     }
