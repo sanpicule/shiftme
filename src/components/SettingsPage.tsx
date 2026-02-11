@@ -49,6 +49,7 @@ export function SettingsPage() {
   const { register: registerExpense, handleSubmit: handleExpenseSubmit, reset: resetExpense } = useForm<FixedExpenseForm>()
   const { register: registerGoal, handleSubmit: handleGoalSubmit, reset: resetGoal } = useForm<SavingsGoalForm>()
 
+
   // 編集用のフォーム状態（一時的な値を保持）
   const [tempExpense, setTempExpense] = useState<FixedExpenseForm>({
     name: '',
@@ -287,6 +288,7 @@ export function SettingsPage() {
     const remainingAmount = goal.target_amount - (goal.current_amount || 0)
     return Math.ceil(remainingAmount / remainingMonths)
   }
+
 
   return (
     <div className="space-y-8">

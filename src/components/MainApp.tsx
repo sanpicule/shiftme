@@ -52,7 +52,7 @@ export function MainApp() {
   const renderPage = () => {
     switch (currentPage) {
       case 'dashboard':
-        return <Dashboard />
+        return <Dashboard onNavigate={handlePageChange} />
       case 'analytics':
         return <AnalyticsPage />
       case 'settings':

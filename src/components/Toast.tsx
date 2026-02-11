@@ -111,7 +111,7 @@ export function Toast({ id, type, title, message, duration = 5000, onClose }: To
         )}
       </div>
       
-      <style jsx>{`
+      <style>{`
         @keyframes shrink {
           from { width: 100%; }
           to { width: 0%; }
