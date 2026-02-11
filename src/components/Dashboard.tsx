@@ -3,7 +3,6 @@ import { format, startOfMonth, endOfMonth } from 'date-fns'
 import { ja } from 'date-fns/locale'
 import { Calendar, AlertTriangle, CheckCircle, Edit2, Trash2, Plus, X, Save, ChevronDown, ChevronUp, Eye, EyeOff, Link2 } from 'lucide-react'
 import { ExpenseCalendar } from './ExpenseCalendar'
-import { LoadingSpinner } from './LoadingSpinner'
 import { SkeletonCard, SkeletonText } from './SkeletonCard'
 import { useUserSettings } from '../hooks/useUserSettings'
 import { useGoogleCalendar } from '../hooks/useGoogleCalendar'
@@ -279,11 +278,39 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     }
   }
 
-  // Show loading state
+  // Show skeleton loading state instead of spinner for better UX
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <LoadingSpinner size="lg" />
+      <div className="space-y-6">
+        <div className="space-y-3">
+          <SkeletonText className="h-8" width="w-40" />
+          <SkeletonText className="h-4" width="w-56" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+        <SkeletonCard className="overflow-hidden">
+          <div className="p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <SkeletonText className="h-6" width="w-32" />
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-16 rounded-lg bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"></div>
+                <div className="h-8 w-8 rounded-full bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"></div>
+                <div className="h-8 w-8 rounded-full bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"></div>
+              </div>
+            </div>
+            <div className="grid grid-cols-7 gap-2">
+              {Array.from({ length: 28 }).map((_, index) => (
+                <div
+                  key={`skeleton-day-${index}`}
+                  className="h-10 rounded-lg bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"
+                ></div>
+              ))}
+            </div>
+          </div>
+        </SkeletonCard>
       </div>
     )
   }

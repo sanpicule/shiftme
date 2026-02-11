@@ -13,8 +13,11 @@ function AppContent() {
   const { user, loading: authLoading } = useAuth()
   const { userSettings, loading: settingsLoading } = useUserSettings()
 
-  // Show loading only during auth check
-  if (authLoading) {
+  // Combine all loading states into one - show loading until everything is ready
+  const isInitializing = authLoading || (user && settingsLoading)
+
+  // Show single loading screen while initializing
+  if (isInitializing) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div>
@@ -24,6 +27,7 @@ function AppContent() {
     )
   }
 
+  // Only show auth form when we're sure user is not authenticated
   if (!user) {
     return (
       <>
@@ -33,27 +37,13 @@ function AppContent() {
     )
   }
 
-  if (settingsLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div>
-          <LoadingSpinner size="lg" />
-        </div>
-      </div>
-    )
-  }
-
-  // Show InitialSetup only when we're sure the user hasn't completed setup
-  // and we're not in a loading state
-  if (userSettings === null && !settingsLoading) {
-    return <InitialSetup />
-  }
-  
-  // If userSettings exists but setup is not completed, show InitialSetup
-  if (userSettings && !userSettings.setup_completed) {
+  // At this point, user is authenticated and settings are loaded
+  // Show InitialSetup if user hasn't completed setup
+  if (!userSettings || !userSettings.setup_completed) {
     return <InitialSetup />
   }
 
+  // User is authenticated and setup is complete - show main app
   return (
     <DataProvider>
       <MainApp />
