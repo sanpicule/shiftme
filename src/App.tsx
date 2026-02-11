@@ -1,4 +1,6 @@
+import { useState, useEffect } from 'react'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { GoogleCalendarProvider, useGoogleCalendarContext } from './contexts/GoogleCalendarContext'
 import { ToastProvider } from './components/ToastContainer'
 import { AuthForm } from './components/AuthForm'
 import { InitialSetup } from './components/InitialSetup'
@@ -9,12 +11,36 @@ import { LoadingSpinner } from './components/LoadingSpinner'
 
 import { DataProvider } from './contexts/DataContext';
 
+// Minimum loading time to prevent flickering (in milliseconds)
+const MIN_LOADING_TIME = 800
+
 function AppContent() {
   const { user, loading: authLoading } = useAuth()
   const { userSettings, loading: settingsLoading } = useUserSettings()
+  const { loading: googleCalendarLoading } = useGoogleCalendarContext()
+  const [minLoadingComplete, setMinLoadingComplete] = useState(false)
+  const [startTime] = useState(Date.now())
 
-  // Show loading only during auth check
-  if (authLoading) {
+  // Ensure minimum loading time to prevent flickering
+  useEffect(() => {
+    const elapsed = Date.now() - startTime
+    const remaining = MIN_LOADING_TIME - elapsed
+
+    if (remaining > 0) {
+      const timer = setTimeout(() => {
+        setMinLoadingComplete(true)
+      }, remaining)
+      return () => clearTimeout(timer)
+    } else {
+      setMinLoadingComplete(true)
+    }
+  }, [startTime])
+
+  // Combine all loading states including Google Calendar status and minimum loading time
+  const isInitializing = authLoading || (user && settingsLoading) || (user && googleCalendarLoading) || !minLoadingComplete
+
+  // Show single loading screen while initializing
+  if (isInitializing) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div>
@@ -24,6 +50,7 @@ function AppContent() {
     )
   }
 
+  // Only show auth form when we're sure user is not authenticated
   if (!user) {
     return (
       <>
@@ -33,27 +60,13 @@ function AppContent() {
     )
   }
 
-  if (settingsLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div>
-          <LoadingSpinner size="lg" />
-        </div>
-      </div>
-    )
-  }
-
-  // Show InitialSetup only when we're sure the user hasn't completed setup
-  // and we're not in a loading state
-  if (userSettings === null && !settingsLoading) {
-    return <InitialSetup />
-  }
-  
-  // If userSettings exists but setup is not completed, show InitialSetup
-  if (userSettings && !userSettings.setup_completed) {
+  // At this point, user is authenticated and settings are loaded
+  // Show InitialSetup if user hasn't completed setup
+  if (!userSettings || !userSettings.setup_completed) {
     return <InitialSetup />
   }
 
+  // User is authenticated and setup is complete - show main app
   return (
     <DataProvider>
       <MainApp />
@@ -66,7 +79,9 @@ function App() {
   return (
     <ToastProvider>
       <AuthProvider>
-        <AppContent />
+        <GoogleCalendarProvider>
+          <AppContent />
+        </GoogleCalendarProvider>
       </AuthProvider>
     </ToastProvider>
   )
