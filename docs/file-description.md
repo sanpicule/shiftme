@@ -8,7 +8,7 @@
 | `.cursor/`            | Cursor/MCP の設定                                                                      |
 | `.env`                | 実行時の環境変数（APIキー等）。Git 追跡外                                              |
 | `.env.example`        | 必要な環境変数のサンプル定義                                                           |
-| `.github/workflows/`  | GitHub Actions（`gemini-*.yml` は Gemini 連携の自動化）                                |
+| `.github/workflows/`  | GitHub Actions                                                                         |
 | `.gitignore`          | 版管理から除外する対象の定義（`dist`, `.env`, `.DS_Store` 等）                         |
 | `.vscode/`            | VS Code ワークスペース設定（`settings.json` 等）                                       |
 | `eslint.config.js`    | ESLint 設定（TS/React Hooks, `dist` 除外）                                             |
