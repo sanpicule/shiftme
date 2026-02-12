@@ -1,13 +1,15 @@
-import React from 'react'
+import React from 'react';
 
 interface SkeletonCardProps {
-  className?: string
-  children?: React.ReactNode
+  className?: string;
+  children?: React.ReactNode;
 }
 
 export function SkeletonCard({ className = '', children }: SkeletonCardProps) {
   return (
-    <div className={`bg-white/60 backdrop-blur-sm rounded-2xl border border-white/20 animate-pulse ${className}`}>
+    <div
+      className={`bg-white/60 backdrop-blur-sm rounded-2xl border border-white/20 animate-pulse ${className}`}
+    >
       {children || (
         <div className="p-6 space-y-4">
           <div className="flex items-center justify-between">
@@ -20,23 +22,35 @@ export function SkeletonCard({ className = '', children }: SkeletonCardProps) {
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export function SkeletonText({ className = '', width = 'w-full' }: { className?: string, width?: string }) {
+export function SkeletonText({
+  className = '',
+  width = 'w-full',
+}: {
+  className?: string;
+  width?: string;
+}) {
   return (
-    <div className={`h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg ${width} ${className} animate-pulse`}></div>
-  )
+    <div
+      className={`h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg ${width} ${className} animate-pulse`}
+    ></div>
+  );
 }
 
 export function SkeletonButton({ className = '' }: { className?: string }) {
   return (
-    <div className={`h-12 bg-gradient-to-r from-gray-200 to-gray-300 rounded-xl ${className} animate-pulse`}></div>
-  )
+    <div
+      className={`h-12 bg-gradient-to-r from-gray-200 to-gray-300 rounded-xl ${className} animate-pulse`}
+    ></div>
+  );
 }
 
 export function SkeletonAvatar({ size = 'w-12 h-12' }: { size?: string }) {
   return (
-    <div className={`${size} bg-gradient-to-r from-gray-200 to-gray-300 rounded-full animate-pulse`}></div>
-  )
+    <div
+      className={`${size} bg-gradient-to-r from-gray-200 to-gray-300 rounded-full animate-pulse`}
+    ></div>
+  );
 }

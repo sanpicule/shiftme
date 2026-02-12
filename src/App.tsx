@@ -1,43 +1,47 @@
-import { useState, useEffect } from 'react'
-import { AuthProvider, useAuth } from './contexts/AuthContext'
-import { GoogleCalendarProvider, useGoogleCalendarContext } from './contexts/GoogleCalendarContext'
-import { ToastProvider } from './components/ToastContainer'
-import { AuthForm } from './components/AuthForm'
-import { InitialSetup } from './components/InitialSetup'
-import { MainApp } from './components/MainApp'
-import { InstallPrompt } from './components/InstallPrompt'
-import { useUserSettings } from './hooks/useUserSettings'
-import { LoadingSpinner } from './components/LoadingSpinner'
+import { useState, useEffect } from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { GoogleCalendarProvider, useGoogleCalendarContext } from './contexts/GoogleCalendarContext';
+import { ToastProvider } from './components/ToastContainer';
+import { AuthForm } from './components/AuthForm';
+import { InitialSetup } from './components/InitialSetup';
+import { MainApp } from './components/MainApp';
+import { InstallPrompt } from './components/InstallPrompt';
+import { useUserSettings } from './hooks/useUserSettings';
+import { LoadingSpinner } from './components/LoadingSpinner';
 
 import { DataProvider } from './contexts/DataContext';
 
 // Minimum loading time to prevent flickering (in milliseconds)
-const MIN_LOADING_TIME = 800
+const MIN_LOADING_TIME = 800;
 
 function AppContent() {
-  const { user, loading: authLoading } = useAuth()
-  const { userSettings, loading: settingsLoading } = useUserSettings()
-  const { loading: googleCalendarLoading } = useGoogleCalendarContext()
-  const [minLoadingComplete, setMinLoadingComplete] = useState(false)
-  const [startTime] = useState(Date.now())
+  const { user, loading: authLoading } = useAuth();
+  const { userSettings, loading: settingsLoading } = useUserSettings();
+  const { loading: googleCalendarLoading } = useGoogleCalendarContext();
+  const [minLoadingComplete, setMinLoadingComplete] = useState(false);
+  const [startTime] = useState(Date.now());
 
   // Ensure minimum loading time to prevent flickering
   useEffect(() => {
-    const elapsed = Date.now() - startTime
-    const remaining = MIN_LOADING_TIME - elapsed
+    const elapsed = Date.now() - startTime;
+    const remaining = MIN_LOADING_TIME - elapsed;
 
     if (remaining > 0) {
       const timer = setTimeout(() => {
-        setMinLoadingComplete(true)
-      }, remaining)
-      return () => clearTimeout(timer)
+        setMinLoadingComplete(true);
+      }, remaining);
+      return () => clearTimeout(timer);
     } else {
-      setMinLoadingComplete(true)
+      setMinLoadingComplete(true);
     }
-  }, [startTime])
+  }, [startTime]);
 
   // Combine all loading states including Google Calendar status and minimum loading time
-  const isInitializing = authLoading || (user && settingsLoading) || (user && googleCalendarLoading) || !minLoadingComplete
+  const isInitializing =
+    authLoading ||
+    (user && settingsLoading) ||
+    (user && googleCalendarLoading) ||
+    !minLoadingComplete;
 
   // Show single loading screen while initializing
   if (isInitializing) {
@@ -47,7 +51,7 @@ function AppContent() {
           <LoadingSpinner size="lg" />
         </div>
       </div>
-    )
+    );
   }
 
   // Only show auth form when we're sure user is not authenticated
@@ -57,13 +61,13 @@ function AppContent() {
         <AuthForm />
         <InstallPrompt />
       </>
-    )
+    );
   }
 
   // At this point, user is authenticated and settings are loaded
   // Show InitialSetup if user hasn't completed setup
   if (!userSettings || !userSettings.setup_completed) {
-    return <InitialSetup />
+    return <InitialSetup />;
   }
 
   // User is authenticated and setup is complete - show main app
@@ -72,7 +76,7 @@ function AppContent() {
       <MainApp />
       <InstallPrompt />
     </DataProvider>
-  )
+  );
 }
 
 function App() {
@@ -84,7 +88,7 @@ function App() {
         </GoogleCalendarProvider>
       </AuthProvider>
     </ToastProvider>
-  )
+  );
 }
 
-export default App
+export default App;

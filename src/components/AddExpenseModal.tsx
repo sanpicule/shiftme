@@ -1,65 +1,59 @@
-import React from 'react'
-import { useForm } from 'react-hook-form'
-import { X, Plus, DollarSign } from 'lucide-react'
-import { supabase } from '../lib/supabase'
-import { useAuth } from '../contexts/AuthContext'
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { X, Plus, DollarSign } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 
 interface AddExpenseModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onExpenseAdded: () => void
+  isOpen: boolean;
+  onClose: () => void;
+  onExpenseAdded: () => void;
 }
 
 interface ExpenseForm {
-  amount: number
-  category: string
-  description: string
-  expense_date: string
+  amount: number;
+  category: string;
+  description: string;
+  expense_date: string;
 }
 
-const categories = [
-  '食費',
-  '交通費',
-  '娯楽',
-  '衣服',
-  '医療',
-  '日用品',
-  '教育',
-  'その他',
-]
+const categories = ['食費', '交通費', '娯楽', '衣服', '医療', '日用品', '教育', 'その他'];
 
 export function AddExpenseModal({ isOpen, onClose, onExpenseAdded }: AddExpenseModalProps) {
-  const { user } = useAuth()
-  const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm<ExpenseForm>({
+  const { user } = useAuth();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { isSubmitting },
+  } = useForm<ExpenseForm>({
     defaultValues: {
       expense_date: new Date().toISOString().split('T')[0],
       category: '食費',
     },
-  })
+  });
 
   const onSubmit = async (data: ExpenseForm) => {
-    if (!user) return
+    if (!user) return;
 
     try {
-      const { error } = await supabase
-        .from('expenses')
-        .insert({
-          ...data,
-          user_id: user.id,
-        })
+      const { error } = await supabase.from('expenses').insert({
+        ...data,
+        user_id: user.id,
+      });
 
-      if (error) throw error
+      if (error) throw error;
 
-      reset()
-      onExpenseAdded()
-      onClose()
+      reset();
+      onExpenseAdded();
+      onClose();
     } catch (error) {
-      console.error('Error adding expense:', error)
-      alert('支出の追加に失敗しました')
+      console.error('Error adding expense:', error);
+      alert('支出の追加に失敗しました');
     }
-  }
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -81,9 +75,7 @@ export function AddExpenseModal({ isOpen, onClose, onExpenseAdded }: AddExpenseM
 
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
-              金額（円）
-            </label>
+            <label className="block text-sm font-semibold text-gray-700 mb-3">金額（円）</label>
             <input
               type="number"
               {...register('amount', { required: true, min: 0 })}
@@ -93,23 +85,21 @@ export function AddExpenseModal({ isOpen, onClose, onExpenseAdded }: AddExpenseM
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
-              カテゴリ
-            </label>
+            <label className="block text-sm font-semibold text-gray-700 mb-3">カテゴリ</label>
             <select
               {...register('category', { required: true })}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             >
-              {categories.map((category) => (
-                <option key={category} value={category}>{category}</option>
+              {categories.map(category => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
-              説明・メモ
-            </label>
+            <label className="block text-sm font-semibold text-gray-700 mb-3">説明・メモ</label>
             <input
               type="text"
               {...register('description')}
@@ -119,9 +109,7 @@ export function AddExpenseModal({ isOpen, onClose, onExpenseAdded }: AddExpenseM
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
-              日付
-            </label>
+            <label className="block text-sm font-semibold text-gray-700 mb-3">日付</label>
             <input
               type="date"
               {...register('expense_date', { required: true })}
@@ -155,5 +143,5 @@ export function AddExpenseModal({ isOpen, onClose, onExpenseAdded }: AddExpenseM
         </form>
       </div>
     </div>
-  )
+  );
 }

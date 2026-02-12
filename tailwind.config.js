@@ -15,7 +15,7 @@ export default {
         backdrop: {
           blur: 'rgba(255, 255, 255, 0.1)',
           'blur-dark': 'rgba(0, 0, 0, 0.1)',
-        }
+        },
       },
       backdropBlur: {
         xs: '2px',
@@ -23,27 +23,27 @@ export default {
       keyframes: {
         fadeIn: {
           '0%': { opacity: '0', transform: 'translateY(10px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' }
+          '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         glassShine: {
           '0%': { transform: 'translateX(-100%)' },
-          '100%': { transform: 'translateX(100%)' }
+          '100%': { transform: 'translateX(100%)' },
         },
         float: {
           '0%, 100%': { transform: 'translateY(0px)' },
-          '50%': { transform: 'translateY(-10px)' }
-        }
+          '50%': { transform: 'translateY(-10px)' },
+        },
       },
       animation: {
         fadeIn: 'fadeIn 0.3s ease-out',
         glassShine: 'glassShine 2s ease-in-out infinite',
-        float: 'float 3s ease-in-out infinite'
+        float: 'float 3s ease-in-out infinite',
       },
       boxShadow: {
-        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+        glass: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
         'glass-inset': 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05)',
         'glass-glow': '0 0 20px rgba(156, 163, 175, 0.3)',
-      }
+      },
     },
   },
   plugins: [],

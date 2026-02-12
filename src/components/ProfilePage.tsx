@@ -1,121 +1,132 @@
-import { useState, useEffect, useCallback } from 'react'
-import { User, Award, Target, PiggyBank, TrendingUp, Calendar, Link2, CheckCircle } from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
-import { useUserSettings } from '../hooks/useUserSettings'
-import { useGoogleCalendarContext } from '../contexts/GoogleCalendarContext'
-import { format } from 'date-fns'
-import { ja } from 'date-fns/locale'
-import { supabase, FixedExpense } from '../lib/supabase'
-import { LogoutConfirmModal } from './LogoutConfirmModal'
-import { useToast } from './ToastContainer'
+import { useState, useEffect, useCallback } from 'react';
+import {
+  User,
+  Award,
+  Target,
+  PiggyBank,
+  TrendingUp,
+  Calendar,
+  Link2,
+  CheckCircle,
+} from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { useUserSettings } from '../hooks/useUserSettings';
+import { useGoogleCalendarContext } from '../contexts/GoogleCalendarContext';
+import { format } from 'date-fns';
+import { ja } from 'date-fns/locale';
+import { supabase, FixedExpense } from '../lib/supabase';
+import { LogoutConfirmModal } from './LogoutConfirmModal';
+import { useToast } from './ToastContainer';
 
 export function ProfilePage() {
-  const { signOut, user, session } = useAuth()
-  const [showLogoutModal, setShowLogoutModal] = useState(false)
-  const openLogoutModal = () => setShowLogoutModal(true)
-  const closeLogoutModal = () => setShowLogoutModal(false)
-  const { showSuccess, showError } = useToast()
+  const { signOut, user, session } = useAuth();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const openLogoutModal = () => setShowLogoutModal(true);
+  const closeLogoutModal = () => setShowLogoutModal(false);
+  const { showSuccess, showError } = useToast();
 
   const handleSignOut = async () => {
     try {
-      await signOut()
+      await signOut();
     } catch (error) {
-      console.error('Logout error:', error)
-      window.location.reload()
+      console.error('Logout error:', error);
+      window.location.reload();
     }
-  }
-  const { userSettings } = useUserSettings()
-  const [activeTab, setActiveTab] = useState<'overview' | 'achievements'>('overview')
-  const [fixedExpenses, setFixedExpenses] = useState<FixedExpense[]>([])
-  const [isConnectingGoogle, setIsConnectingGoogle] = useState(false)
+  };
+  const { userSettings } = useUserSettings();
+  const [activeTab, setActiveTab] = useState<'overview' | 'achievements'>('overview');
+  const [fixedExpenses, setFixedExpenses] = useState<FixedExpense[]>([]);
+  const [isConnectingGoogle, setIsConnectingGoogle] = useState(false);
   const {
     isConnected: isGoogleCalendarConnected,
     loading: googleCalendarStatusLoading,
-    refresh: googleCalendarRefresh
-  } = useGoogleCalendarContext()
+    refresh: googleCalendarRefresh,
+  } = useGoogleCalendarContext();
 
-  const memberSince = user?.created_at ? new Date(user.created_at) : new Date()
-  const daysSinceMember = Math.floor((new Date().getTime() - memberSince.getTime()) / (1000 * 60 * 60 * 24))
+  const memberSince = user?.created_at ? new Date(user.created_at) : new Date();
+  const daysSinceMember = Math.floor(
+    (new Date().getTime() - memberSince.getTime()) / (1000 * 60 * 60 * 24),
+  );
 
   const fetchFixedExpenses = useCallback(async () => {
-    if (!user) return
+    if (!user) return;
 
     try {
       const { data, error } = await supabase
         .from('fixed_expenses')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', user.id);
 
-      if (error) throw error
-      setFixedExpenses(data || [])
+      if (error) throw error;
+      setFixedExpenses(data || []);
     } catch (error) {
-      console.error('Error fetching fixed expenses:', error)
-      setFixedExpenses([])
+      console.error('Error fetching fixed expenses:', error);
+      setFixedExpenses([]);
     }
-  }, [user])
+  }, [user]);
 
   useEffect(() => {
     if (user) {
-      fetchFixedExpenses()
+      fetchFixedExpenses();
     }
-  }, [user, fetchFixedExpenses])
+  }, [user, fetchFixedExpenses]);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
+    const params = new URLSearchParams(window.location.search);
     if (params.get('google_calendar_connected') === 'true') {
-      const url = new URL(window.location.href)
-      url.searchParams.delete('google_calendar_connected')
-      window.history.replaceState({}, '', url.pathname)
-      googleCalendarRefresh()
-      showSuccess('Googleカレンダーを連携しました')
+      const url = new URL(window.location.href);
+      url.searchParams.delete('google_calendar_connected');
+      window.history.replaceState({}, '', url.pathname);
+      googleCalendarRefresh();
+      showSuccess('Googleカレンダーを連携しました');
     }
-    const gcError = params.get('google_calendar_error')
+    const gcError = params.get('google_calendar_error');
     if (gcError) {
-      const url = new URL(window.location.href)
-      url.searchParams.delete('google_calendar_error')
-      window.history.replaceState({}, '', url.pathname)
-      showError('Google連携エラー', gcError)
+      const url = new URL(window.location.href);
+      url.searchParams.delete('google_calendar_error');
+      window.history.replaceState({}, '', url.pathname);
+      showError('Google連携エラー', gcError);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, []);
 
   const handleGoogleCalendarConnect = async () => {
-    if (!user || isGoogleCalendarConnected) return
+    if (!user || isGoogleCalendarConnected) return;
 
-    setIsConnectingGoogle(true)
+    setIsConnectingGoogle(true);
     try {
       if (!session?.access_token) {
-        showError('認証情報が見つかりません', 'ログインし直してください')
-        return
+        showError('認証情報が見つかりません', 'ログインし直してください');
+        return;
       }
 
       const { data, error } = await supabase.functions.invoke('google-calendar-start', {
         body: { returnTo: window.location.origin },
         headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
-      })
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
 
       if (error) {
-        throw error
+        throw error;
       }
 
       if (!data?.url) {
-        showError('連携URLの生成に失敗しました', 'もう一度お試しください')
-        return
+        showError('連携URLの生成に失敗しました', 'もう一度お試しください');
+        return;
       }
 
-      window.location.assign(data.url)
+      window.location.assign(data.url);
     } catch (error) {
-      console.error('Error connecting Google Calendar:', error)
-      showError('連携に失敗しました', 'もう一度お試しください')
+      console.error('Error connecting Google Calendar:', error);
+      showError('連携に失敗しました', 'もう一度お試しください');
     } finally {
-      setIsConnectingGoogle(false)
+      setIsConnectingGoogle(false);
     }
-  }
+  };
 
-  const totalFixedExpenses = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0)
-  const monthlyAvailableAmount = (userSettings?.monthly_income || 0) - totalFixedExpenses
+  const totalFixedExpenses = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+  const monthlyAvailableAmount = (userSettings?.monthly_income || 0) - totalFixedExpenses;
 
   const achievements = [
     {
@@ -150,10 +161,10 @@ export function ProfilePage() {
       completed: false,
       date: null,
     },
-  ]
+  ];
 
-  const completedAchievements = achievements.filter(a => a.completed)
-  const totalAchievements = achievements.length
+  const completedAchievements = achievements.filter(a => a.completed);
+  const totalAchievements = achievements.length;
 
   return (
     <div>
@@ -166,7 +177,6 @@ export function ProfilePage() {
         {/* Profile Card */}
         <div>
           <div className="flex flex-col md:flex-row items-start space-y-6 md:space-y-0 md:space-x-8">
-            
             <div className="flex items-center gap-4 ml-2">
               {/* Avatar */}
               <div>
@@ -190,7 +200,6 @@ export function ProfilePage() {
                   </div>
                   <div className="text-sm glass-text">達成率</div>
                 </div>
-
               </div>
             </div>
           </div>
@@ -212,17 +221,27 @@ export function ProfilePage() {
                   </span>
                 )}
               </div>
-              <p className="text-sm text-gray-700 mt-2">Googleカレンダーに登録された予定を表示します</p>
+              <p className="text-sm text-gray-700 mt-2">
+                Googleカレンダーに登録された予定を表示します
+              </p>
             </div>
             {!isGoogleCalendarConnected && (
               <button
                 type="button"
                 onClick={handleGoogleCalendarConnect}
-                disabled={isConnectingGoogle || isGoogleCalendarConnected || googleCalendarStatusLoading}
+                disabled={
+                  isConnectingGoogle || isGoogleCalendarConnected || googleCalendarStatusLoading
+                }
                 className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-blue-600/90 text-white rounded-xl font-semibold shadow-sm hover:bg-blue-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <Link2 className="w-5 h-5" />
-                <span>{isConnectingGoogle ? '連携中...' : googleCalendarStatusLoading ? '確認中...' : 'Googleカレンダーと連携'}</span>
+                <span>
+                  {isConnectingGoogle
+                    ? '連携中...'
+                    : googleCalendarStatusLoading
+                      ? '確認中...'
+                      : 'Googleカレンダーと連携'}
+                </span>
               </button>
             )}
           </div>
@@ -235,24 +254,25 @@ export function ProfilePage() {
               {[
                 { id: 'overview' as const, name: '概要', icon: User },
                 { id: 'achievements' as const, name: '実績', icon: Award },
-              ].map((tab) => {
-                const Icon = tab.icon
+              ].map(tab => {
+                const Icon = tab.icon;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={`
                       flex items-center space-x-2 py-4 px-2 border-b-2 font-medium text-sm transition-colors glass-shine
-                      ${activeTab === tab.id
-                        ? 'border-blue-400/50 glass-text-strong'
-                        : 'border-transparent glass-text hover:border-white/30'
+                      ${
+                        activeTab === tab.id
+                          ? 'border-blue-400/50 glass-text-strong'
+                          : 'border-transparent glass-text hover:border-white/30'
                       }
                     `}
                   >
                     <Icon className="w-4 h-4 glass-icon" />
                     <span>{tab.name}</span>
                   </button>
-                )
+                );
               })}
             </nav>
           </div>
@@ -263,7 +283,9 @@ export function ProfilePage() {
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold glass-text-strong border-b border-gray-300">基本情報</h3>
+                    <h3 className="text-lg font-semibold glass-text-strong border-b border-gray-300">
+                      基本情報
+                    </h3>
                     <div className="space-y-3">
                       <div className="flex flex-col">
                         <span className="glass-text font-bold">メールアドレス</span>
@@ -279,7 +301,9 @@ export function ProfilePage() {
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold glass-text-strong border-b border-gray-300">収支情報</h3>
+                    <h3 className="text-lg font-semibold glass-text-strong border-b border-gray-300">
+                      収支情報
+                    </h3>
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="glass-text">月収:</span>
@@ -303,7 +327,9 @@ export function ProfilePage() {
                   </div>
 
                   <div className="space-y-4 border-b border-gray-300 pb-6">
-                    <h3 className="text-lg font-semibold glass-text-strong border-b border-gray-300">アクティビティ</h3>
+                    <h3 className="text-lg font-semibold glass-text-strong border-b border-gray-300">
+                      アクティビティ
+                    </h3>
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="glass-text">利用日数:</span>
@@ -311,11 +337,15 @@ export function ProfilePage() {
                       </div>
                       <div className="flex justify-between">
                         <span className="glass-text">達成した実績:</span>
-                        <span className="font-medium glass-text-strong">{completedAchievements.length}個</span>
+                        <span className="font-medium glass-text-strong">
+                          {completedAchievements.length}個
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="glass-text">設定完了:</span>
-                        <span className={`font-medium ${userSettings?.setup_completed ? 'text-green-600' : 'text-red-600'}`}>
+                        <span
+                          className={`font-medium ${userSettings?.setup_completed ? 'text-green-600' : 'text-red-600'}`}
+                        >
                           {userSettings?.setup_completed ? '完了' : '未完了'}
                         </span>
                       </div>
@@ -345,42 +375,51 @@ export function ProfilePage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {achievements.map((achievement) => {
-                    const Icon = achievement.icon
+                  {achievements.map(achievement => {
+                    const Icon = achievement.icon;
                     return (
                       <div
                         key={achievement.id}
                         className={`
                           p-6 rounded-xl border-2 transition-all duration-200 glass-shine
-                          ${achievement.completed
-                            ? 'glass-card border-green-600 bg-green-50 shadow-glass-glow'
-                            : 'glass-card border-gray-400'
+                          ${
+                            achievement.completed
+                              ? 'glass-card border-green-600 bg-green-50 shadow-glass-glow'
+                              : 'glass-card border-gray-400'
                           }
                         `}
                       >
                         <div className="flex items-start space-x-4">
-                          <Icon className={`w-6 h-6 ${achievement.completed ? 'glass-icon' : 'glass-icon'}`} />
+                          <Icon
+                            className={`w-6 h-6 ${achievement.completed ? 'glass-icon' : 'glass-icon'}`}
+                          />
                           <div className="flex-1">
-                            <h4 className={`font-semibold mb-1 ${achievement.completed ? 'glass-text-strong' : 'glass-text'}`}>
+                            <h4
+                              className={`font-semibold mb-1 ${achievement.completed ? 'glass-text-strong' : 'glass-text'}`}
+                            >
                               {achievement.title}
                             </h4>
-                            <p className={`text-sm ${achievement.completed ? 'glass-text' : 'glass-text'}`}>
+                            <p
+                              className={`text-sm ${achievement.completed ? 'glass-text' : 'glass-text'}`}
+                            >
                               {achievement.description}
                             </p>
                             {achievement.completed && achievement.date && (
                               <p className="text-xs text-green-600 mt-2">
-                                {format(new Date(achievement.date), 'yyyy年MM月dd日', { locale: ja })}達成
+                                {format(new Date(achievement.date), 'yyyy年MM月dd日', {
+                                  locale: ja,
+                                })}
+                                達成
                               </p>
                             )}
                           </div>
                         </div>
                       </div>
-                    )
+                    );
                   })}
                 </div>
               </div>
             )}
-
           </div>
         </div>
       </div>
@@ -391,5 +430,5 @@ export function ProfilePage() {
         onConfirm={handleSignOut}
       />
     </div>
-  )
+  );
 }

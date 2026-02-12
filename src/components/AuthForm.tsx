@@ -1,39 +1,39 @@
-import React, { useState } from 'react'
-import { Eye, EyeOff, Target, Shield, TrendingUp, Calendar } from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
+import React, { useState } from 'react';
+import { Eye, EyeOff, Target, Shield, TrendingUp, Calendar } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 export function AuthForm() {
-  const [isLogin, setIsLogin] = useState(true)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState('')
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
 
-  const { signIn, signUp } = useAuth()
+  const { signIn, signUp } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setMessage('')
+    e.preventDefault();
+    setLoading(true);
+    setMessage('');
 
     try {
-      const { error } = isLogin
-        ? await signIn(email, password)
-        : await signUp(email, password)
+      const { error } = isLogin ? await signIn(email, password) : await signUp(email, password);
 
       if (error) {
-        setMessage(error.message)
+        setMessage(error.message);
       } else if (!isLogin) {
-        setMessage('登録完了しました。ログインしてください。')
-        setIsLogin(true)
+        setMessage('登録完了しました。ログインしてください。');
+        setIsLogin(true);
       }
     } catch (error: unknown) {
-      setMessage(error instanceof Error && error.message ? error.message : `エラーが発生しました。`)
+      setMessage(
+        error instanceof Error && error.message ? error.message : `エラーが発生しました。`,
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -43,58 +43,62 @@ export function AuthForm() {
           {/* Logo Section */}
           <div className="mb-12">
             <div className="flex items-center mb-6">
-                <div className="relative group glass-shine">
-                  <img src="/public/shiftme-icon.png" alt="Shiftme" className="w-20 h-20 rounded-xl" />
-                </div>
-              <h1 className="ml-6 text-5xl font-black glass-text-strong">
-                Shiftme
-              </h1>
+              <div className="relative group glass-shine">
+                <img
+                  src="/public/shiftme-icon.png"
+                  alt="Shiftme"
+                  className="w-20 h-20 rounded-xl"
+                />
+              </div>
+              <h1 className="ml-6 text-5xl font-black glass-text-strong">Shiftme</h1>
             </div>
             <h3 className="text-2xl font-bold glass-text-strong mb-4">夢を叶える貯金アプリ</h3>
-            <p className="text-md glass-text leading-relaxed">あなたの目標達成をサポートし、効率的な貯金管理を実現します。</p>
+            <p className="text-md glass-text leading-relaxed">
+              あなたの目標達成をサポートし、効率的な貯金管理を実現します。
+            </p>
           </div>
 
           {/* Features Grid */}
           <div className="grid grid-cols-2 gap-6">
-              <div className="glass-card p-6 hover:bg-glass-white-strong transition-all duration-300 hover:scale-105 glass-shine">
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-gray-500/30 to-gray-600/30 backdrop-blur-sm border border-gray-400/30 rounded-2xl flex items-center justify-center shadow-glass-glow">
-                    <Target className="w-6 h-6 glass-icon" />
-                  </div>
-                  <h3 className="text-lg font-bold glass-text-strong ml-4">目標設定</h3>
+            <div className="glass-card p-6 hover:bg-glass-white-strong transition-all duration-300 hover:scale-105 glass-shine">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-gray-500/30 to-gray-600/30 backdrop-blur-sm border border-gray-400/30 rounded-2xl flex items-center justify-center shadow-glass-glow">
+                  <Target className="w-6 h-6 glass-icon" />
                 </div>
-                <p className="glass-text text-sm">具体的な目標を設定し、達成までの道筋を可視化</p>
+                <h3 className="text-lg font-bold glass-text-strong ml-4">目標設定</h3>
               </div>
+              <p className="glass-text text-sm">具体的な目標を設定し、達成までの道筋を可視化</p>
+            </div>
 
-              <div className="glass-card p-6 hover:bg-glass-white-strong transition-all duration-300 hover:scale-105 glass-shine">
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-gray-600/30 to-gray-700/30 backdrop-blur-sm border border-gray-500/30 rounded-2xl flex items-center justify-center shadow-glass-glow">
-                    <TrendingUp className="w-6 h-6 glass-icon" />
-                  </div>
-                  <h3 className="text-lg font-bold glass-text-strong ml-4">進捗管理</h3>
+            <div className="glass-card p-6 hover:bg-glass-white-strong transition-all duration-300 hover:scale-105 glass-shine">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-gray-600/30 to-gray-700/30 backdrop-blur-sm border border-gray-500/30 rounded-2xl flex items-center justify-center shadow-glass-glow">
+                  <TrendingUp className="w-6 h-6 glass-icon" />
                 </div>
-                <p className="glass-text text-sm">貯金の進捗をグラフで確認し、モチベーションを維持</p>
+                <h3 className="text-lg font-bold glass-text-strong ml-4">進捗管理</h3>
               </div>
+              <p className="glass-text text-sm">貯金の進捗をグラフで確認し、モチベーションを維持</p>
+            </div>
 
-              <div className="glass-card p-6 hover:bg-glass-white-strong transition-all duration-300 hover:scale-105 glass-shine">
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-gray-700/30 to-gray-800/30 backdrop-blur-sm border border-gray-600/30 rounded-2xl flex items-center justify-center shadow-glass-glow">
-                    <Calendar className="w-6 h-6 glass-icon" />
-                  </div>
-                  <h3 className="text-lg font-bold glass-text-strong ml-4">支出管理</h3>
+            <div className="glass-card p-6 hover:bg-glass-white-strong transition-all duration-300 hover:scale-105 glass-shine">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-gray-700/30 to-gray-800/30 backdrop-blur-sm border border-gray-600/30 rounded-2xl flex items-center justify-center shadow-glass-glow">
+                  <Calendar className="w-6 h-6 glass-icon" />
                 </div>
-                <p className="glass-text text-sm">日々の支出を記録し、無駄な出費を削減</p>
+                <h3 className="text-lg font-bold glass-text-strong ml-4">支出管理</h3>
               </div>
+              <p className="glass-text text-sm">日々の支出を記録し、無駄な出費を削減</p>
+            </div>
 
-              <div className="glass-card p-6 hover:bg-glass-white-strong transition-all duration-300 hover:scale-105 glass-shine">
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-gray-800/30 to-gray-900/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl flex items-center justify-center shadow-glass-glow">
-                    <Shield className="w-6 h-6 glass-icon" />
-                  </div>
-                  <h3 className="text-lg font-bold glass-text-strong ml-4">セキュリティ</h3>
+            <div className="glass-card p-6 hover:bg-glass-white-strong transition-all duration-300 hover:scale-105 glass-shine">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-gray-800/30 to-gray-900/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl flex items-center justify-center shadow-glass-glow">
+                  <Shield className="w-6 h-6 glass-icon" />
                 </div>
-                <p className="glass-text text-sm">銀行レベルのセキュリティで大切なデータを保護</p>
+                <h3 className="text-lg font-bold glass-text-strong ml-4">セキュリティ</h3>
               </div>
+              <p className="glass-text text-sm">銀行レベルのセキュリティで大切なデータを保護</p>
+            </div>
           </div>
 
           {/* Bottom Text */}
@@ -126,7 +130,9 @@ export function AuthForm() {
                   {isLogin ? 'ログイン' : '新規登録'}
                 </h2>
                 <p className="text-sm glass-text">
-                  {isLogin ? 'アカウントにログインしてください' : '新しいアカウントを作成しましょう'}
+                  {isLogin
+                    ? 'アカウントにログインしてください'
+                    : '新しいアカウントを作成しましょう'}
                 </p>
               </div>
 
@@ -140,7 +146,7 @@ export function AuthForm() {
                       id="email"
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={e => setEmail(e.target.value)}
                       className="glass-input w-full pr-4 py-3"
                       placeholder="example@email.com"
                       required
@@ -149,7 +155,10 @@ export function AuthForm() {
                 </div>
 
                 <div>
-                  <label htmlFor="password" className="block text-sm font-bold glass-text-strong mb-1">
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-bold glass-text-strong mb-1"
+                  >
                     パスワード
                   </label>
                   <div className="relative">
@@ -157,7 +166,7 @@ export function AuthForm() {
                       id="password"
                       type={showPassword ? 'text' : 'password'}
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={e => setPassword(e.target.value)}
                       className="glass-input w-full py-3"
                       placeholder="••••••••"
                       required
@@ -166,7 +175,7 @@ export function AuthForm() {
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       disabled={!password}
-                      className={`absolute right-4 top-1/2 transform -translate-y-1/2 glass-icon p-1 ${password ? "" : "opacity-50 cursor-not-allowed"}`}
+                      className={`absolute right-4 top-1/2 transform -translate-y-1/2 glass-icon p-1 ${password ? '' : 'opacity-50 cursor-not-allowed'}`}
                     >
                       {!showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
@@ -174,11 +183,13 @@ export function AuthForm() {
                 </div>
 
                 {message && (
-                  <div className={`text-sm p-4 rounded-2xl backdrop-blur-sm border ${
-                    message.includes('エラー') || message.includes('error')
-                      ? 'bg-red-500/20 text-red-300 border-red-400/30'
-                      : 'bg-green-500/20 text-green-300 border-green-400/30'
-                  }`}>
+                  <div
+                    className={`text-sm p-4 rounded-2xl backdrop-blur-sm border ${
+                      message.includes('エラー') || message.includes('error')
+                        ? 'bg-red-500/20 text-red-300 border-red-400/30'
+                        : 'bg-green-500/20 text-green-300 border-green-400/30'
+                    }`}
+                  >
                     {message}
                   </div>
                 )}
@@ -187,7 +198,7 @@ export function AuthForm() {
                   type="submit"
                   disabled={loading}
                   className="w-full text-base bg-white/90 backdrop-blur-md rounded-2xl text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed glass-shine relative overflow-hidden"
-                > 
+                >
                   {loading ? (
                     <div className="flex items-center justify-center space-x-2 relative z-10">
                       <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-900 border-t-transparent"></div>
@@ -206,7 +217,9 @@ export function AuthForm() {
                   onClick={() => setIsLogin(!isLogin)}
                   className="text-gray-400 hover:text-gray-300 font-semibold transition-colors hover:underline text-sm"
                 >
-                  {isLogin ? 'アカウントをお持ちでない方はこちら' : 'すでにアカウントをお持ちの方はこちら'}
+                  {isLogin
+                    ? 'アカウントをお持ちでない方はこちら'
+                    : 'すでにアカウントをお持ちの方はこちら'}
                 </button>
               </div>
             </div>
@@ -214,5 +227,5 @@ export function AuthForm() {
         </div>
       </div>
     </div>
-  )
+  );
 }

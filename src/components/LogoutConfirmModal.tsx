@@ -1,33 +1,31 @@
-import { useState } from 'react'
+import { useState } from 'react';
 
 interface LogoutConfirmModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onConfirm: () => Promise<void>
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => Promise<void>;
 }
 
 export function LogoutConfirmModal({ isOpen, onClose, onConfirm }: LogoutConfirmModalProps) {
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleConfirm = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      await onConfirm()
+      await onConfirm();
     } catch (error) {
-      console.error('Logout error:', error)
-      setIsLoading(false)
+      console.error('Logout error:', error);
+      setIsLoading(false);
     }
-  }
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-gray-800/40 flex items-center justify-center p-4 z-50">
       <div className="glass-modal w-fit border border-gray-500">
         <div className="text-center pt-6">
-          <p className="px-6 text-white text-base leading-relaxed">
-            本当にログアウトしますか？
-          </p>
+          <p className="px-6 text-white text-base leading-relaxed">本当にログアウトしますか？</p>
 
           <div className="flex flex-col md:flex-row pt-4">
             <button
@@ -38,7 +36,7 @@ export function LogoutConfirmModal({ isOpen, onClose, onConfirm }: LogoutConfirm
               {isLoading ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent"></div>
               ) : (
-                <span className='text-red-400'>ログアウト</span>
+                <span className="text-red-400">ログアウト</span>
               )}
             </button>
             <button
@@ -52,5 +50,5 @@ export function LogoutConfirmModal({ isOpen, onClose, onConfirm }: LogoutConfirm
         </div>
       </div>
     </div>
-  )
+  );
 }
