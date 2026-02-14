@@ -300,7 +300,7 @@ export function SettingsPage() {
       </div>
 
       {/* Income Section */}
-      <div className='glass-card'>
+      <div className="glass-card">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-xl font-semibold text-gray-800">収入設定</h2>
@@ -401,7 +401,7 @@ export function SettingsPage() {
       </div>
 
       {/* Fixed Expenses Section */}
-      <div className='glass-card'>
+      <div className="glass-card">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-xl font-semibold text-gray-800">固定支出管理</h2>
@@ -588,7 +588,7 @@ export function SettingsPage() {
       </div>
 
       {/* Savings Goals Section */}
-      <div className='glass-card'>
+      <div className="glass-card">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-xl font-semibold text-gray-800">貯金目標管理</h2>

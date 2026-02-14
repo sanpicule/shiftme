@@ -134,7 +134,7 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
                 transitionTimingFunction: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
               }}
             />
-            
+
             {navigation.map(item => {
               const Icon = item.icon;
               const isActive = currentPage === item.id;

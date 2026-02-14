@@ -204,9 +204,7 @@ export function InitialSetup() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-800 mb-2">
-                    金額（円）
-                  </label>
+                  <label className="block text-sm font-medium text-gray-800 mb-2">金額（円）</label>
                   <input
                     type="number"
                     {...registerExpense('amount', { required: true, min: 0 })}
@@ -269,11 +267,15 @@ export function InitialSetup() {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-600">月収:</span>
-                      <span className="font-semibold text-gray-900">¥{monthlyIncome.toLocaleString()}</span>
+                      <span className="font-semibold text-gray-900">
+                        ¥{monthlyIncome.toLocaleString()}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">固定支出合計:</span>
-                      <span className="font-semibold text-gray-900">¥{totalFixedExpenses.toLocaleString()}</span>
+                      <span className="font-semibold text-gray-900">
+                        ¥{totalFixedExpenses.toLocaleString()}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -331,9 +333,7 @@ export function InitialSetup() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-800 mb-2">
-                    達成予定日
-                  </label>
+                  <label className="block text-sm font-medium text-gray-800 mb-2">達成予定日</label>
                   <input
                     type="date"
                     {...registerGoal('target_date', { required: true })}
@@ -349,11 +349,15 @@ export function InitialSetup() {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-600">月収:</span>
-                      <span className="font-semibold text-gray-900">¥{monthlyIncome.toLocaleString()}</span>
+                      <span className="font-semibold text-gray-900">
+                        ¥{monthlyIncome.toLocaleString()}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">固定支出:</span>
-                      <span className="font-semibold text-gray-900">¥{totalFixedExpenses.toLocaleString()}</span>
+                      <span className="font-semibold text-gray-900">
+                        ¥{totalFixedExpenses.toLocaleString()}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">月間必要貯金額:</span>
@@ -413,11 +417,15 @@ export function InitialSetup() {
             <div className="glass-card p-4 space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600">月収:</span>
-                <span className="font-semibold text-gray-900">¥{monthlyIncome.toLocaleString()}</span>
+                <span className="font-semibold text-gray-900">
+                  ¥{monthlyIncome.toLocaleString()}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">固定支出:</span>
-                <span className="font-semibold text-gray-900">¥{totalFixedExpenses.toLocaleString()}</span>
+                <span className="font-semibold text-gray-900">
+                  ¥{totalFixedExpenses.toLocaleString()}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">貯金目標:</span>

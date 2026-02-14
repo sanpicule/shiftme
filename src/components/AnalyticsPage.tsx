@@ -852,9 +852,9 @@ export function AnalyticsPage() {
             <h2 className="text-xl font-bold text-slate-900">月別支出推移</h2>
           </div>
           <div className="glass-card">
-            {monthlyData.length === 0 ? (<div>
-              データがありません
-            </div>) : (
+            {monthlyData.length === 0 ? (
+              <div>データがありません</div>
+            ) : (
               <div className="space-y-4">
                 {monthlyData.map((data, index) => {
                   const percentage = data.budget > 0 ? (data.expenses / data.budget) * 100 : 0;
@@ -905,7 +905,6 @@ export function AnalyticsPage() {
                   );
                 })}
               </div>
-
             )}
           </div>
         </div>
