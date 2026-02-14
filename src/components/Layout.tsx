@@ -68,10 +68,10 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
       {/* Main Content Area */}
       <div className="flex-1 overflow-hidden">
         {/* Mobile Header */}
-        <header className="md:hidden border-b border-gray-800/20">
-          <div className="flex items-center px-4 py-3">
+        <header className="md:hidden">
+          <div className="flex items-center p-4">
             <div className="flex items-center space-x-2">
-              <h1 className="text-xl text-gray-800 font-bold">Shiftme</h1>
+              <h1 className="text-2xl text-slate-800 font-bold tracking-wide">Shiftme</h1>
             </div>
           </div>
         </header>

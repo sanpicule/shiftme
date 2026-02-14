@@ -25,6 +25,8 @@ export function AnalyticsPage() {
 
   const [timeRange, setTimeRange] = useState<'current' | 'all'>('current');
   const [isMobile, setIsMobile] = useState(false);
+  const [viewMode, setViewMode] = useState<'category' | 'list'>('category');
+  const [sortBy, setSortBy] = useState<'date' | 'amount'>('date');
 
   // 'current' timeRange用のexpensesをフィルタリング
   const expenses =
@@ -141,11 +143,9 @@ export function AnalyticsPage() {
   // Calculate category data
   const getCategoryData = (): CategoryData[] => {
     const categoryTotals: { [key: string]: number } = {};
-    const totalExpenses = expenses.reduce((sum, expense) => {
-      if (expense.amount <= 0) return sum;
+    expenses.forEach(expense => {
       categoryTotals[expense.category] = (categoryTotals[expense.category] || 0) + expense.amount;
-      return sum + expense.amount;
-    }, 0);
+    });
 
     const colors = [
       '#3B82F6',
@@ -162,10 +162,10 @@ export function AnalyticsPage() {
       .map(([category, amount], index) => ({
         category,
         amount,
-        percentage: totalExpenses > 0 ? (amount / totalExpenses) * 100 : 0,
+        percentage: 0,
         color: colors[index % colors.length],
       }))
-      .sort((a, b) => b.amount - a.amount);
+      .sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount));
   };
 
   // 月次の貯蓄額シリーズ（開始日〜今日、全期間データ使用。マイナスもあり）
@@ -236,7 +236,6 @@ export function AnalyticsPage() {
   const monthlyData = getMonthlyData();
   const categoryData = getCategoryData();
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
-  const totalCategoryExpenses = categoryData.reduce((sum, category) => sum + category.amount, 0);
 
   // 貯蓄目標進捗（全期間固定・余剰ベース: 収入 − 固定費 − 変動支出）
   const getSavingsProgressData = () => {
@@ -379,7 +378,16 @@ export function AnalyticsPage() {
       return expenseDate >= monthStart && expenseDate <= monthEnd;
     });
 
-    const totalExpensesThisMonth = monthExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+    // 今月の収入（マイナス値の支出）の絶対値を計算
+    const incomeThisMonth = monthExpenses
+      .filter(expense => expense.amount < 0)
+      .reduce((sum, expense) => sum + Math.abs(expense.amount), 0);
+
+    // 今月の支出（プラス値のみ）を計算
+    const actualExpensesThisMonth = monthExpenses
+      .filter(expense => expense.amount > 0)
+      .reduce((sum, expense) => sum + expense.amount, 0);
+
     const totalFixed = fixedExpenses.reduce((sum, expense) => sum + expense.amount, 0);
     const monthlyIncome = userSettings?.monthly_income || 0;
 
@@ -395,10 +403,11 @@ export function AnalyticsPage() {
       monthlyNeededForGoal = Math.ceil(savingsGoal.target_amount / monthsAtCreation);
     }
 
-    const fixedBudget = monthlyIncome - totalFixed - monthlyNeededForGoal;
+    // 予算 = 収入 - 固定費 - 貯蓄目標 + 今月の収入（マイナス値の絶対値）
+    const fixedBudget = monthlyIncome - totalFixed - monthlyNeededForGoal + incomeThisMonth;
     const budget = fixedBudget + previousMonthCarryover;
-    const remaining = budget - totalExpensesThisMonth;
-    const budgetPercentage = fixedBudget > 0 ? (totalExpensesThisMonth / fixedBudget) * 100 : 0;
+    const remaining = budget - actualExpensesThisMonth;
+    const budgetPercentage = fixedBudget > 0 ? (actualExpensesThisMonth / fixedBudget) * 100 : 0;
 
     return (
       <div className="space-y-6">
@@ -442,31 +451,29 @@ export function AnalyticsPage() {
           <>
             {/* 予算概要カード */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="glass-card p-6 sm:p-8 glass-shine">
-                <p className="glass-text text-sm sm:text-base mb-2">今月の予算</p>
-                <p className="text-3xl sm:text-4xl font-bold glass-text-strong">
+              <div className="px-2 glass-shine">
+                <p className="glass-text font-semibold text-sm sm:text-base mb-2">今月の予算</p>
+                <p className="text-2xl sm:text-4xl font-bold glass-text-strong">
                   ¥{budget.toLocaleString()}
                 </p>
-                <p className="glass-text text-xs sm:text-sm mt-2">使える金額</p>
               </div>
 
-              <div className="glass-card p-6 sm:p-8 glass-shine">
-                <p className="glass-text text-sm sm:text-base mb-2">実支出</p>
-                <p className="text-3xl sm:text-4xl font-bold glass-text-strong">
-                  ¥{totalExpensesThisMonth.toLocaleString()}
+              <div className="px-2 glass-shine">
+                <div className="flex items-center gap-4">
+                  <p className="glass-text font-semibold text-sm sm:text-base">実支出</p>
+                  <p className="glass-text text-xs sm:text-sm">- {monthExpenses.length}件の記録</p>
+                </div>
+                <p className="text-2xl sm:text-4xl font-bold glass-text-strong">
+                  ¥{actualExpensesThisMonth.toLocaleString()}
                 </p>
-                <p className="glass-text text-xs sm:text-sm mt-2">{monthExpenses.length}件の記録</p>
               </div>
 
-              <div className="glass-card p-6 sm:p-8 glass-shine">
-                <p className="glass-text text-sm sm:text-base mb-2">残り</p>
+              <div className="px-2 glass-shine">
+                <p className="glass-text font-semibold text-sm sm:text-base mb-2">残り</p>
                 <p
-                  className={`text-3xl sm:text-4xl font-bold ${remaining >= 0 ? 'text-green-400' : 'text-red-400'}`}
+                  className={`text-2xl sm:text-4xl font-bold ${remaining >= 0 ? 'text-green-600' : 'text-red-400'}`}
                 >
                   ¥{remaining.toLocaleString()}
-                </p>
-                <p className="glass-text text-xs sm:text-sm mt-2">
-                  {remaining >= 0 ? '節約できている' : '超過している'}
                 </p>
               </div>
             </div>
@@ -507,94 +514,188 @@ export function AnalyticsPage() {
               </div>
             </div>
 
-            {/* カテゴリ別内訳 */}
-            {categoryData.length > 0 && (
+            {/* カテゴリ別内訳/全記録表示 */}
+            {(categoryData.length > 0 || expenses.length > 0) && (
               <div className="glass-card p-4 sm:p-6">
-                <div className="flex items-center space-x-3 mb-4 sm:mb-6">
-                  <PieChart className="w-6 h-6 sm:w-7 sm:h-7 glass-icon" />
-                  <h2 className="text-lg sm:text-xl font-bold glass-text-strong">カテゴリ別内訳</h2>
-                </div>
-
-                {/* スマホ最適化：リストのみ表示 */}
-                <div className="space-y-3">
-                  {categoryData.map((category, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 sm:p-4 bg-white/5 hover:bg-white/10 rounded-lg sm:rounded-xl border border-white/10 transition-all"
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-4">
+                  <div className="flex items-center space-x-3">
+                    <PieChart className="w-6 h-6 sm:w-7 sm:h-7 glass-icon" />
+                    <h2 className="text-lg sm:text-xl font-bold glass-text-strong">
+                      {viewMode === 'category' ? 'カテゴリ別内訳' : '全記録'}
+                    </h2>
+                  </div>
+                  <div className="flex gap-2">
+                    <select
+                      value={viewMode}
+                      onChange={e => setViewMode(e.target.value as 'category' | 'list')}
+                      className="glass-input px-3 py-1.5 text-sm"
                     >
-                      <div className="flex items-center space-x-3 flex-1 min-w-0">
-                        <div
-                          className="w-3 h-3 sm:w-4 sm:h-4 rounded-full flex-shrink-0"
-                          style={{ backgroundColor: category.color }}
-                        />
-                        <span className="font-medium glass-text-strong text-sm sm:text-base truncate">
-                          {category.category}
-                        </span>
-                      </div>
-                      <div className="text-right ml-4">
-                        <div className="font-bold glass-text-strong text-sm sm:text-base">
-                          ¥{category.amount.toLocaleString()}
-                        </div>
-                        <div className="text-xs sm:text-sm glass-text">
-                          {category.percentage.toFixed(1)}%
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* デスクトップ用：円グラフを追加表示 */}
-                <div className="hidden lg:flex items-center justify-center mt-8">
-                  <div className="relative w-64 h-64">
-                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                      {categoryData.length === 1 ? (
-                        <circle
-                          cx="50"
-                          cy="50"
-                          r="40"
-                          fill={categoryData[0].color}
-                          fillOpacity={0.5}
-                          stroke={categoryData[0].color}
-                          strokeWidth={1.5}
-                          className="hover:opacity-80 transition-opacity"
-                        />
-                      ) : (
-                        categoryData.map((category, index) => {
-                          const startAngle = categoryData
-                            .slice(0, index)
-                            .reduce((sum, cat) => sum + (cat.percentage / 100) * 360, 0);
-                          const endAngle = startAngle + (category.percentage / 100) * 360;
-                          const largeArcFlag = category.percentage > 50 ? 1 : 0;
-
-                          const x1 = 50 + 40 * Math.cos((startAngle * Math.PI) / 180);
-                          const y1 = 50 + 40 * Math.sin((startAngle * Math.PI) / 180);
-                          const x2 = 50 + 40 * Math.cos((endAngle * Math.PI) / 180);
-                          const y2 = 50 + 40 * Math.sin((endAngle * Math.PI) / 180);
-
-                          return (
-                            <path
-                              key={index}
-                              d={`M 50 50 L ${x1} ${y1} A 40 40 0 ${largeArcFlag} 1 ${x2} ${y2} Z`}
-                              fill={category.color}
-                              fillOpacity={0.5}
-                              stroke={category.color}
-                              strokeWidth={1.5}
-                              className="hover:opacity-80 transition-opacity"
-                            />
-                          );
-                        })
-                      )}
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold glass-text-strong">
-                          ¥{totalCategoryExpenses.toLocaleString()}
-                        </div>
-                        <div className="text-sm glass-text">合計</div>
-                      </div>
-                    </div>
+                      <option value="category">カテゴリ別</option>
+                      <option value="list">全記録</option>
+                    </select>
+                    {viewMode === 'list' && (
+                      <select
+                        value={sortBy}
+                        onChange={e => setSortBy(e.target.value as 'date' | 'amount')}
+                        className="glass-input px-3 py-1.5 text-sm"
+                      >
+                        <option value="date">日付順</option>
+                        <option value="amount">金額順</option>
+                      </select>
+                    )}
                   </div>
                 </div>
+
+                {viewMode === 'category' ? (
+                  <>
+                    {/* カテゴリ別表示 */}
+                    <div className="flex flex-col lg:flex-row gap-6">
+                      {/* カテゴリリスト */}
+                      <div className="flex-1 space-y-2">
+                        {categoryData.map((category, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center sm:p-4 bg-white/5 hover:bg-white/10 rounded-lg sm:rounded-xl border border-white/10 transition-all"
+                          >
+                            <div className="flex items-center space-x-3 flex-1 min-w-0">
+                              <div
+                                className="w-3 h-3 sm:w-4 sm:h-4 rounded-full flex-shrink-0"
+                                style={{ backgroundColor: category.color }}
+                              />
+                              <span className="font-medium glass-text-strong text-sm sm:text-base truncate">
+                                {category.category}
+                              </span>
+                            </div>
+                            <div className="text-right ml-4">
+                              <div className="font-bold glass-text-strong text-sm sm:text-base">
+                                {category.amount > 0 ? '-' : ''}¥
+                                {Math.abs(category.amount).toLocaleString()}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* デスクトップ用：円グラフ */}
+                      <div className="hidden lg:flex items-center justify-center lg:w-80">
+                        <div className="relative w-64 h-64">
+                          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                            {categoryData.length === 1 ? (
+                              <circle
+                                cx="50"
+                                cy="50"
+                                r="40"
+                                fill={categoryData[0].color}
+                                fillOpacity={0.5}
+                                stroke={categoryData[0].color}
+                                strokeWidth={1.5}
+                                className="hover:opacity-80 transition-opacity"
+                              />
+                            ) : (
+                              (() => {
+                                const totalAmount = categoryData.reduce(
+                                  (sum, cat) => sum + Math.abs(cat.amount),
+                                  0,
+                                );
+                                let currentAngle = 0;
+                                return categoryData.map((category, index) => {
+                                  const percentage =
+                                    totalAmount > 0
+                                      ? (Math.abs(category.amount) / totalAmount) * 100
+                                      : 0;
+                                  const startAngle = currentAngle;
+                                  const endAngle = startAngle + (percentage / 100) * 360;
+                                  currentAngle = endAngle;
+                                  const largeArcFlag = percentage > 50 ? 1 : 0;
+
+                                  const x1 = 50 + 40 * Math.cos((startAngle * Math.PI) / 180);
+                                  const y1 = 50 + 40 * Math.sin((startAngle * Math.PI) / 180);
+                                  const x2 = 50 + 40 * Math.cos((endAngle * Math.PI) / 180);
+                                  const y2 = 50 + 40 * Math.sin((endAngle * Math.PI) / 180);
+
+                                  return (
+                                    <path
+                                      key={index}
+                                      d={`M 50 50 L ${x1} ${y1} A 40 40 0 ${largeArcFlag} 1 ${x2} ${y2} Z`}
+                                      fill={category.color}
+                                      fillOpacity={0.5}
+                                      stroke={category.color}
+                                      strokeWidth={1.5}
+                                      className="hover:opacity-80 transition-opacity"
+                                    />
+                                  );
+                                });
+                              })()
+                            )}
+                          </svg>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="text-center">
+                              <div className="text-2xl font-bold glass-text-strong">
+                                ¥
+                                {categoryData
+                                  .reduce((sum, cat) => sum + Math.abs(cat.amount), 0)
+                                  .toLocaleString()}
+                              </div>
+                              <div className="text-sm glass-text">合計</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* 全記録表示 */}
+                    <div className="space-y-2">
+                      {(() => {
+                        const sortedExpenses = [...expenses].sort((a, b) => {
+                          if (sortBy === 'date') {
+                            return (
+                              new Date(b.expense_date).getTime() -
+                              new Date(a.expense_date).getTime()
+                            );
+                          } else {
+                            return b.amount - a.amount;
+                          }
+                        });
+
+                        return sortedExpenses.map(expense => (
+                          <div
+                            key={expense.id}
+                            className="flex items-center justify-between p-3 sm:p-4 bg-white/5 hover:bg-white/10 rounded-lg sm:rounded-xl border border-white/10 transition-all"
+                          >
+                            <div className="flex flex-col flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-medium glass-text-strong text-sm sm:text-base truncate">
+                                  {expense.category}
+                                </span>
+                                {expense.description && (
+                                  <span className="text-xs glass-text truncate">
+                                    - {expense.description}
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-xs glass-text">
+                                {format(new Date(expense.expense_date), 'yyyy年M月d日(E)', {
+                                  locale: ja,
+                                })}
+                              </span>
+                            </div>
+                            <div className="text-right ml-4">
+                              <div className="font-bold glass-text-strong text-sm sm:text-base">
+                                {expense.amount > 0 ? '-' : ''}¥
+                                {Math.abs(expense.amount).toLocaleString()}
+                              </div>
+                            </div>
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                    {expenses.length === 0 && (
+                      <div className="text-center py-8 glass-text">記録がありません</div>
+                    )}
+                  </>
+                )}
               </div>
             )}
           </>
@@ -625,31 +726,193 @@ export function AnalyticsPage() {
       </div>
 
       {/* KPIサマリーカード */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="glass-card p-6 glass-shine">
-          <p className="text-sm font-medium glass-text mb-1">総支出</p>
-          <p className="text-3xl font-bold glass-text-strong">¥{totalExpenses.toLocaleString()}</p>
+      {/* 詳細トレンドセクション */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* 貯蓄目標の進捗 */}
+        <div className="glass-card p-6">
+          <div className="flex items-center space-x-3 mb-4">
+            <Target className="w-7 h-7 glass-icon" />
+            <h2 className="text-xl font-bold glass-text-strong">貯蓄目標の進捗</h2>
+          </div>
+          {getSavingsProgressData() ? (
+            (() => {
+              const sp = getSavingsProgressData()!;
+              return (
+                <div className="space-y-4">
+                  <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-2">
+                    <div>
+                      <p className="glass-text text-sm">目標</p>
+                      <p className="text-2xl font-bold text-gray-800">{sp.title || '未設定'}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="glass-text text-sm">目標金額</p>
+                      <p className="text-2xl font-bold text-gray-800">
+                        ¥{sp.target.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="glass-text text-sm">今日の理想到達額（ペース）</span>
+                      <span className="font-semibold text-blue-600">
+                        ¥{Math.floor(sp.idealAccumulated).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="relative">
+                      <div className="w-full bg-gray-300 rounded-full h-3 backdrop-blur-sm">
+                        <div
+                          className="h-3 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-500"
+                          style={{ width: `${sp.percentIdeal}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="glass-text text-sm">実績（全期間・余剰の累計）</span>
+                      <span className="glass-text-strong font-semibold">
+                        ¥{Math.floor(sp.accumulated).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="relative">
+                      <div className="w-full bg-gray-300 rounded-full h-3 backdrop-blur-sm">
+                        <div
+                          className={`h-3 rounded-full transition-all duration-500 bg-gradient-to-r from-green-400 to-green-600`}
+                          style={{ width: `${sp.percent}%` }}
+                        />
+                      </div>
+                      {sp.percent >= 100 && (
+                        <div className="absolute -top-[3px] right-0 -mr-1">
+                          <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs">✓</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div
+                        className={`${sp.aheadAmount >= 0 ? 'text-green-600' : 'text-red-600'} text-right font-medium`}
+                      >
+                        {sp.aheadAmount >= 0 ? '先行' : '遅れ'} ¥
+                        {Math.abs(Math.floor(sp.aheadAmount)).toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="glass-card p-3">
+                      <p className="glass-text text-xs">残り金額</p>
+                      <p className="text-lg font-semibold text-gray-800">
+                        ¥{Math.ceil(sp.remaining).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="glass-card p-3">
+                      <p className="glass-text text-xs">目標日</p>
+                      <p className="text-lg font-semibold text-gray-800">
+                        {format(new Date(sp.targetDate), 'yyyy/MM/dd')}
+                      </p>
+                    </div>
+                    <div className="glass-card p-3">
+                      <p className="glass-text text-xs">分析期間</p>
+                      <p className="text-lg font-semibold text-gray-800">
+                        開始 {sp.startDate ? format(new Date(sp.startDate), 'yyyy/MM/dd') : '—'} 〜
+                        今日
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()
+          ) : (
+            <div className="text-center glass-text">貯蓄目標が未設定です。</div>
+          )}
         </div>
-        <div className="glass-card p-6 glass-shine">
-          <p className="text-sm font-medium glass-text mb-1">支出記録数</p>
-          <p className="text-3xl font-bold glass-text-strong">{expenses.length}件</p>
+        {/* 月別支出推移 */}
+        <div className="glass-card p-6">
+          <div className="flex items-center space-x-3 mb-6">
+            <BarChart3 className="w-7 h-7 glass-icon" />
+            <h2 className="text-xl font-bold glass-text-strong">月別支出推移</h2>
+          </div>
+          <div className="space-y-4">
+            {monthlyData.map((data, index) => {
+              const percentage = data.budget > 0 ? (data.expenses / data.budget) * 100 : 0;
+              const isOverBudget = percentage > 100;
+              return (
+                <div key={index} className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium text-gray-800">{data.month}</span>
+                    <div className="flex items-center space-x-4">
+                      <span className="text-sm text-gray-800">
+                        予算: ¥{data.budget.toLocaleString()}
+                      </span>
+                      <span
+                        className={`font-semibold ${isOverBudget ? 'text-red-600' : 'text-gray-800'}`}
+                      >
+                        ¥{data.expenses.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="relative">
+                    <div className="w-full bg-gray-300 rounded-full h-3">
+                      <div
+                        className={`h-3 rounded-full transition-all duration-500 ${
+                          isOverBudget
+                            ? 'bg-gradient-to-r from-red-400 to-red-600'
+                            : 'bg-gradient-to-r from-blue-400 to-blue-600'
+                        }`}
+                        style={{ width: `${Math.min(percentage, 100)}%` }}
+                      />
+                    </div>
+                    {isOverBudget && (
+                      <div className="absolute top-[2px] right-0 -mt-1 -mr-1">
+                        <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                          <span className="text-gray-800 text-xs">!</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-800">
+                    <span>0%</span>
+                    <span className={isOverBudget ? 'text-red-600 font-medium' : 'text-gray-800'}>
+                      {percentage.toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
-        <div className="glass-card p-6 glass-shine">
-          <p className="text-sm font-medium glass-text mb-1">平均月間支出</p>
-          <p className="text-3xl font-bold glass-text-strong">
-            ¥
-            {monthlyData.length > 0
-              ? Math.round(
-                  monthlyData.reduce((sum, d) => sum + d.expenses, 0) / monthlyData.length,
-                ).toLocaleString()
-              : 0}
-          </p>
-        </div>
-        <div className="glass-card p-6 glass-shine">
-          <p className="text-sm font-medium glass-text mb-1">目標達成率</p>
-          <p className="text-3xl font-bold glass-text-strong">
-            {getSavingsProgressData()?.percent.toFixed(1) || '0.0'}%
-          </p>
+      </div>
+
+      <div className="glass-card p-4 sm:p-0 sm:glass-none">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+          <div className="sm:glass-card sm:p-6 sm:glass-shine pb-3 sm:pb-0 border-b sm:border-b-0 border-white/10">
+            <p className="text-sm font-bold glass-text mb-1">総支出</p>
+            <p className="text-2xl font-semibold glass-text-strong">
+              ¥{totalExpenses.toLocaleString()}
+            </p>
+          </div>
+          <div className="sm:glass-card sm:p-6 sm:glass-shine pb-3 sm:pb-0 border-b sm:border-b-0 border-white/10">
+            <p className="text-sm font-bold glass-text mb-1">支出記録数</p>
+            <p className="text-2xl font-semibold glass-text-strong">{expenses.length}件</p>
+          </div>
+          <div className="sm:glass-card sm:p-6 sm:glass-shine pb-3 sm:pb-0 border-b sm:border-b-0 border-white/10">
+            <p className="text-sm font-bold glass-text mb-1">平均月間支出</p>
+            <p className="text-2xl font-semibold glass-text-strong">
+              ¥
+              {monthlyData.length > 0
+                ? Math.round(
+                    monthlyData.reduce((sum, d) => sum + d.expenses, 0) / monthlyData.length,
+                  ).toLocaleString()
+                : 0}
+            </p>
+          </div>
+          <div className="sm:glass-card sm:p-6 sm:glass-shine">
+            <p className="text-sm font-bold glass-text mb-1">目標達成率</p>
+            <p className="text-2xl font-semibold glass-text-strong">
+              {getSavingsProgressData()?.percent.toFixed(1) || '0.0'}%
+            </p>
+          </div>
         </div>
       </div>
 
@@ -781,7 +1044,7 @@ export function AnalyticsPage() {
             {categoryData.map((category, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-3 bg-white/5 hover:bg-white/10 rounded-lg border border-white/10"
+                className="flex items-center justify-between bg-white/5 hover:bg-white/10 rounded-lg border border-white/10"
               >
                 <div className="flex items-center space-x-3 flex-1 min-w-0">
                   <div
@@ -801,165 +1064,6 @@ export function AnalyticsPage() {
               </div>
             ))}
           </div>
-        </div>
-      </div>
-
-      {/* 詳細トレンドセクション */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* 月別支出推移 */}
-        <div className="glass-card p-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <BarChart3 className="w-7 h-7 glass-icon" />
-            <h2 className="text-xl font-bold glass-text-strong">月別支出推移</h2>
-          </div>
-          <div className="space-y-4">
-            {monthlyData.map((data, index) => {
-              const percentage = data.budget > 0 ? (data.expenses / data.budget) * 100 : 0;
-              const isOverBudget = percentage > 100;
-              return (
-                <div key={index} className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium text-gray-800">{data.month}</span>
-                    <div className="flex items-center space-x-4">
-                      <span className="text-sm text-gray-800">
-                        予算: ¥{data.budget.toLocaleString()}
-                      </span>
-                      <span
-                        className={`font-semibold ${isOverBudget ? 'text-red-600' : 'text-gray-800'}`}
-                      >
-                        ¥{data.expenses.toLocaleString()}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="relative">
-                    <div className="w-full bg-gray-300 rounded-full h-3">
-                      <div
-                        className={`h-3 rounded-full transition-all duration-500 ${
-                          isOverBudget
-                            ? 'bg-gradient-to-r from-red-400 to-red-600'
-                            : 'bg-gradient-to-r from-blue-400 to-blue-600'
-                        }`}
-                        style={{ width: `${Math.min(percentage, 100)}%` }}
-                      />
-                    </div>
-                    {isOverBudget && (
-                      <div className="absolute top-[2px] right-0 -mt-1 -mr-1">
-                        <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-                          <span className="text-gray-800 text-xs">!</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-800">
-                    <span>0%</span>
-                    <span className={isOverBudget ? 'text-red-600 font-medium' : 'text-gray-800'}>
-                      {percentage.toFixed(1)}%
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* 貯蓄目標の進捗 */}
-        <div className="glass-card p-6">
-          <div className="flex items-center space-x-3 mb-4">
-            <Target className="w-7 h-7 glass-icon" />
-            <h2 className="text-xl font-bold glass-text-strong">貯蓄目標の進捗</h2>
-          </div>
-          {getSavingsProgressData() ? (
-            (() => {
-              const sp = getSavingsProgressData()!;
-              return (
-                <div className="space-y-4">
-                  <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-2">
-                    <div>
-                      <p className="glass-text text-sm">目標</p>
-                      <p className="text-2xl font-bold text-gray-800">{sp.title || '未設定'}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="glass-text text-sm">目標金額</p>
-                      <p className="text-2xl font-bold text-gray-800">
-                        ¥{sp.target.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="glass-text text-sm">今日の理想到達額（ペース）</span>
-                      <span className="font-semibold text-blue-600">
-                        ¥{Math.floor(sp.idealAccumulated).toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="relative">
-                      <div className="w-full bg-gray-300 rounded-full h-3 backdrop-blur-sm">
-                        <div
-                          className="h-3 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-500"
-                          style={{ width: `${sp.percentIdeal}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="glass-text text-sm">実績（全期間・余剰の累計）</span>
-                      <span className="glass-text-strong font-semibold">
-                        ¥{Math.floor(sp.accumulated).toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="relative">
-                      <div className="w-full bg-gray-300 rounded-full h-3 backdrop-blur-sm">
-                        <div
-                          className={`h-3 rounded-full transition-all duration-500 bg-gradient-to-r from-green-400 to-green-600`}
-                          style={{ width: `${sp.percent}%` }}
-                        />
-                      </div>
-                      {sp.percent >= 100 && (
-                        <div className="absolute -top-[3px] right-0 -mr-1">
-                          <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                            <span className="text-white text-xs">✓</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div
-                        className={`${sp.aheadAmount >= 0 ? 'text-green-600' : 'text-red-600'} text-right font-medium`}
-                      >
-                        {sp.aheadAmount >= 0 ? '先行' : '遅れ'} ¥
-                        {Math.abs(Math.floor(sp.aheadAmount)).toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div className="glass-card p-3">
-                      <p className="glass-text text-xs">残り金額</p>
-                      <p className="text-lg font-semibold text-gray-800">
-                        ¥{Math.ceil(sp.remaining).toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="glass-card p-3">
-                      <p className="glass-text text-xs">目標日</p>
-                      <p className="text-lg font-semibold text-gray-800">
-                        {format(new Date(sp.targetDate), 'yyyy/MM/dd')}
-                      </p>
-                    </div>
-                    <div className="glass-card p-3">
-                      <p className="glass-text text-xs">分析期間</p>
-                      <p className="text-lg font-semibold text-gray-800">
-                        開始 {sp.startDate ? format(new Date(sp.startDate), 'yyyy/MM/dd') : '—'} 〜
-                        今日
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })()
-          ) : (
-            <div className="text-center glass-text">貯蓄目標が未設定です。</div>
-          )}
         </div>
       </div>
     </div>

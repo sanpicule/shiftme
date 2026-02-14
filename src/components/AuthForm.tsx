@@ -60,9 +60,9 @@ export function AuthForm() {
 
           {/* Features Grid */}
           <div className="grid grid-cols-2 gap-6">
-            <div className="glass-card p-6 hover:bg-glass-white-strong transition-all duration-300 hover:scale-105 glass-shine">
+            <div className="glass-card p-6">
               <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-gray-500/30 to-gray-600/30 backdrop-blur-sm border border-gray-400/30 rounded-2xl flex items-center justify-center shadow-glass-glow">
+                <div className="w-12 h-12 border border-gray-400/30 rounded-2xl flex items-center justify-center shadow-glass-glow">
                   <Target className="w-6 h-6 glass-icon" />
                 </div>
                 <h3 className="text-lg font-bold glass-text-strong ml-4">目標設定</h3>
@@ -70,9 +70,9 @@ export function AuthForm() {
               <p className="glass-text text-sm">具体的な目標を設定し、達成までの道筋を可視化</p>
             </div>
 
-            <div className="glass-card p-6 hover:bg-glass-white-strong transition-all duration-300 hover:scale-105 glass-shine">
+            <div className="glass-card p-6">
               <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-gray-600/30 to-gray-700/30 backdrop-blur-sm border border-gray-500/30 rounded-2xl flex items-center justify-center shadow-glass-glow">
+                <div className="w-12 h-12 border border-gray-500/30 rounded-2xl flex items-center justify-center shadow-glass-glow">
                   <TrendingUp className="w-6 h-6 glass-icon" />
                 </div>
                 <h3 className="text-lg font-bold glass-text-strong ml-4">進捗管理</h3>
@@ -80,9 +80,9 @@ export function AuthForm() {
               <p className="glass-text text-sm">貯金の進捗をグラフで確認し、モチベーションを維持</p>
             </div>
 
-            <div className="glass-card p-6 hover:bg-glass-white-strong transition-all duration-300 hover:scale-105 glass-shine">
+            <div className="glass-card p-6">
               <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-gray-700/30 to-gray-800/30 backdrop-blur-sm border border-gray-600/30 rounded-2xl flex items-center justify-center shadow-glass-glow">
+                <div className="w-12 h-12 border border-gray-600/30 rounded-2xl flex items-center justify-center shadow-glass-glow">
                   <Calendar className="w-6 h-6 glass-icon" />
                 </div>
                 <h3 className="text-lg font-bold glass-text-strong ml-4">支出管理</h3>
@@ -90,9 +90,9 @@ export function AuthForm() {
               <p className="glass-text text-sm">日々の支出を記録し、無駄な出費を削減</p>
             </div>
 
-            <div className="glass-card p-6 hover:bg-glass-white-strong transition-all duration-300 hover:scale-105 glass-shine">
+            <div className="glass-card p-6">
               <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-gray-800/30 to-gray-900/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl flex items-center justify-center shadow-glass-glow">
+                <div className="w-12 h-12 border border-gray-700/30 rounded-2xl flex items-center justify-center shadow-glass-glow">
                   <Shield className="w-6 h-6 glass-icon" />
                 </div>
                 <h3 className="text-lg font-bold glass-text-strong ml-4">セキュリティ</h3>
@@ -108,7 +108,7 @@ export function AuthForm() {
         </div>
 
         {/* Right Side - Auth Form */}
-        <div className="px-12 flex-1 flex items-center justify-center py-8 lg:px-12 lg:py-12">
+        <div className="px-8 flex-1 flex items-center justify-center py-8 lg:px-12 lg:py-12">
           <div className="w-full max-w-md">
             {/* Mobile Logo Section (shown only on mobile) */}
             <div className="lg:hidden">
@@ -124,7 +124,7 @@ export function AuthForm() {
             </div>
 
             {/* Auth Form */}
-            <div className="glass-shine mt-20">
+            <div className="glass-shine mt-4 md:mt-20">
               <div className="mb-6">
                 <h2 className="text-xl font-bold glass-text-strong mb-1">
                   {isLogin ? 'ログイン' : '新規登録'}

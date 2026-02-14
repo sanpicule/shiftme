@@ -14,7 +14,6 @@ import {
   ChevronUp,
   Eye,
   EyeOff,
-  Link2,
 } from 'lucide-react';
 import { ExpenseCalendar } from './ExpenseCalendar';
 import { SkeletonCard, SkeletonText } from './SkeletonCard';
@@ -576,26 +575,25 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       {/* Google Calendar Connect Callout */}
       {!isGoogleCalendarConnected && (
         <div className="border border-blue-300/70 rounded-2xl p-5 md:p-6 glass-shine bg-gradient-to-r from-blue-50/70 via-white/60 to-blue-100/50">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-blue-600" />
-                <h3 className="text-lg md:text-xl font-semibold text-gray-800">
-                  Googleカレンダー連携
-                </h3>
+          <div className="w-full flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="w-full">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-blue-600" />
+                  <h3 className="text-lg md:text-xl font-semibold text-gray-800">
+                    Googleカレンダー連携
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onNavigate?.('profile')}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-1 bg-blue-600/90 text-white rounded-full shadow-md hover:bg-blue-600 transition-colors"
+                >
+                  <span className="text-sm">連携</span>
+                </button>
               </div>
-              <p className="text-sm text-gray-700 mt-1">
-                予定を支出と同じ画面で見える化できます。金の流れを崩さず管理。
-              </p>
+              <p className="text-sm text-gray-700 mt-2">予定を支出と同じ画面で見える化できます。</p>
             </div>
-            <button
-              type="button"
-              onClick={() => onNavigate?.('profile')}
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-blue-600/90 text-white rounded-xl font-semibold shadow-sm hover:bg-blue-600 transition-colors"
-            >
-              <Link2 className="w-5 h-5" />
-              <span>アカウントで連携する</span>
-            </button>
           </div>
         </div>
       )}

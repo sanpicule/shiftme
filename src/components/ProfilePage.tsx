@@ -1,14 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import {
-  User,
-  Award,
-  Target,
-  PiggyBank,
-  TrendingUp,
-  Calendar,
-  Link2,
-  CheckCircle,
-} from 'lucide-react';
+import { User, Award, Target, PiggyBank, TrendingUp, Calendar, CheckCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserSettings } from '../hooks/useUserSettings';
 import { useGoogleCalendarContext } from '../contexts/GoogleCalendarContext';
@@ -232,9 +223,8 @@ export function ProfilePage() {
                 disabled={
                   isConnectingGoogle || isGoogleCalendarConnected || googleCalendarStatusLoading
                 }
-                className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-blue-600/90 text-white rounded-xl font-semibold shadow-sm hover:bg-blue-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-blue-600/90 text-white rounded-full font-semibold shadow-sm hover:bg-blue-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <Link2 className="w-5 h-5" />
                 <span>
                   {isConnectingGoogle
                     ? '連携中...'
