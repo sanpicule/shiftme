@@ -121,7 +121,7 @@ export function Layout({ children, currentPage, onPageChange }: LayoutProps) {
         </main>
 
         {/* Mobile Bottom Navigation */}
-        <div className="md:hidden fixed bottom-6 left-6 right-4 glass-nav shadow-glass z-40 rounded-full w-fit ml-auto">
+        <div className="md:hidden fixed bottom-6 left-6 right-4 glass-nav shadow-glass z-40 rounded-full w-fit">
           <div className="flex gap-1 p-1 relative">
             {/* Sliding Active Indicator */}
             <div
