@@ -184,7 +184,7 @@ export function AuthForm() {
 
                 {message && (
                   <div
-                    className={`text-sm p-4 rounded-2xl backdrop-blur-sm border ${
+                    className={`text-sm p-4 rounded-2xl   border ${
                       message.includes('エラー') || message.includes('error')
                         ? 'bg-red-500/20 text-red-300 border-red-400/30'
                         : 'bg-green-500/20 text-green-300 border-green-400/30'

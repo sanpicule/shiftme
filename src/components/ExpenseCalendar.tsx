@@ -82,19 +82,19 @@ export function ExpenseCalendar({
         <div className="flex items-center space-x-2">
           <button
             onClick={goToToday}
-            className="px-3 py-1.5 text-sm font-medium glass-text hover:bg-glass-white-weak rounded-lg transition-colors glass-shine border border-gray-200"
+            className="px-3 py-1.5 text-sm font-medium glass-text hover:bg-glass-white-weak rounded-lg glass-card transition-colors glass-shine border border-gray-200"
           >
             今月
           </button>
           <button
             onClick={prevMonth}
-            className="p-2 hover:bg-glass-white-weak rounded-full transition-colors glass-shine border border-gray-200"
+            className="p-2 hover:bg-glass-white-weak rounded-full transition-colors glass-shine border border-gray-200 glass-card"
           >
             <ChevronLeft className="w-5 h-5 glass-icon" />
           </button>
           <button
             onClick={nextMonth}
-            className="p-2 hover:bg-glass-white-weak rounded-full transition-colors glass-shine border border-gray-200"
+            className="p-2 hover:bg-glass-white-weak rounded-full transition-colors glass-shine border border-gray-200 glass-card"
           >
             <ChevronRight className="w-5 h-5 glass-icon" />
           </button>
@@ -102,12 +102,12 @@ export function ExpenseCalendar({
       </div>
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 border border-gray-200 rounded-lg overflow-hidden backdrop-blur-sm bg-glass-white-weak">
+      <div className="grid grid-cols-7 rounded-2xl shadow-md overflow-hidden  bg-glass-white-weak">
         {/* Day Headers */}
         {['日', '月', '火', '水', '木', '金', '土'].map((day, index) => (
           <div
             key={day}
-            className={`p-3 text-center text-sm font-semibold border-b border-gray-200 last:border-r-0 bg-gray-200/50 ${
+            className={`p-3 text-center text-sm font-semibold border-gray-200 last:border-r-0 bg-white ${
               index === 0 ? 'text-red-400' : index === 6 ? 'text-blue-400' : 'glass-text'
             }`}
           >
@@ -116,7 +116,7 @@ export function ExpenseCalendar({
         ))}
 
         {/* Calendar Days */}
-        {days.map(day => {
+        {days.map((day, index) => {
           const dayExpenses = getExpensesForDate(day);
           const dayTotal = getDayTotal(day);
           const dayTotalLabel =
@@ -126,6 +126,7 @@ export function ExpenseCalendar({
           const dayOfWeek = day.getDay();
           const inCurrentMonth = isCurrentMonth(day);
           const dayEvents = getEventsForDate(calendarEvents, day);
+          const isLastInRow = (index + 1) % 7 === 0;
 
           return (
             <button
@@ -133,7 +134,8 @@ export function ExpenseCalendar({
               onClick={() => inCurrentMonth && handleDateClick(day)}
               aria-label={`${format(day, 'M月d日', { locale: ja })}${dayEvents.length > 0 ? `、カレンダーイベント${dayEvents.length}件` : ''}${dayExpenses.length > 0 ? `、支出${dayExpenses.length}件` : ''}`}
               className={`
-                px-1 md:p-2 min-h-[80px] border-r border-b border-gray-200 last:border-r-0 relative transition-all duration-200 md:hover:shadow-glass-glow flex flex-col items-start glass-shine gap-1
+                bg-white px-1 md:p-2 min-h-[80px] border-b border-gray-200 relative transition-all duration-200 md:hover:shadow-glass-glow flex flex-col items-start glass-shine gap-1
+                ${!isLastInRow ? 'border-r' : ''}
                 ${inCurrentMonth ? 'hover:bg-glass-white-weak cursor-pointer' : 'cursor-default'}
                   ${isToday(day) && inCurrentMonth ? 'border border-green-400 bg-green-500/10' : ''}
               `}
@@ -155,7 +157,7 @@ export function ExpenseCalendar({
               {/* Calendar Events Indicator */}
               {dayEvents.length > 0 && inCurrentMonth && (
                 <div className="w-full">
-                  <div className="mx-auto text-[8px] md:text-xs font-medium text-blue-700 bg-blue-100 backdrop-blur-sm px-1 py-0.5 rounded truncate border border-blue-300/50">
+                  <div className="mx-auto text-[8px] md:text-xs font-medium text-blue-700 bg-blue-100   px-1 py-0.5 rounded truncate border border-blue-300/50">
                     📅 {dayEvents.length}件
                   </div>
                 </div>
@@ -166,7 +168,7 @@ export function ExpenseCalendar({
                   {/* Desktop: Show expense details, Mobile: Show only marker */}
                   <div>
                     <div
-                      className={`mx-auto text-[8px] md:text-xs font-semibold text-white backdrop-blur-sm px-1 py-0.5 rounded truncate border ${
+                      className={`mx-auto text-[8px] md:text-xs font-semibold text-white   px-1 py-0.5 rounded truncate border ${
                         dayTotal < 0
                           ? 'bg-emerald-500/80 border-emerald-400/50'
                           : 'bg-red-500/80 border-red-400/50'

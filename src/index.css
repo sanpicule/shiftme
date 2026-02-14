@@ -21,23 +21,18 @@
 @layer components {
   /* Glass Card Component */
   .glass-card {
-    @apply bg-white backdrop-blur-md border border-gray-200 rounded-2xl;
-  }
-
-  .glass-card-dark {
-    @apply bg-glass-black backdrop-blur-md border border-white/10 rounded-2xl shadow-glass;
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05));
+    @apply bg-white rounded-2xl shadow-md p-4;
   }
 
   /* Glass Button Component */
   .glass-button {
-    @apply bg-glass-white backdrop-blur-sm border border-gray-300 rounded-xl px-6 py-3 font-medium text-gray-800 transition-all duration-300 hover:bg-glass-white-strong hover:scale-105 hover:shadow-glass-glow;
+    @apply bg-glass-white   border border-gray-300 rounded-xl px-6 py-3 font-medium text-gray-800 transition-all duration-300 hover:bg-glass-white-strong hover:scale-105 hover:shadow-glass-glow;
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
   }
 
   /* Stronger contrast button (slightly denser white than inputs) */
   .glass-button-strong {
-    @apply backdrop-blur-sm rounded-xl px-6 py-3 font-medium text-white transition-all duration-300 hover:scale-105 hover:shadow-glass-glow border;
+    @apply rounded-xl px-6 py-3 font-medium text-white transition-all duration-300 hover:scale-105 hover:shadow-glass-glow border;
     /* 少し濃いめの白と境界 */
     border-color: rgba(255, 255, 255, 0.4);
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.18));
@@ -49,7 +44,7 @@
 
   /* Glass Input Component */
   .glass-input {
-    @apply bg-glass-white-weak backdrop-blur-sm border border-black/20 rounded-xl px-4 py-3 text-black placeholder-black/60 focus:outline-none focus:border-gray-800 transition-all duration-300;
+    @apply bg-glass-white-weak   border border-black/20 rounded-xl px-4 py-3 text-black placeholder-black/60 focus:outline-none focus:border-gray-800 transition-all duration-300;
   }
 
   /* Glass Navigation */

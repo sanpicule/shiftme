@@ -475,7 +475,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   return (
     <div className="space-y-4 md:space-y-8">
       {/* Main Budget Display - Hero Section with Glass Effect */}
-      <div className="relative overflow-hidden">
+      <div className="relative">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-20 pointer-events-none">
           <div className="absolute top-0 left-0 w-32 h-32 bg-white/30 rounded-full -translate-x-16 -translate-y-16 glass-float"></div>
@@ -493,7 +493,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         <div className="absolute top-10 right-0 md:hidden z-20">
           <button
             onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}
-            className="p-2 backdrop-blur-sm transition-all duration-300 rounded-full glass-text border border-gray-200"
+            className="p-2 glass-card transition-all duration-300 rounded-full glass-text border border-gray-200"
             aria-label={isDetailsExpanded ? '詳細を隠す' : '詳細を確認'}
           >
             {isDetailsExpanded ? (
@@ -546,20 +546,20 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
               {/* Quick Stats - 2 columns - Hidden on mobile when collapsed */}
               <div
-                className={`md:block overflow-hidden transition-all duration-500 ease-in-out ${
+                className={`md:block transition-all duration-500 ease-in-out ${
                   isDetailsExpanded
                     ? 'mt-2 max-h-96 opacity-100'
                     : 'max-h-0 opacity-0 md:max-h-none md:opacity-100'
                 }`}
               >
                 <div className="grid grid-cols-2 gap-3 mt-2">
-                  <div className="backdrop-blur-sm rounded-xl p-3 border border-gray-200">
+                  <div className="glass-card">
                     <div className="text-xs glass-text mb-1">1日あたり</div>
                     <div className="text-base font-bold glass-text-strong">
                       ¥{dailyBudget.toLocaleString()}
                     </div>
                   </div>
-                  <div className="backdrop-blur-sm rounded-xl p-3 border border-gray-200">
+                  <div className="glass-card p-3">
                     <div className="text-xs glass-text mb-1">1週間あたり</div>
                     <div className="text-base font-bold glass-text-strong">
                       ¥{weeklyBudget.toLocaleString()}
@@ -574,13 +574,13 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
       {/* Google Calendar Connect Callout */}
       {!isGoogleCalendarConnected && (
-        <div className="border border-blue-300/70 rounded-2xl p-5 md:p-6 glass-shine bg-gradient-to-r from-blue-50/70 via-white/60 to-blue-100/50">
+        <div className="rounded-2xl p-5 md:p-6 glass-shine bg-gradient-to-r from-blue-300 to-blue-100 shadow-md">
           <div className="w-full flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="w-full">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-blue-600" />
-                  <h3 className="text-lg md:text-xl font-semibold text-gray-800">
+                  <h3 className="text-md md:text-xl font-semibold text-gray-800">
                     Googleカレンダー連携
                   </h3>
                 </div>
@@ -617,7 +617,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         </h3>
         <div className="space-y-3">
           {remainingBudget < 0 && (
-            <div className="flex items-start space-x-2 md:space-x-3 p-3 bg-red-500/20 backdrop-blur-sm rounded-xl border border-red-400/30">
+            <div className="flex items-start space-x-2 md:space-x-3 p-3 bg-red-500/20   rounded-xl border border-red-400/30">
               <AlertTriangle className="w-4 h-4 md:w-5 md:h-5 text-red-400 mt-0.5 glass-icon" />
               <div>
                 <p className="font-medium text-red-600 text-sm md:text-base text-shadow">
@@ -633,7 +633,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           )}
 
           {remainingBudget > 0 && remainingBudget < baseMonthlyBudget * 0.2 && (
-            <div className="flex items-start space-x-2 md:space-x-3 p-3 bg-yellow-500/20 backdrop-blur-sm rounded-xl border border-yellow-400/30">
+            <div className="flex items-start space-x-2 md:space-x-3 p-3 bg-yellow-500/20   rounded-xl border border-yellow-400/30">
               <AlertTriangle className="w-4 h-4 md:w-5 md:h-5 text-yellow-800 mt-0.5 glass-icon" />
               <div>
                 <p className="font-medium text-yellow-900 text-sm md:text-base text-shadow">
@@ -958,7 +958,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                 !isAddingExpense &&
                 !editingExpense && (
                   <div className="text-center py-12">
-                    <div className="w-20 h-20 bg-glass-white-weak backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <div className="w-20 h-20 bg-glass-white-weak   border border-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
                       <Calendar className="w-10 h-10 glass-icon" />
                     </div>
                     <h3 className="text-lg font-semibold glass-text-strong mb-2">

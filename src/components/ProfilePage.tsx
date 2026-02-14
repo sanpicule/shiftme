@@ -174,9 +174,6 @@ export function ProfilePage() {
                 <div className="w-20 h-20  border border-gray-800 rounded-full flex items-center justify-center">
                   <User className="w-12 h-12 glass-icon" />
                 </div>
-                {/* <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-gradient-to-br from-green-500/30 to-emerald-600/30 backdrop-blur-sm border-4 border-glass-white rounded-full flex items-center justify-center shadow-glass-glow">
-                  <Award className="w-4 h-4 glass-icon" />
-                </div> */}
               </div>
 
               {/* Stats */}
@@ -197,7 +194,7 @@ export function ProfilePage() {
         </div>
 
         {/* Google Calendar Section */}
-        <div className="border border-blue-300/70 rounded-2xl p-5 md:p-6 glass-shine bg-gradient-to-r from-blue-50/70 via-white/60 to-blue-100/50">
+        <div className="rounded-2xl p-5 md:p-6 glass-shine bg-gradient-to-r from-blue-300 to-blue-100 shadow-md">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
               <div className="flex flex-col gap-1">

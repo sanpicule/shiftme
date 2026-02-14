@@ -7,9 +7,7 @@ interface SkeletonCardProps {
 
 export function SkeletonCard({ className = '', children }: SkeletonCardProps) {
   return (
-    <div
-      className={`bg-white/60 backdrop-blur-sm rounded-2xl border border-white/20 animate-pulse ${className}`}
-    >
+    <div className={`bg-white/60   rounded-2xl border border-white/20 animate-pulse ${className}`}>
       {children || (
         <div className="p-6 space-y-4">
           <div className="flex items-center justify-between">
