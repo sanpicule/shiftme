@@ -67,7 +67,7 @@ export function ExpenseCalendar({
   return (
     <div className="space-y-4">
       {/* Calendar Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between relative z-30">
         <div>
           <h3 className="text-2xl font-semibold glass-text-strong">
             {format(currentDate, 'yyyy年M月', { locale: ja })}

@@ -490,7 +490,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         </div>
 
         {/* Details Toggle Button - Top Right */}
-        <div className="absolute top-10 right-0 md:hidden z-20">
+        <div className="absolute top-2 right-0 md:hidden z-10">
           <button
             onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}
             className="p-2 glass-card transition-all duration-300 rounded-full glass-text border border-gray-200"
