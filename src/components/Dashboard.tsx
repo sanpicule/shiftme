@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import { ExpenseCalendar } from './ExpenseCalendar';
 import { BulkExpenseModal } from './BulkExpenseModal';
-import { SkeletonCard, SkeletonText } from './SkeletonCard';
 import { useUserSettings } from '../hooks/useUserSettings';
 import { useGoogleCalendar } from '../hooks/useGoogleCalendar';
 import { useGoogleCalendarContext } from '../contexts/GoogleCalendarContext';
@@ -36,8 +35,6 @@ interface ExpenseForm {
 }
 
 const categories = ['食費', '交通費', '娯楽', '衣服', '医療', '日用品', '教育', 'その他'];
-
-const SKELETON_CALENDAR_DAYS = 28;
 
 type Page = 'dashboard' | 'analytics' | 'settings' | 'profile';
 
@@ -308,78 +305,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     }
   };
 
-  // Show skeleton loading state instead of spinner for better UX
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="space-y-3">
-          <SkeletonText className="h-8" width="w-40" />
-          <SkeletonText className="h-4" width="w-56" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <SkeletonCard />
-          <SkeletonCard />
-          <SkeletonCard />
-        </div>
-        <SkeletonCard className="overflow-hidden">
-          <div className="p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <SkeletonText className="h-6" width="w-32" />
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-16 rounded-lg bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"></div>
-                <div className="h-8 w-8 rounded-full bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"></div>
-                <div className="h-8 w-8 rounded-full bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"></div>
-              </div>
-            </div>
-            <div className="grid grid-cols-7 gap-2">
-              {Array.from({ length: SKELETON_CALENDAR_DAYS }).map((_, index) => (
-                <div
-                  key={`skeleton-day-${index}`}
-                  className="h-10 rounded-lg bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"
-                ></div>
-              ))}
-            </div>
-          </div>
-        </SkeletonCard>
-      </div>
-    );
-  }
-
-  if (isMonthTransitioning) {
-    return (
-      <div className="space-y-6">
-        <div className="space-y-3">
-          <SkeletonText className="h-8" width="w-40" />
-          <SkeletonText className="h-4" width="w-56" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <SkeletonCard />
-          <SkeletonCard />
-          <SkeletonCard />
-        </div>
-        <SkeletonCard className="overflow-hidden">
-          <div className="p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <SkeletonText className="h-6" width="w-32" />
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-16 rounded-lg bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"></div>
-                <div className="h-8 w-8 rounded-full bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"></div>
-                <div className="h-8 w-8 rounded-full bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"></div>
-              </div>
-            </div>
-            <div className="grid grid-cols-7 gap-2">
-              {Array.from({ length: SKELETON_CALENDAR_DAYS }).map((_, index) => (
-                <div
-                  key={`month-skeleton-day-${index}`}
-                  className="h-10 rounded-lg bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"
-                ></div>
-              ))}
-            </div>
-          </div>
-        </SkeletonCard>
-      </div>
-    );
-  }
+  // データ読み込み状態（インラインskeletonで制御）
+  const isNumbersLoading = loading || isMonthTransitioning;
 
   // スタート月を判定
   let startMonth: Date | null = null;
@@ -538,7 +465,9 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                   <span
                     className={`font-bold glass-text-strong ${monthlyCarryover < 0 ? 'text-red-500' : ''}`}
                   >
-                    {hideRemaining ? '¥••••••' : `¥${monthlyCarryover.toLocaleString()}`}
+                    {isNumbersLoading ? (
+                      <span className="inline-block h-4 w-20 bg-gradient-to-r from-gray-200 to-gray-300 rounded animate-pulse align-middle" />
+                    ) : hideRemaining ? '¥••••••' : `¥${monthlyCarryover.toLocaleString()}`}
                   </span>
                 </div>
                 <hr className="my-2 border-gray-200/50" />
@@ -562,7 +491,9 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                 </h3>
                 <div className="flex items-center gap-2">
                   <div className="text-2xl md:text-4xl font-bold glass-text-strong">
-                    {hideRemaining ? '¥••••••' : `¥${remainingBudget.toLocaleString()}`}
+                    {isNumbersLoading ? (
+                      <div className="h-8 md:h-10 w-44 bg-gradient-to-r from-gray-200 to-gray-300 rounded-xl animate-pulse" />
+                    ) : hideRemaining ? '¥••••••' : `¥${remainingBudget.toLocaleString()}`}
                   </div>
                 </div>
               </div>
@@ -579,13 +510,17 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                   <div className="glass-card">
                     <div className="text-xs glass-text mb-1">1日あたり</div>
                     <div className="text-base font-bold glass-text-strong">
-                      ¥{dailyBudget.toLocaleString()}
+                      {isNumbersLoading ? (
+                        <div className="h-5 w-16 bg-gradient-to-r from-gray-200 to-gray-300 rounded animate-pulse" />
+                      ) : `¥${dailyBudget.toLocaleString()}`}
                     </div>
                   </div>
                   <div className="glass-card p-3">
                     <div className="text-xs glass-text mb-1">1週間あたり</div>
                     <div className="text-base font-bold glass-text-strong">
-                      ¥{weeklyBudget.toLocaleString()}
+                      {isNumbersLoading ? (
+                        <div className="h-5 w-16 bg-gradient-to-r from-gray-200 to-gray-300 rounded animate-pulse" />
+                      ) : `¥${weeklyBudget.toLocaleString()}`}
                     </div>
                   </div>
                 </div>
@@ -631,6 +566,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           actualMonthlySavings={actualMonthlySavings}
           calendarEvents={calendarEvents}
           onBulkAdd={() => setIsBulkModalOpen(true)}
+          loading={loading}
         />
       </div>
 
@@ -639,6 +575,9 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         <h3 className="text-base md:text-lg font-bold text-gray-900/90 mb-3 md:mb-4">
           💡 {isPastMonth ? 'この月の結果' : isCurrentMonth ? '今月のアドバイス' : 'この月の予測'}
         </h3>
+        {isNumbersLoading ? (
+          <div className="h-16 bg-gradient-to-r from-gray-200 to-gray-300 rounded-xl animate-pulse" />
+        ) : (
         <div className="space-y-3">
           {remainingBudget < 0 && (
             <div className="flex items-start space-x-2 md:space-x-3 p-3 bg-red-500/20   rounded-xl border border-red-400/30">
@@ -686,6 +625,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             </div>
           )}
         </div>
+        )}
       </div>
 
       {/* Bulk Expense Modal */}

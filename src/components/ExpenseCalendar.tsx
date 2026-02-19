@@ -22,6 +22,7 @@ interface ExpenseCalendarProps {
   actualMonthlySavings: number;
   calendarEvents?: CalendarEvent[];
   onBulkAdd?: () => void;
+  loading?: boolean;
 }
 
 const PEEK = 16; // px: adjacent slide が覗く量
@@ -34,12 +35,14 @@ function CalendarGrid({
   calendarEvents,
   onDateClick,
   isActive,
+  isLoading,
 }: {
   monthDate: Date;
   expenses: Expense[];
   calendarEvents: CalendarEvent[];
   onDateClick: (date: Date) => void;
   isActive: boolean;
+  isLoading?: boolean;
 }) {
   const monthStart = startOfMonth(monthDate);
   const monthEnd = endOfMonth(monthDate);
@@ -74,8 +77,17 @@ function CalendarGrid({
         </div>
       ))}
 
-      {/* Calendar Days */}
-      {days.map((day, index) => {
+      {/* Calendar Days — loading 中はセルのみ Skeleton */}
+      {isActive && isLoading
+        ? days.map((_, i) => (
+            <div
+              key={i}
+              className="bg-white px-1 min-h-[80px] border-b border-r border-gray-200 flex items-start p-2"
+            >
+              <div className="h-4 w-5 bg-gradient-to-r from-gray-100 to-gray-200 rounded animate-pulse mx-auto mt-1" />
+            </div>
+          ))
+        : days.map((day, index) => {
         const dayExpenses = getExpensesForDate(day);
         const dayTotal = getDayTotal(day);
         const dayTotalLabel =
@@ -160,6 +172,7 @@ export function ExpenseCalendar({
   actualMonthlySavings,
   calendarEvents = [],
   onBulkAdd,
+  loading = false,
 }: ExpenseCalendarProps) {
   const prevMonthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
   const nextMonthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
@@ -318,7 +331,9 @@ export function ExpenseCalendar({
           style={{
             display: 'flex',
             transform: `translateX(${getTranslate()}px)`,
-            transition: hasTransition ? 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
+            transition: hasTransition
+              ? 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+              : 'none',
             willChange: 'transform',
           }}
           onTransitionEnd={handleTransitionEnd}
@@ -334,6 +349,7 @@ export function ExpenseCalendar({
                 calendarEvents={calendarEvents}
                 onDateClick={onDateClick}
                 isActive={i === 1}
+                isLoading={i === 1 && loading}
               />
             </div>
           ))}
@@ -342,4 +358,3 @@ export function ExpenseCalendar({
     </div>
   );
 }
-
