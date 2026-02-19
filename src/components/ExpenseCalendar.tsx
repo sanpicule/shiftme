@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import {
   format,
   startOfMonth,
@@ -66,6 +67,28 @@ export function ExpenseCalendar({
 
   const isCurrentMonth = (date: Date) => date.getMonth() === currentDate.getMonth();
 
+  // スワイプ操作（SP向け）
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    const dy = e.changedTouches[0].clientY - touchStartY.current;
+    // 水平スワイプが縦より大きい場合のみ月切り替え（スクロールと干渉しないよう）
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+      if (dx < 0) nextMonth();
+      else prevMonth();
+    }
+    touchStartX.current = null;
+    touchStartY.current = null;
+  };
+
   return (
     <div className="space-y-4">
       {/* Calendar Header */}
@@ -114,7 +137,11 @@ export function ExpenseCalendar({
       </div>
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 rounded-2xl shadow-md overflow-hidden  bg-glass-white-weak">
+      <div
+        className="grid grid-cols-7 rounded-2xl shadow-md overflow-hidden  bg-glass-white-weak"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         {/* Day Headers */}
         {['日', '月', '火', '水', '木', '金', '土'].map((day, index) => (
           <div
