@@ -9,7 +9,7 @@ import {
   endOfWeek,
 } from 'date-fns';
 import { ja } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ListPlus } from 'lucide-react';
 import { Expense } from '../lib/supabase';
 import { CalendarEvent, getEventsForDate } from '../lib/googleCalendar';
 
@@ -20,6 +20,7 @@ interface ExpenseCalendarProps {
   onMonthChange: (date: Date) => void;
   actualMonthlySavings: number;
   calendarEvents?: CalendarEvent[];
+  onBulkAdd?: () => void;
 }
 
 export function ExpenseCalendar({
@@ -29,6 +30,7 @@ export function ExpenseCalendar({
   onMonthChange,
   actualMonthlySavings,
   calendarEvents = [],
+  onBulkAdd,
 }: ExpenseCalendarProps) {
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -80,6 +82,16 @@ export function ExpenseCalendar({
           </div>
         </div>
         <div className="flex items-center space-x-2">
+          {onBulkAdd && (
+            <button
+              onClick={onBulkAdd}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium glass-text hover:bg-glass-white-weak rounded-lg glass-card transition-colors glass-shine border border-gray-200"
+              title="一括登録"
+            >
+              <ListPlus className="w-4 h-4 glass-icon" />
+              <span className="hidden sm:inline">一括登録</span>
+            </button>
+          )}
           <button
             onClick={goToToday}
             className="px-3 py-1.5 text-sm font-medium glass-text hover:bg-glass-white-weak rounded-lg glass-card transition-colors glass-shine border border-gray-200"

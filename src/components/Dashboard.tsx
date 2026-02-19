@@ -16,6 +16,7 @@ import {
   EyeOff,
 } from 'lucide-react';
 import { ExpenseCalendar } from './ExpenseCalendar';
+import { BulkExpenseModal } from './BulkExpenseModal';
 import { SkeletonCard, SkeletonText } from './SkeletonCard';
 import { useUserSettings } from '../hooks/useUserSettings';
 import { useGoogleCalendar } from '../hooks/useGoogleCalendar';
@@ -52,6 +53,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [isAddingExpense, setIsAddingExpense] = useState(false);
   const [editingExpense, setEditingExpense] = useState<string | null>(null);
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(false);
@@ -226,6 +228,27 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     } catch (error) {
       console.error('Error adding expense:', error);
       alert('支出の追加に失敗しました');
+    }
+  };
+
+  const bulkAddExpenses = async (
+    entries: { date: string; amount: number; category: string; description: string }[],
+  ) => {
+    if (!user) return;
+    try {
+      const rows = entries.map(e => ({
+        amount: e.amount,
+        category: e.category,
+        description: e.description,
+        user_id: user.id,
+        expense_date: e.date,
+      }));
+      const { error } = await supabase.from('expenses').insert(rows);
+      if (error) throw error;
+      handleExpenseUpdate();
+    } catch (error) {
+      console.error('Error bulk adding expenses:', error);
+      alert('一括登録に失敗しました');
     }
   };
 
@@ -607,6 +630,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           onMonthChange={handleMonthChange}
           actualMonthlySavings={actualMonthlySavings}
           calendarEvents={calendarEvents}
+          onBulkAdd={() => setIsBulkModalOpen(true)}
         />
       </div>
 
@@ -663,6 +687,14 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           )}
         </div>
       </div>
+
+      {/* Bulk Expense Modal */}
+      <BulkExpenseModal
+        open={isBulkModalOpen}
+        onClose={() => setIsBulkModalOpen(false)}
+        onSubmit={bulkAddExpenses}
+        currentDate={currentDate}
+      />
 
       {/* Expense Modal */}
       {isModalOpen && selectedDate && (
