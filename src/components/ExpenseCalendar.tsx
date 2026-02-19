@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import {
   format,
   startOfMonth,
@@ -67,6 +67,15 @@ export function ExpenseCalendar({
 
   const isCurrentMonth = (date: Date) => date.getMonth() === currentDate.getMonth();
 
+  // スライド方向の管理（カルーセルアニメーション用）
+  const [slideDir, setSlideDir] = useState<'left' | 'right'>('left');
+
+  const changeMonth = (direction: 'next' | 'prev') => {
+    setSlideDir(direction === 'next' ? 'left' : 'right');
+    if (direction === 'next') nextMonth();
+    else prevMonth();
+  };
+
   // スワイプ操作（SP向け）
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
@@ -80,10 +89,8 @@ export function ExpenseCalendar({
     if (touchStartX.current === null || touchStartY.current === null) return;
     const dx = e.changedTouches[0].clientX - touchStartX.current;
     const dy = e.changedTouches[0].clientY - touchStartY.current;
-    // 水平スワイプが縦より大きい場合のみ月切り替え（スクロールと干渉しないよう）
     if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
-      if (dx < 0) nextMonth();
-      else prevMonth();
+      changeMonth(dx < 0 ? 'next' : 'prev');
     }
     touchStartX.current = null;
     touchStartY.current = null;
@@ -123,25 +130,31 @@ export function ExpenseCalendar({
           </button>
           <button
             onClick={prevMonth}
-            className="p-2 hover:bg-glass-white-weak rounded-full transition-colors glass-shine border border-gray-200 glass-card"
+            className="hidden md:flex p-2 hover:bg-glass-white-weak rounded-full transition-colors glass-shine border border-gray-200 glass-card"
           >
             <ChevronLeft className="w-5 h-5 glass-icon" />
           </button>
           <button
             onClick={nextMonth}
-            className="p-2 hover:bg-glass-white-weak rounded-full transition-colors glass-shine border border-gray-200 glass-card"
+            className="hidden md:flex p-2 hover:bg-glass-white-weak rounded-full transition-colors glass-shine border border-gray-200 glass-card"
           >
             <ChevronRight className="w-5 h-5 glass-icon" />
           </button>
         </div>
       </div>
 
-      {/* Calendar Grid */}
+      {/* Calendar Grid — SP ではカルーセルアニメーション */}
       <div
-        className="grid grid-cols-7 rounded-2xl shadow-md overflow-hidden  bg-glass-white-weak"
+        className="overflow-hidden rounded-2xl shadow-md"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
+        <div
+          key={currentDate.toISOString()}
+          className={`grid grid-cols-7 bg-glass-white-weak ${
+            slideDir === 'left' ? 'calendar-slide-from-right' : 'calendar-slide-from-left'
+          }`}
+        >
         {/* Day Headers */}
         {['日', '月', '火', '水', '木', '金', '土'].map((day, index) => (
           <div
@@ -230,6 +243,7 @@ export function ExpenseCalendar({
             </button>
           );
         })}
+        </div>
       </div>
     </div>
   );
