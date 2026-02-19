@@ -407,11 +407,13 @@ export function AnalyticsPage() {
       monthlyNeededForGoal = Math.ceil(savingsGoal.target_amount / monthsAtCreation);
     }
 
-    // 予算 = 収入 - 固定費 - 貯蓄目標 + 今月の収入（マイナス値の絶対値）
-    const fixedBudget = monthlyIncome - totalFixed - monthlyNeededForGoal + incomeThisMonth;
-    const budget = fixedBudget + previousMonthCarryover;
+    // 月の基本予算 = 収入 - 固定費 - 貯蓄目標
+    const baseMonthlyBudget = monthlyIncome - totalFixed - monthlyNeededForGoal;
+    // 今月使える総予算 = 基本予算 + 前月繰越 + 今月の追加収入
+    const budget = baseMonthlyBudget + previousMonthCarryover + incomeThisMonth;
     const remaining = budget - actualExpensesThisMonth;
-    const budgetPercentage = fixedBudget > 0 ? (actualExpensesThisMonth / fixedBudget) * 100 : 0;
+    // 使用率は「今月の予算」に対する実支出の割合
+    const budgetPercentage = budget > 0 ? (actualExpensesThisMonth / budget) * 100 : 0;
 
     return (
       <div className="space-y-6">
