@@ -17,7 +17,7 @@ export function useGoogleCalendar(currentDate: Date, isEnabled: boolean) {
 
       // Calculate date range for the current month
       const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-      const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+      const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
 
       // Fetch calendar events only when the user is connected
       const events = await fetchGoogleCalendarEvents(startOfMonth, endOfMonth);

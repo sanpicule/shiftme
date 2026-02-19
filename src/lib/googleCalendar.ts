@@ -1,3 +1,4 @@
+import { format } from 'date-fns';
 import { supabase } from './supabase';
 
 // Google Calendar Event interface
@@ -97,7 +98,7 @@ function transformGoogleEvents(events: GoogleCalendarEvent[]): CalendarEvent[] {
         })
       : undefined;
     const date = event.start.dateTime
-      ? new Date(event.start.dateTime).toISOString().split('T')[0]
+      ? format(new Date(event.start.dateTime), 'yyyy-MM-dd')
       : event.start.date || '';
 
     return {
@@ -117,6 +118,6 @@ function transformGoogleEvents(events: GoogleCalendarEvent[]): CalendarEvent[] {
  * Get calendar events for a specific date
  */
 export function getEventsForDate(events: CalendarEvent[], date: Date): CalendarEvent[] {
-  const dateStr = date.toISOString().split('T')[0];
+  const dateStr = format(date, 'yyyy-MM-dd');
   return events.filter(event => event.date === dateStr);
 }
